@@ -123,9 +123,10 @@ interface PredictionRecord {
   prediction_metadata: string | Record<string, unknown> | null;
 }
 
-// Create Supabase client
+// Create Supabase client (outside component to prevent re-creation on every render)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -1177,7 +1178,6 @@ function MilestoneDetailModal({
 // ============================================================================
 
 export default function HealingForecast({ userId }: HealingForecastProps) {
-  const supabase = createClient(supabaseUrl, supabaseKey);
   const [data, setData] = useState<PredictionData>({
     timeline: null,
     outcomes: null,
@@ -1449,7 +1449,7 @@ export default function HealingForecast({ userId }: HealingForecastProps) {
     }
 
     fetchPredictions();
-  }, [userId, supabase]);
+  }, [userId]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
