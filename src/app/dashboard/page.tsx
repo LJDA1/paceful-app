@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { DEMO_USER_ID } from '@/lib/constants';
 import QuickMoodLog from '@/components/mood/QuickMoodLog';
 import {
   fetchMoodEntries,
@@ -11,8 +12,6 @@ import {
   getMoodLabel,
   type MoodEntry,
 } from '@/lib/mood-calculator';
-
-const DEMO_USER_ID = '5b362424-0963-4fe3-b4fc-84d85cf47044';
 
 // ============================================================================
 // Types

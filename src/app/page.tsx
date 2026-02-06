@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import ERSDashboard from '@/components/ers/ERSDashboard';
 import { supabase } from '@/lib/supabase';
-
-// Demo user ID (James)
-const DEMO_USER_ID = '5b362424-0963-4fe3-b4fc-84d85cf47044';
+import { DEMO_USER_ID } from '@/lib/constants';
 
 interface UserStats {
   streak: number;

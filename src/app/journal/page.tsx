@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { DEMO_USER_ID } from '@/lib/constants';
 import {
   JournalEntryForm,
   JournalEntriesList,
@@ -10,8 +11,6 @@ import {
   type JournalPrompt,
   type SavedEntry,
 } from '@/components/journal';
-
-const DEMO_USER_ID = '5b362424-0963-4fe3-b4fc-84d85cf47044';
 
 // ============================================================================
 // Types
@@ -392,9 +391,8 @@ export default function JournalPage() {
     setIsWriting(true);
   }, []);
 
-  // Handle edit (for now, just log - would need edit mode)
-  const handleEditEntry = useCallback((entry: JournalEntry) => {
-    console.log('Edit entry:', entry.id);
+  // Handle edit (placeholder for future edit mode)
+  const handleEditEntry = useCallback((_entry: JournalEntry) => {
     // Future: implement edit mode
   }, []);
 

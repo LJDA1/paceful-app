@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { DEMO_USER_ID } from '@/lib/constants';
 import { ERSDashboard, ERSComponentBreakdown } from '@/components/ers';
 
 // ============================================================================
 // Types
 // ============================================================================
-
-const DEMO_USER_ID = '5b362424-0963-4fe3-b4fc-84d85cf47044';
 
 type ERSStage = 'healing' | 'rebuilding' | 'ready';
 

@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-
-const DEMO_USER_ID = '5b362424-0963-4fe3-b4fc-84d85cf47044';
+import { DEMO_USER_ID } from '@/lib/constants';
 
 interface Match {
   id: string;

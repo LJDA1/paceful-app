@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { DEMO_USER_ID } from '@/lib/constants';
 
 // ============================================================================
 // Types
@@ -454,7 +455,7 @@ export default function OnboardingPage() {
 
     try {
       // Use current user ID or demo user ID
-      const profileId = userId || '5b362424-0963-4fe3-b4fc-84d85cf47044';
+      const profileId = userId || DEMO_USER_ID;
 
       // Update profile (using correct column names from database)
       const { error: profileError } = await supabase

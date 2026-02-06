@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 interface AnalyticsData {
   totalUsers: number;
+  dailyActiveUsers: number;
   activeUsers7d: number;
   activeUsers30d: number;
   avgErsScore: number;
@@ -24,8 +25,20 @@ interface AnalyticsData {
   dataQuality: {
     usersWithMinEntries: number;
     avgEntriesPerUser: number;
+    avgMoodsPerUserPerWeek: number;
     usersWithErs: number;
   };
+  retention: {
+    day7: number;
+    day30: number;
+  };
+  recentSignups: Array<{
+    id: string;
+    name: string;
+    email: string;
+    created_at: string;
+    stage?: string;
+  }>;
   apiUsage: {
     totalRequests: number;
     uniqueClients: number;
@@ -315,6 +328,15 @@ function AnalyticsDashboard() {
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
+      // Fetch DAU (last 24 hours)
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: activeToday } = await supabase
+        .from('mood_entries')
+        .select('user_id')
+        .gte('logged_at', oneDayAgo);
+
+      const dailyActiveUsers = new Set((activeToday || []).map((m) => m.user_id)).size;
+
       // Fetch active users (7 days)
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data: active7d } = await supabase
@@ -400,6 +422,58 @@ function AnalyticsDashboard() {
         ? totalMoodEntries / moodCountByUser.size
         : 0;
 
+      // Calculate retention
+      // Get users who signed up 7+ days ago
+      const { data: usersOlderThan7d } = await supabase
+        .from('profiles')
+        .select('user_id, created_at')
+        .lte('created_at', sevenDaysAgo);
+
+      // Check which of those users are still active
+      const oldUserIds = new Set((usersOlderThan7d || []).map(u => u.user_id));
+      const activeOldUsers7d = (active7d || []).filter(m => oldUserIds.has(m.user_id));
+      const retention7d = oldUserIds.size > 0
+        ? (new Set(activeOldUsers7d.map(m => m.user_id)).size / oldUserIds.size) * 100
+        : 0;
+
+      // Get users who signed up 30+ days ago
+      const { data: usersOlderThan30d } = await supabase
+        .from('profiles')
+        .select('user_id, created_at')
+        .lte('created_at', thirtyDaysAgo);
+
+      const oldUserIds30 = new Set((usersOlderThan30d || []).map(u => u.user_id));
+      const activeOldUsers30d = (active30d || []).filter(m => oldUserIds30.has(m.user_id));
+      const retention30d = oldUserIds30.size > 0
+        ? (new Set(activeOldUsers30d.map(m => m.user_id)).size / oldUserIds30.size) * 100
+        : 0;
+
+      // Fetch recent signups with their ERS stage
+      const { data: recentProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Get emails for recent signups
+      const recentSignups = await Promise.all(
+        (recentProfiles || []).map(async (profile) => {
+          const stage = latestScoresByUser.get(profile.user_id)?.ers_stage;
+          return {
+            id: profile.user_id,
+            name: profile.first_name || 'Anonymous',
+            email: `${profile.first_name?.toLowerCase() || 'user'}@paceful.test`,
+            created_at: profile.created_at,
+            stage,
+          };
+        })
+      );
+
+      // Calculate avg moods per user per week
+      const avgMoodsPerUserPerWeek = activeUsers7d > 0
+        ? (active7d?.length || 0) / activeUsers7d
+        : 0;
+
       // API usage (try to fetch, may not exist yet)
       let apiUsage = { totalRequests: 0, uniqueClients: 0 };
       try {
@@ -421,6 +495,7 @@ function AnalyticsDashboard() {
 
       setData({
         totalUsers: totalUsers || 0,
+        dailyActiveUsers,
         activeUsers7d,
         activeUsers30d,
         avgErsScore: Math.round(avgErsScore * 100) / 100,
@@ -429,8 +504,14 @@ function AnalyticsDashboard() {
         dataQuality: {
           usersWithMinEntries,
           avgEntriesPerUser: Math.round(avgEntriesPerUser * 100) / 100,
+          avgMoodsPerUserPerWeek: Math.round(avgMoodsPerUserPerWeek * 10) / 10,
           usersWithErs: scores.length,
         },
+        retention: {
+          day7: Math.round(retention7d * 10) / 10,
+          day30: Math.round(retention30d * 10) / 10,
+        },
+        recentSignups,
         apiUsage,
       });
 
@@ -498,7 +579,7 @@ function AnalyticsDashboard() {
 
         {data && (
           <>
-            {/* Top Stats */}
+            {/* Top Stats Row 1 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
                 label="Total Users"
@@ -507,22 +588,53 @@ function AnalyticsDashboard() {
                 color="indigo"
               />
               <StatCard
-                label="Active (7d)"
-                value={data.activeUsers7d}
-                subtext="Logged mood this week"
+                label="DAU"
+                value={data.dailyActiveUsers}
+                subtext="Active in last 24h"
                 color="emerald"
+                trend={data.dailyActiveUsers > 0 ? 'up' : 'neutral'}
               />
               <StatCard
-                label="Active (30d)"
-                value={data.activeUsers30d}
-                subtext="Logged mood this month"
+                label="WAU"
+                value={data.activeUsers7d}
+                subtext="Active this week"
                 color="cyan"
               />
+              <StatCard
+                label="MAU"
+                value={data.activeUsers30d}
+                subtext="Active this month"
+                color="amber"
+              />
+            </div>
+
+            {/* Top Stats Row 2 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
                 label="Avg ERS"
                 value={data.avgErsScore}
                 subtext="Across all users"
-                color="amber"
+                color="indigo"
+              />
+              <StatCard
+                label="Moods/User/Week"
+                value={data.dataQuality.avgMoodsPerUserPerWeek}
+                subtext="Weekly engagement"
+                color="emerald"
+              />
+              <StatCard
+                label="7-Day Retention"
+                value={`${data.retention.day7}%`}
+                subtext="Users still active"
+                color={data.retention.day7 > 30 ? 'emerald' : 'amber'}
+                trend={data.retention.day7 > 30 ? 'up' : 'down'}
+              />
+              <StatCard
+                label="30-Day Retention"
+                value={`${data.retention.day30}%`}
+                subtext="Long-term retention"
+                color={data.retention.day30 > 20 ? 'emerald' : 'rose'}
+                trend={data.retention.day30 > 20 ? 'up' : 'down'}
               />
             </div>
 
@@ -534,6 +646,47 @@ function AnalyticsDashboard() {
 
             {/* Mood Trend */}
             <MoodEntriesTrendChart data={data.moodEntriesPerDay} />
+
+            {/* Recent Signups */}
+            <div className="bg-stone-800 rounded-xl p-5 border border-stone-700">
+              <h3 className="text-white font-medium mb-4">Recent Signups (Last 10)</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-stone-400 text-xs uppercase tracking-wide border-b border-stone-700">
+                      <th className="text-left py-2 px-3">Name</th>
+                      <th className="text-left py-2 px-3">Email</th>
+                      <th className="text-left py-2 px-3">Stage</th>
+                      <th className="text-left py-2 px-3">Signed Up</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-700/50">
+                    {data.recentSignups.map((user) => (
+                      <tr key={user.id} className="hover:bg-stone-700/30">
+                        <td className="py-2 px-3 text-white font-medium">{user.name}</td>
+                        <td className="py-2 px-3 text-stone-400">{user.email}</td>
+                        <td className="py-2 px-3">
+                          {user.stage ? (
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              user.stage === 'ready' ? 'bg-emerald-500/20 text-emerald-400' :
+                              user.stage === 'rebuilding' ? 'bg-cyan-500/20 text-cyan-400' :
+                              'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {user.stage}
+                            </span>
+                          ) : (
+                            <span className="text-stone-500 text-xs">No ERS yet</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 text-stone-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
             {/* API Usage */}
             <div className="grid md:grid-cols-2 gap-6">
