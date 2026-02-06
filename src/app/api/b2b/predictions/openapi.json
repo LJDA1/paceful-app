@@ -1,0 +1,713 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Paceful B2B Predictions API",
+    "description": "API for accessing anonymized aggregate and individual prediction data from the Paceful emotional wellness platform. This API enables B2B partners to integrate healing prediction insights into their applications.\n\n## Authentication\nAll endpoints require Bearer token authentication. Include your API key in the Authorization header:\n```\nAuthorization: Bearer your_api_key_here\n```\n\n## Rate Limits\n- **Tier 1**: 100 calls/hour\n- **Tier 2**: 500 calls/hour  \n- **Tier 3**: Unlimited\n\nRate limit headers are included in all responses:\n- `X-RateLimit-Limit`: Your hourly limit\n- `X-RateLimit-Remaining`: Calls remaining this hour\n- `X-RateLimit-Reset`: When the limit resets (ISO 8601)\n\n## Data Privacy\nAll data is anonymized and aggregated by default. Individual user predictions require explicit user consent and Tier 2+ subscription.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Paceful API Support",
+      "email": "api-support@paceful.app",
+      "url": "https://paceful.app/developers"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://paceful.app/api-terms"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.paceful.app",
+      "description": "Production server"
+    },
+    {
+      "url": "https://staging-api.paceful.app",
+      "description": "Staging server"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/b2b/predictions": {
+      "get": {
+        "summary": "Get aggregate predictions or API health",
+        "description": "Retrieve anonymized aggregate prediction statistics or check API health status.",
+        "operationId": "getAggregate",
+        "tags": ["Predictions"],
+        "parameters": [
+          {
+            "name": "endpoint",
+            "in": "query",
+            "required": true,
+            "description": "The endpoint to access",
+            "schema": {
+              "type": "string",
+              "enum": ["aggregate", "health"]
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "description": "Date range for aggregate data (required for aggregate endpoint)",
+            "schema": {
+              "type": "string",
+              "example": "2026-01-01 to 2026-01-31"
+            }
+          },
+          {
+            "name": "demographic_filter",
+            "in": "query",
+            "required": false,
+            "description": "JSON object with demographic filters (age_range, gender, country)",
+            "schema": {
+              "type": "string",
+              "example": "{\"age_range\": \"25-34\", \"gender\": \"female\"}"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/AggregateResponse" },
+                    { "$ref": "#/components/schemas/HealthResponse" }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Get individual user predictions",
+        "description": "Retrieve predictions for a specific user. Requires Tier 2+ subscription and user consent for B2B data sharing.",
+        "operationId": "getIndividual",
+        "tags": ["Predictions"],
+        "parameters": [
+          {
+            "name": "endpoint",
+            "in": "query",
+            "required": true,
+            "description": "Must be 'individual' for POST requests",
+            "schema": {
+              "type": "string",
+              "enum": ["individual"]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndividualRequest"
+              },
+              "example": {
+                "user_id": "550e8400-e29b-41d4-a716-446655440000",
+                "prediction_types": ["timeline", "outcomes", "risks"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Individual predictions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndividualResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API Key",
+        "description": "Enter your API key"
+      }
+    },
+    "schemas": {
+      "AggregateResponse": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "description": "The requested date range",
+            "example": "2026-01-01 to 2026-01-31"
+          },
+          "total_predictions": {
+            "type": "integer",
+            "description": "Total number of predictions made in the period",
+            "example": 15234
+          },
+          "total_users": {
+            "type": "integer",
+            "description": "Number of unique users with predictions",
+            "example": 1247
+          },
+          "accuracy_metrics": {
+            "type": "object",
+            "properties": {
+              "timeline_predictions": {
+                "type": "object",
+                "properties": {
+                  "accuracy": {
+                    "type": "number",
+                    "description": "Accuracy rate (0-1)",
+                    "example": 0.87
+                  },
+                  "sample_size": {
+                    "type": "integer",
+                    "description": "Number of resolved predictions",
+                    "example": 8234
+                  },
+                  "avg_error_days": {
+                    "type": "number",
+                    "description": "Average prediction error in days",
+                    "example": 3.2
+                  }
+                }
+              },
+              "outcome_predictions": {
+                "type": "object",
+                "properties": {
+                  "accuracy": {
+                    "type": "number",
+                    "example": 0.84
+                  },
+                  "sample_size": {
+                    "type": "integer",
+                    "example": 4521
+                  }
+                }
+              },
+              "risk_predictions": {
+                "type": "object",
+                "properties": {
+                  "accuracy": {
+                    "type": "number",
+                    "example": 0.79
+                  },
+                  "sample_size": {
+                    "type": "integer",
+                    "example": 2479
+                  }
+                }
+              }
+            }
+          },
+          "cohort_insights": {
+            "type": "object",
+            "properties": {
+              "avg_cohort_size": {
+                "type": "integer",
+                "description": "Average number of users in prediction cohorts",
+                "example": 127
+              },
+              "avg_similarity_score": {
+                "type": "number",
+                "description": "Average similarity score within cohorts (0-1)",
+                "example": 0.82
+              },
+              "median_confidence": {
+                "type": "number",
+                "description": "Median confidence level of predictions (0-1)",
+                "example": 0.85
+              }
+            }
+          },
+          "stage_distribution": {
+            "type": "object",
+            "description": "Distribution of users across healing stages",
+            "properties": {
+              "healing": {
+                "type": "number",
+                "example": 0.35
+              },
+              "rebuilding": {
+                "type": "number",
+                "example": 0.45
+              },
+              "ready": {
+                "type": "number",
+                "example": 0.20
+              }
+            }
+          },
+          "top_predictive_factors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "factor": {
+                  "type": "string",
+                  "description": "The predictive factor name",
+                  "example": "daily_journaling"
+                },
+                "correlation": {
+                  "type": "number",
+                  "description": "Correlation coefficient",
+                  "example": 0.68
+                },
+                "impact": {
+                  "type": "string",
+                  "description": "Human-readable impact description",
+                  "example": "+34% faster recovery"
+                }
+              }
+            }
+          },
+          "demographic_filters_applied": {
+            "type": "object",
+            "nullable": true,
+            "description": "Demographic filters applied to the query"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the response was generated"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "degraded", "down"],
+            "example": "healthy"
+          },
+          "api_version": {
+            "type": "string",
+            "example": "1.0"
+          },
+          "your_usage": {
+            "type": "object",
+            "properties": {
+              "calls_this_month": {
+                "type": "integer",
+                "example": 1247
+              },
+              "limit": {
+                "type": "integer",
+                "example": 10000
+              },
+              "overage": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          },
+          "rate_limit": {
+            "type": "object",
+            "properties": {
+              "tier": {
+                "type": "integer",
+                "enum": [1, 2, 3],
+                "example": 2
+              },
+              "hourly_limit": {
+                "oneOf": [
+                  { "type": "integer" },
+                  { "type": "string", "enum": ["unlimited"] }
+                ],
+                "example": 500
+              },
+              "hourly_remaining": {
+                "oneOf": [
+                  { "type": "integer" },
+                  { "type": "string", "enum": ["unlimited"] }
+                ],
+                "example": 423
+              },
+              "resets_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "data_freshness": {
+            "type": "object",
+            "properties": {
+              "last_prediction_batch": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-02-04T00:00:00Z"
+              },
+              "next_update": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-02-11T00:00:00Z"
+              }
+            }
+          },
+          "permissions": {
+            "type": "object",
+            "properties": {
+              "aggregate_data": {
+                "type": "boolean"
+              },
+              "individual_predictions": {
+                "type": "boolean"
+              },
+              "individual_ers": {
+                "type": "boolean"
+              },
+              "trends": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "IndividualRequest": {
+        "type": "object",
+        "required": ["user_id", "prediction_types"],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The hashed user ID to retrieve predictions for",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "prediction_types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["timeline", "outcomes", "risks"]
+            },
+            "minItems": 1,
+            "description": "Types of predictions to retrieve",
+            "example": ["timeline", "outcomes", "risks"]
+          }
+        }
+      },
+      "IndividualResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The requested user ID"
+          },
+          "consent_verified": {
+            "type": "boolean",
+            "description": "Whether user consent was verified",
+            "example": true
+          },
+          "predictions": {
+            "type": "object",
+            "properties": {
+              "timeline": {
+                "type": "object",
+                "properties": {
+                  "rebuilding_weeks": {
+                    "type": "object",
+                    "description": "Probability of reaching 'rebuilding' stage by week",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "example": {
+                      "week_4": 0.23,
+                      "week_8": 0.61,
+                      "week_12": 0.84
+                    }
+                  },
+                  "ready_weeks": {
+                    "type": "object",
+                    "description": "Probability of reaching 'ready' stage by week",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "example": {
+                      "week_12": 0.15,
+                      "week_16": 0.42,
+                      "week_20": 0.68
+                    }
+                  },
+                  "median_rebuilding_weeks": {
+                    "type": "number",
+                    "description": "Median weeks to reach rebuilding stage",
+                    "example": 9.2
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "description": "Confidence level of the prediction (0-1)",
+                    "example": 0.87
+                  }
+                }
+              },
+              "outcomes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "outcome": {
+                      "type": "string",
+                      "description": "The predicted outcome type",
+                      "enum": [
+                        "stopped_daily_thoughts",
+                        "ready_to_date",
+                        "reconnected_with_friends",
+                        "developed_new_hobbies",
+                        "felt_grateful",
+                        "experienced_setback",
+                        "attempted_reconciliation",
+                        "got_back_together"
+                      ],
+                      "example": "stopped_daily_thoughts"
+                    },
+                    "probability": {
+                      "type": "number",
+                      "description": "Probability of this outcome occurring (0-1)",
+                      "example": 0.89
+                    },
+                    "typical_timing": {
+                      "type": "string",
+                      "description": "Typical time for this outcome based on cohort",
+                      "example": "8.3 weeks"
+                    }
+                  }
+                }
+              },
+              "risks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "risk_type": {
+                      "type": "string",
+                      "description": "Type of risk identified",
+                      "example": "valentine_setback"
+                    },
+                    "date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "Date of the predicted risk event",
+                      "example": "2026-02-14"
+                    },
+                    "probability": {
+                      "type": "number",
+                      "description": "Probability of risk occurring (0-1)",
+                      "example": 0.78
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "cohort_size": {
+            "type": "integer",
+            "description": "Size of the user's comparison cohort",
+            "example": 127
+          },
+          "similarity_score": {
+            "type": "number",
+            "description": "How similar this user is to their cohort (0-1)",
+            "example": 0.84
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the predictions were last calculated"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code",
+            "enum": [
+              "UNAUTHORIZED",
+              "FORBIDDEN",
+              "BAD_REQUEST",
+              "NOT_FOUND",
+              "RATE_LIMITED",
+              "SERVER_ERROR"
+            ]
+          },
+          "details": {
+            "type": "string",
+            "description": "Additional error details"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Invalid period format",
+              "code": "BAD_REQUEST",
+              "details": "Period must be in format: YYYY-MM-DD to YYYY-MM-DD"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Invalid or missing API key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Invalid API key",
+              "code": "UNAUTHORIZED",
+              "details": "The provided API key is not valid or has been revoked"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Insufficient permissions for the requested operation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Insufficient tier",
+              "code": "FORBIDDEN",
+              "details": "Individual predictions require Tier 2 or higher subscription"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Requested resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "User not found",
+              "code": "NOT_FOUND",
+              "details": "No user found with the provided ID"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Your hourly rate limit"
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Remaining calls this hour"
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "When the rate limit resets"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Rate limit exceeded",
+              "code": "RATE_LIMITED",
+              "details": "Hourly limit reached. Resets at 2026-02-06T12:00:00Z"
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Internal server error",
+              "code": "SERVER_ERROR",
+              "details": "An unexpected error occurred. Please try again or contact support."
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Predictions",
+      "description": "Endpoints for accessing prediction data"
+    }
+  ]
+}
