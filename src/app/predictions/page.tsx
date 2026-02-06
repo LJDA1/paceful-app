@@ -7,19 +7,34 @@ import { HealingForecast } from '@/components/predictions';
 interface UserSubscription {
   isPremium: boolean;
   lastPredictionUpdate: Date | null;
-  nextUpdateAvailable: Date;
+  nextUpdateAvailable: Date | null;
 }
 
-function useUserSubscription(): UserSubscription {
-  // TODO: Replace with actual subscription check from Supabase
-  return {
-    isPremium: false, // Change to true to test premium features
-    lastPredictionUpdate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-    nextUpdateAvailable: new Date(Date.now() + 23 * 24 * 60 * 60 * 1000), // 23 days from now for free
-  };
+// Hook that returns subscription data - time values are set via useEffect to avoid hydration mismatch
+function useUserSubscription(): UserSubscription & { isHydrated: boolean } {
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [subscription, setSubscription] = useState<UserSubscription>({
+    isPremium: false,
+    lastPredictionUpdate: null,
+    nextUpdateAvailable: null,
+  });
+
+  useEffect(() => {
+    // Set time-based values only on client side to avoid hydration mismatch
+    setSubscription({
+      isPremium: false, // Change to true to test premium features
+      lastPredictionUpdate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+      nextUpdateAvailable: new Date(Date.now() + 23 * 24 * 60 * 60 * 1000), // 23 days from now for free
+    });
+    setIsHydrated(true);
+  }, []);
+
+  return { ...subscription, isHydrated };
 }
 
-function formatTimeUntil(date: Date): string {
+function formatTimeUntil(date: Date | null): string {
+  if (!date) return '';
+
   const now = new Date();
   const diff = date.getTime() - now.getTime();
 
@@ -181,21 +196,23 @@ function UpgradeModal({ isOpen, onClose, daysUntilUpdate }: { isOpen: boolean; o
 }
 
 export default function PredictionsPage() {
-  const subscription = useUserSubscription();
+  const { isHydrated, ...subscription } = useUserSubscription();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    // Set last updated from subscription or current time
-    setLastUpdated(subscription.lastPredictionUpdate || new Date());
-  }, [subscription.lastPredictionUpdate]);
+    // Set last updated from subscription or current time (only after hydration)
+    if (isHydrated) {
+      setLastUpdated(subscription.lastPredictionUpdate || new Date());
+    }
+  }, [isHydrated, subscription.lastPredictionUpdate]);
 
   const handleRefresh = async () => {
     // Check if user can refresh
     const now = new Date();
-    if (!subscription.isPremium && subscription.nextUpdateAvailable > now) {
+    if (!subscription.isPremium && subscription.nextUpdateAvailable && subscription.nextUpdateAvailable > now) {
       setShowUpgrade(true);
       return;
     }
@@ -207,9 +224,9 @@ export default function PredictionsPage() {
     setIsRefreshing(false);
   };
 
-  const daysUntilUpdate = Math.ceil(
-    (subscription.nextUpdateAvailable.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  );
+  const daysUntilUpdate = subscription.nextUpdateAvailable
+    ? Math.ceil((subscription.nextUpdateAvailable.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-8">
@@ -230,7 +247,7 @@ export default function PredictionsPage() {
                     })}
                   </span>
                 )}
-                {!subscription.isPremium && (
+                {!subscription.isPremium && isHydrated && subscription.nextUpdateAvailable && (
                   <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
