@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
-import Navigation from "@/components/Navigation";
-import DemoBanner from "@/components/DemoBanner";
+import "../globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -10,14 +8,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Paceful - Emotional Readiness Platform",
+  title: "Paceful - Heal at Your Pace",
   description: "Track your emotional healing journey with science-backed insights. Get your Emotional Readiness Score and see the progress you can't always feel.",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-icon.svg",
   },
   openGraph: {
-    title: "Paceful - Emotional Readiness Platform",
+    title: "Paceful - Heal at Your Pace",
     description: "Track your emotional healing journey with science-backed insights. Get your Emotional Readiness Score and see the progress you can't always feel.",
     url: "https://app.paceful.com",
     siteName: "Paceful",
@@ -26,25 +24,21 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Paceful - Emotional Readiness Platform",
+    title: "Paceful - Heal at Your Pace",
     description: "Track your emotional healing journey with science-backed insights.",
     images: ["/og-image.svg"],
   },
 };
 
-export default function RootLayout({
+export default function MarketingLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50 min-h-screen`}>
-        <DemoBanner />
-        <Navigation />
-        <main className="pb-20 md:pb-0 md:ml-64">
-          {children}
-        </main>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        {children}
       </body>
     </html>
   );
