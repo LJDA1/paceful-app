@@ -133,7 +133,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // ============================================================================
 
 interface HealingForecastProps {
-  userId: string;
+  userId?: string;
 }
 
 interface PredictionData {
@@ -1177,7 +1177,7 @@ function MilestoneDetailModal({
 // MAIN COMPONENT
 // ============================================================================
 
-export default function HealingForecast({ userId }: HealingForecastProps) {
+export default function HealingForecast({ userId = 'demo-user' }: HealingForecastProps) {
   const [data, setData] = useState<PredictionData>({
     timeline: null,
     outcomes: null,
