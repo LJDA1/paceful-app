@@ -120,11 +120,48 @@ npm run test:e2e:ui  # Interactive mode
 
 ## Deployment
 
-The app is configured for deployment on Vercel:
+### Deploy to Vercel (Recommended)
 
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy
+#### Option 1: Via Vercel CLI
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy
+vercel --prod
+```
+
+#### Option 2: Via GitHub Integration
+
+1. Push your code to GitHub:
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/paceful.git
+   git push -u origin main
+   ```
+
+2. Go to [vercel.com/new](https://vercel.com/new)
+3. Import your GitHub repository
+4. Configure environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon/public key
+   - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
+   - `ADMIN_API_KEY` - Secure admin key for protected routes
+   - `NEXT_PUBLIC_APP_URL` - Your production URL (e.g., https://paceful.vercel.app)
+5. Click "Deploy"
+
+### Environment Variables Reference
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (server-side) |
+| `ADMIN_API_KEY` | No | Admin key for protected API routes |
+| `NEXT_PUBLIC_APP_URL` | No | Production URL for internal API calls |
 
 ## License
 
