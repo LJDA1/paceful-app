@@ -12,6 +12,7 @@
 
 import { supabase } from '../supabase';
 import { calculateAndStoreERSScore } from '../ers-calculator';
+import { logger } from '../api-errors';
 
 export interface WeeklyERSJobResult {
   jobId: string;
@@ -97,7 +98,7 @@ export async function runWeeklyERSCalculation(): Promise<WeeklyERSJobResult> {
   const jobId = generateJobId();
   const startedAt = new Date();
 
-  console.log(`[${jobId}] Starting weekly ERS calculation job`);
+  logger.info(`[${jobId}] Starting weekly ERS calculation job`);
 
   const result: WeeklyERSJobResult = {
     jobId,
@@ -116,7 +117,7 @@ export async function runWeeklyERSCalculation(): Promise<WeeklyERSJobResult> {
     const userIds = await getEligibleUsers();
     result.totalUsers = userIds.length;
 
-    console.log(`[${jobId}] Found ${userIds.length} eligible users`);
+    logger.info(`[${jobId}] Found ${userIds.length} eligible users`);
 
     // Process each user
     for (const userId of userIds) {
@@ -125,14 +126,14 @@ export async function runWeeklyERSCalculation(): Promise<WeeklyERSJobResult> {
         const hasData = await hasEnoughData(userId);
         if (!hasData) {
           result.skippedCount++;
-          console.log(`[${jobId}] Skipped user ${userId}: insufficient data`);
+          logger.info(`[${jobId}] Skipped user ${userId}: insufficient data`);
           continue;
         }
 
         // Calculate and store ERS
         await calculateAndStoreERSScore(userId);
         result.successCount++;
-        console.log(`[${jobId}] Calculated ERS for user ${userId}`);
+        logger.info(`[${jobId}] Calculated ERS for user ${userId}`);
       } catch (err) {
         result.failedCount++;
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -140,11 +141,11 @@ export async function runWeeklyERSCalculation(): Promise<WeeklyERSJobResult> {
           userId,
           error: errorMsg,
         });
-        console.error(`[${jobId}] Failed for user ${userId}: ${errorMsg}`);
+        logger.error(`[${jobId}] Failed for user ${userId}: ${errorMsg}`);
       }
     }
   } catch (err) {
-    console.error(`[${jobId}] Job failed:`, err);
+    logger.error(`[${jobId}] Job failed:`, err);
     result.errors.push({
       userId: 'SYSTEM',
       error: err instanceof Error ? err.message : 'Job failed to start',
@@ -156,8 +157,8 @@ export async function runWeeklyERSCalculation(): Promise<WeeklyERSJobResult> {
   result.completedAt = completedAt.toISOString();
   result.duration = completedAt.getTime() - startedAt.getTime();
 
-  console.log(`[${jobId}] Job completed in ${result.duration}ms`);
-  console.log(`[${jobId}] Results: ${result.successCount} success, ${result.failedCount} failed, ${result.skippedCount} skipped`);
+  logger.info(`[${jobId}] Job completed in ${result.duration}ms`);
+  logger.info(`[${jobId}] Results: ${result.successCount} success, ${result.failedCount} failed, ${result.skippedCount} skipped`);
 
   return result;
 }

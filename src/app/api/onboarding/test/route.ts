@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { errors } from '@/lib/api-errors';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const ADMIN_KEY = process.env.ADMIN_API_KEY || 'paceful_admin_2025';
+
 export async function POST(request: NextRequest) {
+  // Require admin key for test routes
+  const url = new URL(request.url);
+  const keyFromQuery = url.searchParams.get('key');
+  const keyFromHeader = request.headers.get('X-Admin-Key');
+  const providedKey = keyFromQuery || keyFromHeader;
+
+  if (providedKey !== ADMIN_KEY) {
+    return errors.unauthorized('Admin key required for test endpoints');
+  }
   try {
     const body = await request.json();
     const userId = body.userId || '5b362424-0963-4fe3-b4fc-84d85cf47044';
@@ -67,7 +79,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Require admin key for test routes
+  const url = new URL(request.url);
+  const keyFromQuery = url.searchParams.get('key');
+  const keyFromHeader = request.headers.get('X-Admin-Key');
+  const providedKey = keyFromQuery || keyFromHeader;
+
+  if (providedKey !== ADMIN_KEY) {
+    return errors.unauthorized('Admin key required for test endpoints');
+  }
   try {
     // Get profile columns
     const { data, error } = await supabase

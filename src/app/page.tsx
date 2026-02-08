@@ -84,19 +84,19 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-8">
+      <header className="bg-white border-b border-stone-200 px-4 sm:px-6 py-8">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back, James 👋
+          <h1 className="text-2xl font-bold text-stone-900">
+            Welcome back 👋
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-stone-600 mt-1">
             Your healing journey continues. Keep going!
           </p>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* ERS Dashboard - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
@@ -106,14 +106,14 @@ export default function DashboardPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Stats */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            <div className="bg-white rounded-2xl border border-stone-100 p-6">
+              <h3 className="text-lg font-semibold text-stone-800 mb-4">
                 Your Progress
               </h3>
               {loading ? (
                 <div className="space-y-4 animate-pulse">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-12 bg-gray-200 rounded-lg" />
+                    <div key={i} className="h-12 bg-stone-200 rounded-lg" />
                   ))}
                 </div>
               ) : stats ? (
@@ -147,8 +147,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            <div className="bg-white rounded-2xl border border-stone-100 p-6">
+              <h3 className="text-lg font-semibold text-stone-800 mb-4">
                 Recent Activity
               </h3>
               {activities.length > 0 ? (
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                   {activities.map((activity, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-gray-50"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-stone-50"
                     >
                       <span className="text-lg">
                         {activity.type === 'journal' && '📝'}
@@ -164,16 +164,16 @@ export default function DashboardPage() {
                         {activity.type === 'exercise' && '✨'}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-stone-900 truncate">
                           {activity.title}
                         </p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
+                        <p className="text-xs text-stone-500">{activity.time}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">No recent activity</p>
+                <p className="text-stone-500 text-sm">No recent activity</p>
               )}
             </div>
 
@@ -211,13 +211,13 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="flex items-center gap-4 p-3 rounded-xl bg-gray-50">
+    <div className="flex items-center gap-4 p-3 rounded-xl bg-stone-50">
       <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center text-lg`}>
         {icon}
       </div>
       <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-lg font-semibold text-gray-900">{value}</p>
+        <p className="text-sm text-stone-500">{label}</p>
+        <p className="text-lg font-semibold text-stone-900">{value}</p>
       </div>
     </div>
   );

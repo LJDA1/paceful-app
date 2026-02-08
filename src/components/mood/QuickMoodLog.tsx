@@ -84,6 +84,7 @@ function MoodSlider({
             <button
               key={n}
               onClick={() => onChange(n)}
+              aria-label={`Set mood to ${n}`}
               className={`w-5 h-5 text-xs rounded transition-all ${
                 n === value
                   ? 'font-bold text-stone-800'
@@ -141,6 +142,8 @@ function EmotionTags({
               key={emotion}
               onClick={() => toggleEmotion(emotion)}
               disabled={isDisabled}
+              aria-label={`${isSelected ? 'Remove' : 'Select'} ${emotion} emotion`}
+              aria-pressed={isSelected}
               className={`px-3 py-1.5 text-sm rounded-full capitalize transition-all ${
                 isSelected
                   ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-300'
@@ -247,6 +250,8 @@ export default function QuickMoodLog({ userId, onSave }: QuickMoodLogProps) {
           <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => !isSubmitting && setIsOpen(false)}
+            role="presentation"
+            aria-hidden="true"
           />
 
           {/* Modal Content */}
@@ -260,6 +265,7 @@ export default function QuickMoodLog({ userId, onSave }: QuickMoodLogProps) {
                   <h3 className="text-lg font-semibold text-stone-800">Quick Mood Log</h3>
                   <button
                     onClick={() => setIsOpen(false)}
+                    aria-label="Close mood log dialog"
                     className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors"
                   >
                     <svg
@@ -268,6 +274,7 @@ export default function QuickMoodLog({ userId, onSave }: QuickMoodLogProps) {
                       viewBox="0 0 24 24"
                       strokeWidth={2}
                       stroke="currentColor"
+                      aria-hidden="true"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>

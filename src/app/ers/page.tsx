@@ -45,10 +45,10 @@ function LoadingSkeleton() {
   return (
     <div className="min-h-screen animate-pulse">
       {/* Header Skeleton */}
-      <header className="bg-white border-b border-gray-200 px-6 py-8">
+      <header className="bg-white border-b border-stone-200 px-6 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="h-8 w-64 bg-gray-200 rounded mb-2" />
-          <div className="h-4 w-48 bg-gray-100 rounded" />
+          <div className="h-8 w-64 bg-stone-200 rounded mb-2" />
+          <div className="h-4 w-48 bg-stone-100 rounded" />
         </div>
       </header>
 
@@ -58,21 +58,21 @@ function LoadingSkeleton() {
           {/* Dashboard Skeleton */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             <div className="flex items-center gap-6">
-              <div className="w-32 h-32 rounded-full bg-gray-200" />
+              <div className="w-32 h-32 rounded-full bg-stone-200" />
               <div className="flex-1 space-y-3">
-                <div className="h-8 w-24 bg-gray-200 rounded-full" />
-                <div className="h-4 w-32 bg-gray-100 rounded" />
-                <div className="h-4 w-28 bg-gray-100 rounded" />
+                <div className="h-8 w-24 bg-stone-200 rounded-full" />
+                <div className="h-4 w-32 bg-stone-100 rounded" />
+                <div className="h-4 w-28 bg-stone-100 rounded" />
               </div>
             </div>
           </div>
 
           {/* Stats Skeleton */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <div className="h-5 w-28 bg-gray-200 rounded mb-4" />
+            <div className="h-5 w-28 bg-stone-200 rounded mb-4" />
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-12 bg-gray-100 rounded-xl" />
+                <div key={i} className="h-12 bg-stone-100 rounded-xl" />
               ))}
             </div>
           </div>
@@ -80,15 +80,15 @@ function LoadingSkeleton() {
 
         {/* Breakdown Skeleton */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <div className="h-5 w-36 bg-gray-200 rounded mb-6" />
+          <div className="h-5 w-36 bg-stone-200 rounded mb-6" />
           <div className="space-y-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i}>
                 <div className="flex justify-between mb-2">
-                  <div className="h-4 w-32 bg-gray-200 rounded" />
-                  <div className="h-4 w-12 bg-gray-100 rounded" />
+                  <div className="h-4 w-32 bg-stone-200 rounded" />
+                  <div className="h-4 w-12 bg-stone-100 rounded" />
                 </div>
-                <div className="h-2.5 bg-gray-100 rounded-full" />
+                <div className="h-2.5 bg-stone-100 rounded-full" />
               </div>
             ))}
           </div>
@@ -127,10 +127,10 @@ function ErrorState({
             />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+        <h2 className="text-lg font-semibold text-stone-900 mb-2">
           Unable to Load ERS Data
         </h2>
-        <p className="text-gray-500 mb-6">{message}</p>
+        <p className="text-stone-500 mb-6">{message}</p>
         <button
           onClick={onRetry}
           className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium"
@@ -149,12 +149,12 @@ function ErrorState({
 function EmptyState({ onCalculate }: { onCalculate: () => void }) {
   return (
     <div className="min-h-screen">
-      <header className="bg-white border-b border-gray-200 px-6 py-8">
+      <header className="bg-white border-b border-stone-200 px-6 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-stone-900">
             Your Emotional Readiness Score
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-stone-600 mt-1">
             A holistic view of your healing journey
           </p>
         </div>
@@ -177,10 +177,10 @@ function EmptyState({ onCalculate }: { onCalculate: () => void }) {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+          <h2 className="text-2xl font-semibold text-stone-900 mb-3">
             No ERS Score Yet
           </h2>
-          <p className="text-gray-500 max-w-md mx-auto mb-8">
+          <p className="text-stone-500 max-w-md mx-auto mb-8">
             Your Emotional Readiness Score helps you understand where you are in
             your healing journey. Start by logging some activities.
           </p>
@@ -207,7 +207,7 @@ function EmptyState({ onCalculate }: { onCalculate: () => void }) {
             </button>
             <a
               href="/journal"
-              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+              className="px-6 py-3 bg-stone-100 text-gray-700 rounded-xl hover:bg-stone-200 transition-colors font-medium"
             >
               Start Journaling
             </a>
@@ -215,7 +215,7 @@ function EmptyState({ onCalculate }: { onCalculate: () => void }) {
 
           {/* What contributes section - Mood Focused */}
           <div className="mt-12 pt-8 border-t border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-6">
+            <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wide mb-6">
               What Builds Your ERS
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-lg mx-auto">
@@ -227,11 +227,11 @@ function EmptyState({ onCalculate }: { onCalculate: () => void }) {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">Mood Stability</p>
+                    <p className="font-semibold text-stone-900">Mood Stability</p>
                     <p className="text-xs text-indigo-600">60% of your score</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-stone-600">
                   Consistent, stable moods indicate emotional readiness. Lower variance = higher score.
                 </p>
               </div>
@@ -243,16 +243,16 @@ function EmptyState({ onCalculate }: { onCalculate: () => void }) {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">Daily Logging</p>
+                    <p className="font-semibold text-stone-900">Daily Logging</p>
                     <p className="text-xs text-emerald-600">40% of your score</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-stone-600">
                   Consistent daily check-ins show self-awareness. Build streaks for bonus points.
                 </p>
               </div>
             </div>
-            <p className="text-sm text-gray-400 mt-6 text-center">
+            <p className="text-sm text-stone-500 mt-6 text-center">
               Log at least 3 moods in the last 14 days to calculate your score
             </p>
           </div>
@@ -284,12 +284,12 @@ function QuickStatsCard({ ersData }: { ersData: ERSData }) {
           : v.toFixed(1),
       color: (v: number | null) =>
         v === null
-          ? 'text-gray-400'
+          ? 'text-stone-500'
           : v > 0
           ? 'text-emerald-600'
           : v < 0
           ? 'text-rose-600'
-          : 'text-gray-600',
+          : 'text-stone-600',
     },
     {
       label: 'Data Confidence',
@@ -316,21 +316,21 @@ function QuickStatsCard({ ersData }: { ersData: ERSData }) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+      <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wide mb-4">
         Quick Insights
       </h3>
       <div className="space-y-3">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+            className="flex items-center justify-between p-3 bg-stone-50 rounded-xl"
           >
-            <span className="text-sm text-gray-600">{stat.label}</span>
+            <span className="text-sm text-stone-600">{stat.label}</span>
             <span
               className={`text-sm font-semibold ${
                 'color' in stat && typeof stat.color === 'function'
                   ? stat.color(stat.value as number | null)
-                  : 'text-gray-900'
+                  : 'text-stone-900'
               }`}
             >
               {stat.format(stat.value as never)}
@@ -355,7 +355,7 @@ function HistoryMiniChart({ history }: { history: ERSHistory[] }) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+      <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wide mb-4">
         Recent Trend
       </h3>
       <div className="flex items-end gap-2 h-24">
@@ -367,11 +367,11 @@ function HistoryMiniChart({ history }: { history: ERSHistory[] }) {
             <div key={h.week_of} className="flex-1 flex flex-col items-center gap-1">
               <div
                 className={`w-full rounded-t transition-all ${
-                  isLatest ? 'bg-indigo-500' : 'bg-gray-200'
+                  isLatest ? 'bg-indigo-500' : 'bg-stone-200'
                 }`}
                 style={{ height: `${Math.max(height, 10)}%` }}
               />
-              <span className="text-[10px] text-gray-400">
+              <span className="text-[10px] text-stone-500">
                 {new Date(h.week_of).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
             </div>
@@ -419,7 +419,7 @@ function StageInfoSection() {
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-6">
-      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-6">
+      <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wide mb-6">
         Understanding the Stages
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -427,10 +427,10 @@ function StageInfoSection() {
           <div key={stage.name} className={`${stage.bgColor} rounded-xl p-4`}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">{stage.icon}</span>
-              <span className="font-semibold text-gray-900">{stage.name}</span>
-              <span className="text-xs text-gray-500 ml-auto">{stage.range}</span>
+              <span className="font-semibold text-stone-900">{stage.name}</span>
+              <span className="text-xs text-stone-500 ml-auto">{stage.range}</span>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed">
+            <p className="text-sm text-stone-600 leading-relaxed">
               {stage.description}
             </p>
           </div>
@@ -597,14 +597,14 @@ export default function ERSPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-8">
+      <header className="bg-white border-b border-stone-200 px-6 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-stone-900">
                 Your Emotional Readiness Score
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-stone-600 mt-1">
                 A holistic view of your healing journey
               </p>
             </div>
@@ -724,7 +724,7 @@ export default function ERSPage() {
 
         {/* Footer Note */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-stone-500">
             Your ERS is recalculated weekly based on your activity.
             <br />
             Keep journaling, tracking moods, and completing exercises to improve your score.

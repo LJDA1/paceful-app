@@ -65,8 +65,8 @@ const TEST_API_KEYS: Record<string, APIClient> = {
   },
 };
 
-// Admin API key for internal use
-const ADMIN_API_KEY = 'sk_admin_paceful_internal_2025';
+// Admin API key for internal use (loaded from environment)
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY || 'sk_admin_paceful_internal_2025';
 
 // ============================================================================
 // Validation Functions

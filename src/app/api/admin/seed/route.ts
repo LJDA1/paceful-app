@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 // Configuration
 // ============================================================================
 
-const ADMIN_KEY = 'paceful_admin_2025';
+const ADMIN_KEY = process.env.ADMIN_API_KEY || 'paceful_admin_2025';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

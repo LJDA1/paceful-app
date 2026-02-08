@@ -75,15 +75,15 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-white border-r border-gray-200">
+      <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-white border-r border-stone-200">
         {/* Logo */}
-        <div className="flex items-center gap-2 px-6 py-5 border-b border-gray-200">
+        <div className="flex items-center gap-2 px-6 py-5 border-b border-stone-200">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
             <span className="text-white text-xl">💜</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Paceful</h1>
-            <p className="text-xs text-gray-500">Heal at your pace</p>
+            <h1 className="text-xl font-bold text-stone-900">Paceful</h1>
+            <p className="text-xs text-stone-500">Heal at your pace</p>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default function Navigation() {
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
                     ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -109,19 +109,19 @@ export default function Navigation() {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-gray-200 space-y-2">
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50">
+        <div className="p-4 border-t border-stone-200 space-y-2">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-stone-50">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
-              J
+              U
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">James</p>
+              <p className="text-sm font-medium text-stone-900 truncate">User</p>
               <p className="text-xs text-amber-600">Rebuilding</p>
             </div>
           </div>
           <Link
             href="/login"
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-50 rounded-lg transition-colors"
             aria-label="Sign out of your account"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
@@ -133,7 +133,7 @@ export default function Navigation() {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-50">
         <div className="flex justify-around py-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -144,7 +144,7 @@ export default function Navigation() {
                 className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
                   isActive
                     ? 'text-indigo-600'
-                    : 'text-gray-500'
+                    : 'text-stone-500'
                 }`}
               >
                 <item.icon className="w-6 h-6" />

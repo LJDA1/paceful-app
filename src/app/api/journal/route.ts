@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { analyzeText, type FullAnalysisResult } from '@/lib/sentiment-analyzer';
 import { calculateAndStoreERSScore } from '@/lib/ers-calculator';
+import { logger } from '@/lib/api-errors';
 
 // ============================================================================
 // Supabase Admin Client (server-side only)
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError) {
-      console.log('User validation skipped (demo mode):', userError.message);
+      logger.debug('User validation skipped (demo mode):', userError.message);
       // Continue anyway for demo - user might exist but RLS blocking
     }
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (promptError) {
-        console.log('Prompt validation skipped:', promptError.message);
+        logger.debug('Prompt validation skipped:', promptError.message);
         // Continue anyway - set prompt_id to null if invalid
         body.prompt_id = null;
       }
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Failed to insert journal entry:', insertError);
+      logger.error('Failed to insert journal entry:', insertError);
       return NextResponse.json(
         { error: 'Failed to save journal entry', details: insertError.message },
         { status: 500 }
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     // Trigger ERS recalculation (async, don't wait for completion)
     calculateAndStoreERSScore(body.user_id).catch(err => {
-      console.error('Failed to recalculate ERS after journal entry:', err);
+      logger.error('Failed to recalculate ERS after journal entry:', err);
     });
 
     // Return response
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Journal API error:', error);
+    logger.error('Journal API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -191,7 +192,7 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Failed to fetch journal entries:', error);
+      logger.error('Failed to fetch journal entries:', error);
       return NextResponse.json(
         { error: 'Failed to fetch entries', details: error.message },
         { status: 500 }
@@ -205,7 +206,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('Journal GET error:', error);
+    logger.error('Journal GET error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -238,7 +239,7 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Failed to delete journal entry:', error);
+      logger.error('Failed to delete journal entry:', error);
       return NextResponse.json(
         { error: 'Failed to delete entry', details: error.message },
         { status: 500 }
@@ -247,12 +248,12 @@ export async function DELETE(request: NextRequest) {
 
     // Trigger ERS recalculation
     calculateAndStoreERSScore(userId).catch(err => {
-      console.error('Failed to recalculate ERS after entry deletion:', err);
+      logger.error('Failed to recalculate ERS after entry deletion:', err);
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Journal DELETE error:', error);
+    logger.error('Journal DELETE error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { errors } from '@/lib/api-errors';
+
+const ADMIN_KEY = process.env.ADMIN_API_KEY || 'paceful_admin_2025';
 
 export async function POST(request: NextRequest) {
+  // Require admin key for debug routes
+  const url = new URL(request.url);
+  const keyFromQuery = url.searchParams.get('key');
+  const keyFromHeader = request.headers.get('X-Admin-Key');
+  const providedKey = keyFromQuery || keyFromHeader;
+
+  if (providedKey !== ADMIN_KEY) {
+    return errors.unauthorized('Admin key required for debug endpoints');
+  }
+
   const { userId } = await request.json();
 
   const now = new Date();

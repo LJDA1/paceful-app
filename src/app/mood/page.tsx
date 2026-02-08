@@ -44,7 +44,7 @@ function StatsCards({ stats, isLoading }: { stats: MoodStats; isLoading: boolean
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181" />
       </svg>
     ) : (
-      <svg className="w-4 h-4 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <svg className="w-4 h-4 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
       </svg>
     );
@@ -90,7 +90,7 @@ function TrendChart({ dailySummaries }: { dailySummaries: DailyMoodSummary[] }) 
     return (
       <div className="bg-white rounded-xl p-4 border border-stone-100">
         <h3 className="text-sm font-medium text-stone-700 mb-3">30-Day Mood Trend</h3>
-        <div className="h-32 flex items-center justify-center text-stone-400 text-sm">
+        <div className="h-32 flex items-center justify-center text-stone-500 text-sm">
           Log more moods to see your trend
         </div>
       </div>
@@ -154,7 +154,7 @@ function TrendChart({ dailySummaries }: { dailySummaries: DailyMoodSummary[] }) 
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-stone-400 -ml-6">
+        <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-stone-500 -ml-6">
           <span>10</span>
           <span>5</span>
           <span>1</span>
@@ -162,7 +162,7 @@ function TrendChart({ dailySummaries }: { dailySummaries: DailyMoodSummary[] }) 
       </div>
 
       {/* X-axis labels */}
-      <div className="flex justify-between mt-2 text-xs text-stone-400">
+      <div className="flex justify-between mt-2 text-xs text-stone-500">
         <span>{dailySummaries[0]?.date.slice(5) || ''}</span>
         <span>Today</span>
       </div>
@@ -260,7 +260,7 @@ function CalendarView({
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-stone-400 py-1">
+          <div key={day} className="text-center text-xs font-medium text-stone-500 py-1">
             {day}
           </div>
         ))}
@@ -558,7 +558,7 @@ export default function MoodPage() {
             />
           ) : (
             <div className="bg-stone-50 rounded-xl border border-stone-200 border-dashed flex items-center justify-center p-8">
-              <p className="text-stone-400 text-sm text-center">
+              <p className="text-stone-500 text-sm text-center">
                 Select a date on the calendar to view entries
               </p>
             </div>
