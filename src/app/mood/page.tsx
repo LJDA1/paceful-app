@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { DEMO_USER_ID } from '@/lib/constants';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/hooks/useUser';
 import QuickMoodLog from '@/components/mood/QuickMoodLog';
 import {
   fetchMoodEntries,
@@ -459,6 +460,8 @@ function EmotionFilter({
 // ============================================================================
 
 export default function MoodPage() {
+  const router = useRouter();
+  const { userId, loading: userLoading, isAuthenticated } = useUser();
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [stats, setStats] = useState<MoodStats | null>(null);
   const [dailySummaries, setDailySummaries] = useState<DailyMoodSummary[]>([]);
@@ -468,10 +471,18 @@ export default function MoodPage() {
   const [isLoadingDate, setIsLoadingDate] = useState(false);
   const [emotionFilter, setEmotionFilter] = useState<string | null>(null);
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!userLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [userLoading, isAuthenticated, router]);
+
   // Fetch mood data
   const fetchData = useCallback(async () => {
+    if (!userId) return;
     setIsLoading(true);
-    const fetchedEntries = await fetchMoodEntries(DEMO_USER_ID, 60);
+    const fetchedEntries = await fetchMoodEntries(userId, 60);
     setEntries(fetchedEntries);
 
     const calculatedStats = calculateMoodStats(fetchedEntries);
@@ -481,22 +492,24 @@ export default function MoodPage() {
     setDailySummaries(summaries);
 
     setIsLoading(false);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (userId) {
+      fetchData();
+    }
+  }, [userId, fetchData]);
 
   // Fetch entries for selected date
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && userId) {
       setIsLoadingDate(true);
-      getEntriesForDate(DEMO_USER_ID, selectedDate).then((entries) => {
+      getEntriesForDate(userId, selectedDate).then((entries) => {
         setDateEntries(entries);
         setIsLoadingDate(false);
       });
     }
-  }, [selectedDate]);
+  }, [selectedDate, userId]);
 
   // Get unique emotions for filter
   const uniqueEmotions = useMemo(() => {
@@ -521,7 +534,7 @@ export default function MoodPage() {
               <h1 className="text-2xl font-bold text-stone-800">Mood Tracker</h1>
               <p className="text-stone-500 mt-0.5 text-sm sm:text-base">Track your emotional patterns</p>
             </div>
-            <QuickMoodLog userId={DEMO_USER_ID} onSave={fetchData} />
+            {userId && <QuickMoodLog userId={userId} onSave={fetchData} />}
           </div>
         </div>
       </header>

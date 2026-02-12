@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
-import DemoBanner from "@/components/DemoBanner";
+import AppShell from "@/components/AppShell";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,12 +38,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50 min-h-screen`}>
-        <DemoBanner />
-        <Navigation />
-        <main className="pb-20 md:pb-0 md:ml-64">
-          {children}
-        </main>
+      <body className={`${inter.variable} font-sans antialiased bg-stone-50 min-h-screen`}>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

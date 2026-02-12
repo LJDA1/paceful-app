@@ -23,7 +23,7 @@ export default function TermsPage() {
 
         <div className="prose prose-stone max-w-none">
           <p className="text-stone-600 mb-6">
-            Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            Last updated: February 1, 2026
           </p>
 
           <section className="mb-8">

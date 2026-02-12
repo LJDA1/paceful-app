@@ -18,11 +18,11 @@ export default function LandingPage() {
             <Link href="/demo" className="text-gray-600 hover:text-gray-900">
               Demo
             </Link>
-            <Link href="/login" className="text-gray-600 hover:text-gray-900">
+            <Link href="/auth/login" className="text-gray-600 hover:text-gray-900">
               Login
             </Link>
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
             >
               Start Free
@@ -49,7 +49,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
             >
               Start Free Journey
@@ -154,7 +154,7 @@ export default function LandingPage() {
             Join thousands of people who are tracking their emotional recovery journey.
           </p>
           <Link
-            href="/signup"
+            href="/auth/signup"
             className="inline-block px-8 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
           >
             Start Your Free Journey

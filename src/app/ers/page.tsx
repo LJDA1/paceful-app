@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { DEMO_USER_ID } from '@/lib/constants';
+import { useUser } from '@/hooks/useUser';
 import { ERSDashboard, ERSComponentBreakdown } from '@/components/ers';
 
 // ============================================================================
@@ -445,14 +446,24 @@ function StageInfoSection() {
 // ============================================================================
 
 export default function ERSPage() {
+  const router = useRouter();
+  const { userId, loading: userLoading, isAuthenticated } = useUser();
   const [ersData, setErsData] = useState<ERSData | null>(null);
   const [history, setHistory] = useState<ERSHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recalculating, setRecalculating] = useState(false);
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!userLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [userLoading, isAuthenticated, router]);
+
   // Fetch ERS data
   const fetchERSData = useCallback(async () => {
+    if (!userId) return;
     try {
       setError(null);
 
@@ -460,7 +471,7 @@ export default function ERSPage() {
       const { data, error: fetchError } = await supabase
         .from('ers_scores')
         .select('*')
-        .eq('user_id', DEMO_USER_ID)
+        .eq('user_id', userId)
         .order('calculated_at', { ascending: false })
         .limit(1)
         .single();
@@ -475,7 +486,7 @@ export default function ERSPage() {
       const { data: historyData } = await supabase
         .from('ers_scores')
         .select('ers_score, ers_stage, week_of, calculated_at')
-        .eq('user_id', DEMO_USER_ID)
+        .eq('user_id', userId)
         .order('week_of', { ascending: false })
         .limit(8);
 
@@ -486,24 +497,28 @@ export default function ERSPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   // Initial fetch
   useEffect(() => {
-    fetchERSData();
-  }, [fetchERSData]);
+    if (userId) {
+      fetchERSData();
+    }
+  }, [userId, fetchERSData]);
 
   // Real-time subscription
   useEffect(() => {
+    if (!userId) return;
+
     const channel = supabase
-      .channel(`ers_page_${DEMO_USER_ID}`)
+      .channel(`ers_page_${userId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'ers_scores',
-          filter: `user_id=eq.${DEMO_USER_ID}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
@@ -518,16 +533,17 @@ export default function ERSPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchERSData]);
+  }, [userId, fetchERSData]);
 
   // Recalculate handler
   const handleRecalculate = async () => {
+    if (!userId) return;
     setRecalculating(true);
     try {
       const response = await fetch('/api/ers/calculate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: DEMO_USER_ID }),
+        body: JSON.stringify({ userId }),
       });
 
       if (!response.ok) {
@@ -693,7 +709,7 @@ export default function ERSPage() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Top Section: Dashboard + Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <ERSDashboard userId={DEMO_USER_ID} compact />
+          {userId && <ERSDashboard userId={userId} compact />}
           <QuickStatsCard ersData={ersData} />
         </div>
 

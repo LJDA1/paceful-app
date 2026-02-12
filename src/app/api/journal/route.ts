@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
     // Fetch entries (only select columns that exist in the table)
     const { data: entries, error, count } = await supabase
       .from('journal_entries')
-      .select('id, entry_title, entry_content, prompt_id, sentiment_score, emotion_primary, word_count, created_at', { count: 'exact' })
+      .select('id, entry_title, entry_content, prompt_id, sentiment_score, emotion_primary, word_count, status, tags, is_private, created_at, updated_at', { count: 'exact' })
       .eq('user_id', userId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -207,6 +207,72 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Journal GET error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================================
+// PUT - Update Journal Entry
+// ============================================================================
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, user_id, entry_title, entry_content, is_private, status, tags } = body;
+
+    if (!id || !user_id) {
+      return NextResponse.json(
+        { error: 'id and user_id are required' },
+        { status: 400 }
+      );
+    }
+
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (entry_title !== undefined) updateData.entry_title = entry_title;
+    if (entry_content !== undefined) {
+      updateData.entry_content = entry_content;
+      updateData.word_count = entry_content.trim().split(/\s+/).length;
+
+      // Re-run sentiment analysis
+      const analysis = analyzeText(entry_content);
+      updateData.sentiment_score = analysis.sentiment.score;
+      updateData.emotion_primary = analysis.emotions.primary;
+    }
+    if (is_private !== undefined) updateData.is_private = is_private;
+    if (status !== undefined) updateData.status = status;
+    if (tags !== undefined) updateData.tags = tags;
+
+    const { data: entry, error } = await supabase
+      .from('journal_entries')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', user_id)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Failed to update journal entry:', error);
+      return NextResponse.json(
+        { error: 'Failed to update entry', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    // Trigger ERS recalculation
+    calculateAndStoreERSScore(user_id).catch(err => {
+      logger.error('Failed to recalculate ERS after entry update:', err);
+    });
+
+    return NextResponse.json(entry);
+  } catch (error) {
+    logger.error('Journal PUT error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

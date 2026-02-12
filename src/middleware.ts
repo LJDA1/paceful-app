@@ -2,10 +2,32 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Routes that don't require authentication
-const publicRoutes = ['/login', '/signup', '/reset-password'];
+const publicRoutes = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+  '/auth/callback',
+  // Marketing pages
+  '/',
+  '/pricing',
+  '/about',
+  '/privacy',
+  '/terms',
+  '/design-partners',
+  '/api-docs',
+  '/investors',
+];
 
 // Routes that require authentication but not completed onboarding
 const authOnlyRoutes = ['/onboarding'];
+
+// Routes that are completely public (marketing, landing)
+const marketingRoutes = ['/', '/pricing', '/about', '/privacy', '/terms', '/design-partners', '/api-docs', '/investors'];
+
+// App routes that require completed onboarding
+const appRoutes = ['/dashboard', '/journal', '/mood', '/moods', '/ers', '/exercises', '/predictions', '/matches'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -47,45 +69,53 @@ export async function middleware(request: NextRequest) {
   // Get current session
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Check if route is public
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  // Check route types
+  const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'));
   const isAuthOnlyRoute = authOnlyRoutes.some((route) => pathname.startsWith(route));
+  const isMarketingRoute = marketingRoutes.some((route) => pathname === route);
+  const isAuthRoute = pathname.startsWith('/auth/');
+  const isAppRoute = appRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'));
 
   // If user is not authenticated
   if (!user) {
-    // Allow public routes
-    if (isPublicRoute) {
+    // Allow public routes and marketing routes
+    if (isPublicRoute || isMarketingRoute) {
       return response;
     }
 
-    // For demo mode: allow access to all routes without auth
-    // In production, uncomment the redirect below:
-    // return NextResponse.redirect(new URL('/login', request.url));
+    // Redirect to login for protected routes (app routes and onboarding)
+    if (isAppRoute || isAuthOnlyRoute) {
+      return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
 
+    // For other routes, allow access
     return response;
   }
 
   // User is authenticated
-  if (isPublicRoute) {
-    // Redirect authenticated users away from login/signup
-    return NextResponse.redirect(new URL('/', request.url));
+  if (isAuthRoute && !pathname.includes('/callback') && !pathname.includes('/reset-password')) {
+    // Redirect authenticated users away from login/signup pages to dashboard
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Check if onboarding is completed (skip for onboarding route)
-  if (!isAuthOnlyRoute) {
+  // Check if onboarding is completed for app routes
+  if (isAppRoute) {
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('onboarding_completed')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
 
-      // If onboarding not completed, redirect to onboarding
-      if (!profile?.onboarding_completed) {
-        return NextResponse.redirect(new URL('/onboarding', request.url));
+      // If profile doesn't exist or onboarding not completed, redirect to onboarding
+      if (error || !profile || !profile.onboarding_completed) {
+        // Only redirect if not already on onboarding page
+        if (!isAuthOnlyRoute) {
+          return NextResponse.redirect(new URL('/onboarding', request.url));
+        }
       }
     } catch {
-      // If profile doesn't exist, redirect to onboarding
+      // On error, redirect to onboarding
       return NextResponse.redirect(new URL('/onboarding', request.url));
     }
   }

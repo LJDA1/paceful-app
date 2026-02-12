@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { DEMO_USER_ID } from '@/lib/constants';
+import { useUser } from '@/hooks/useUser';
 import {
   JournalEntryForm,
   JournalEntriesList,
@@ -97,17 +99,15 @@ function QuickStats({ stats, isLoading }: { stats: JournalStats; isLoading: bool
 }
 
 // ============================================================================
-// Writing Mode Toggle
+// Header Component
 // ============================================================================
 
-function WritingModeHeader({
+function JournalHeader({
   isWriting,
   onToggle,
-  hasEntries,
 }: {
   isWriting: boolean;
   onToggle: () => void;
-  hasEntries: boolean;
 }) {
   return (
     <header className="bg-white border-b border-stone-200 sticky top-0 z-20">
@@ -120,30 +120,27 @@ function WritingModeHeader({
             </p>
           </div>
 
-          <button
-            onClick={onToggle}
-            className={`px-5 py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-sm ${
-              isWriting
-                ? 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600'
-            }`}
-          >
-            {isWriting ? (
-              <>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-                Cancel
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                New Entry
-              </>
-            )}
-          </button>
+          {isWriting ? (
+            <button
+              onClick={onToggle}
+              className="px-5 py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-sm bg-stone-100 text-stone-700 hover:bg-stone-200"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+              Cancel
+            </button>
+          ) : (
+            <Link
+              href="/journal/new"
+              className="px-5 py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-sm bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New Entry
+            </Link>
+          )}
         </div>
       </div>
     </header>
@@ -154,7 +151,7 @@ function WritingModeHeader({
 // Empty State for New Users
 // ============================================================================
 
-function NewUserWelcome({ onStartWriting }: { onStartWriting: () => void }) {
+function NewUserWelcome() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 rounded-3xl p-8 sm:p-12 text-center border border-amber-100">
@@ -187,32 +184,44 @@ function NewUserWelcome({ onStartWriting }: { onStartWriting: () => void }) {
         {/* Benefits */}
         <div className="grid sm:grid-cols-3 gap-4 mb-8 text-left">
           <div className="bg-white/60 rounded-xl p-4">
-            <span className="text-2xl mb-2 block">🧠</span>
+            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mb-2">
+              <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
             <h3 className="font-medium text-stone-800 mb-1">Process Emotions</h3>
             <p className="text-sm text-stone-500">Writing helps you understand and release difficult feelings.</p>
           </div>
           <div className="bg-white/60 rounded-xl p-4">
-            <span className="text-2xl mb-2 block">📈</span>
+            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mb-2">
+              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
             <h3 className="font-medium text-stone-800 mb-1">Track Progress</h3>
             <p className="text-sm text-stone-500">See your healing journey unfold over time.</p>
           </div>
           <div className="bg-white/60 rounded-xl p-4">
-            <span className="text-2xl mb-2 block">💡</span>
+            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mb-2">
+              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
             <h3 className="font-medium text-stone-800 mb-1">Gain Insights</h3>
             <p className="text-sm text-stone-500">AI analysis reveals patterns in your emotional growth.</p>
           </div>
         </div>
 
         {/* CTA */}
-        <button
-          onClick={onStartWriting}
-          className="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25 flex items-center gap-2 mx-auto"
+        <Link
+          href="/journal/new"
+          className="inline-flex px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25 items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
           </svg>
           Write Your First Entry
-        </button>
+        </Link>
       </div>
     </div>
   );
@@ -223,6 +232,9 @@ function NewUserWelcome({ onStartWriting }: { onStartWriting: () => void }) {
 // ============================================================================
 
 export default function JournalPage() {
+  const router = useRouter();
+  const { userId, loading: userLoading, isAuthenticated } = useUser();
+
   // Data state
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [stats, setStats] = useState<JournalStats>({
@@ -239,6 +251,13 @@ export default function JournalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isWriting, setIsWriting] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<JournalPrompt | null>(null);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!userLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [userLoading, isAuthenticated, router]);
 
   // Calculate streak from entries
   const calculateStreak = useCallback((entries: JournalEntry[]): number => {
@@ -281,13 +300,15 @@ export default function JournalPage() {
   // Fetch data
   useEffect(() => {
     async function fetchData() {
+      if (!userId) return;
+
       setIsLoading(true);
 
       // Fetch entries
       const { data: entriesData } = await supabase
         .from('journal_entries')
         .select('id, entry_title, entry_content, sentiment_score, emotion_primary, word_count, created_at')
-        .eq('user_id', DEMO_USER_ID)
+        .eq('user_id', userId)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -312,7 +333,7 @@ export default function JournalPage() {
       const { data: profileData } = await supabase
         .from('profiles')
         .select('current_stage')
-        .eq('id', DEMO_USER_ID)
+        .eq('user_id', userId)
         .single();
 
       if (profileData) {
@@ -323,7 +344,7 @@ export default function JournalPage() {
     }
 
     fetchData();
-  }, [calculateStreak]);
+  }, [userId, calculateStreak]);
 
   // Handle entry saved
   const handleEntrySaved = useCallback((savedEntry: SavedEntry) => {
@@ -402,27 +423,26 @@ export default function JournalPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50/30 pb-24 md:pb-8">
       {/* Header */}
-      <WritingModeHeader
+      <JournalHeader
         isWriting={isWriting}
         onToggle={() => {
           setIsWriting(!isWriting);
           if (isWriting) setSelectedPrompt(null);
         }}
-        hasEntries={entries.length > 0}
       />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-8">
         {/* New User Welcome */}
         {isNewUser && !isWriting && (
-          <NewUserWelcome onStartWriting={() => setIsWriting(true)} />
+          <NewUserWelcome />
         )}
 
         {/* Writing Mode */}
-        {isWriting && (
+        {isWriting && userId && (
           <section className="bg-white rounded-2xl shadow-sm border border-stone-100 p-4 sm:p-6">
             <JournalEntryForm
-              userId={DEMO_USER_ID}
+              userId={userId}
               onSave={handleEntrySaved}
               onCancel={() => {
                 setIsWriting(false);

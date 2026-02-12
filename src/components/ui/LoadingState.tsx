@@ -68,15 +68,17 @@ export function SkeletonList({ items = 3 }: { items?: number }) {
 }
 
 export function SkeletonChart() {
+  // Fixed heights to avoid hydration mismatch
+  const heights = [65, 80, 45, 90, 55, 75, 60];
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-200 animate-pulse">
       <div className="h-4 bg-stone-200 rounded w-1/4 mb-6" />
       <div className="flex items-end gap-2 h-32">
-        {Array.from({ length: 7 }).map((_, i) => (
+        {heights.map((height, i) => (
           <div
             key={i}
             className="flex-1 bg-stone-200 rounded-t"
-            style={{ height: `${30 + Math.random() * 70}%` }}
+            style={{ height: `${height}%` }}
           />
         ))}
       </div>

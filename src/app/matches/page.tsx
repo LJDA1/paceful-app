@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { DEMO_USER_ID } from '@/lib/constants';
+import { useUser } from '@/hooks/useUser';
 
 interface Match {
   id: string;
@@ -25,16 +26,27 @@ const stageConfig: Record<string, { label: string; color: string; bg: string }> 
 };
 
 export default function MatchesPage() {
+  const router = useRouter();
+  const { userId, loading: userLoading, isAuthenticated } = useUser();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Redirect if not authenticated
   useEffect(() => {
+    if (!userLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [userLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!userId) return;
+
     async function fetchMatches() {
       // Fetch matches where user is either user1 or user2
       const { data: matchData } = await supabase
         .from('active_matches')
         .select('id, matched_at, last_message_at, match_health_score, user1_id, user2_id')
-        .or(`user1_id.eq.${DEMO_USER_ID},user2_id.eq.${DEMO_USER_ID}`)
+        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
         .eq('is_active', true)
         .order('last_message_at', { ascending: false, nullsFirst: false });
 
@@ -46,7 +58,7 @@ export default function MatchesPage() {
 
       // Get the other user's ID for each match
       const otherUserIds = matchData.map((m) =>
-        m.user1_id === DEMO_USER_ID ? m.user2_id : m.user1_id
+        m.user1_id === userId ? m.user2_id : m.user1_id
       );
 
       // Fetch profiles for other users
@@ -64,7 +76,7 @@ export default function MatchesPage() {
 
       // Build matches with other user info
       const enrichedMatches: Match[] = matchData.map((match) => {
-        const otherUserId = match.user1_id === DEMO_USER_ID ? match.user2_id : match.user1_id;
+        const otherUserId = match.user1_id === userId ? match.user2_id : match.user1_id;
         const profile = profiles?.find((p) => p.user_id === otherUserId);
         const ers = ersScores?.find((e) => e.user_id === otherUserId);
 
@@ -88,7 +100,7 @@ export default function MatchesPage() {
     }
 
     fetchMatches();
-  }, []);
+  }, [userId]);
 
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
