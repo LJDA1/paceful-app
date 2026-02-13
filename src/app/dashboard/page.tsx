@@ -243,6 +243,9 @@ export default function DashboardPage() {
   const [showMilestoneToast, setShowMilestoneToast] = useState(false);
   const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
   const [showWeeklyRecap, setShowWeeklyRecap] = useState(false);
+  const [showReadinessCheck, setShowReadinessCheck] = useState(false);
+  const [readinessSubmitted, setReadinessSubmitted] = useState(false);
+  const [submittingReadiness, setSubmittingReadiness] = useState(false);
   const [weeklyRecapData, setWeeklyRecapData] = useState<{
     daysLogged: number;
     avgMood: number;
@@ -461,6 +464,55 @@ export default function DashboardPage() {
       trackEvent('page_view', { page: 'dashboard' });
     }
   }, [userId, fetchDashboardData]);
+
+  // Check if we should show readiness check (once per week)
+  useEffect(() => {
+    if (!userId || !isAuthenticated || isLoading) return;
+
+    const lastReadinessKey = 'paceful_last_readiness_check';
+    const lastCheck = localStorage.getItem(lastReadinessKey);
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+    // Only show if it's been at least a week and user is not brand new
+    if ((!lastCheck || parseInt(lastCheck) < oneWeekAgo) && ersData) {
+      // Delay to not overlap with other modals
+      const timer = setTimeout(() => {
+        setShowReadinessCheck(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [userId, isAuthenticated, isLoading, ersData]);
+
+  const handleReadinessResponse = async (readiness: string) => {
+    setSubmittingReadiness(true);
+    try {
+      const response = await fetch('/api/trajectory/self-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ readiness }),
+      });
+
+      if (response.ok) {
+        setReadinessSubmitted(true);
+        localStorage.setItem('paceful_last_readiness_check', Date.now().toString());
+
+        // Hide card after showing thanks
+        setTimeout(() => {
+          setShowReadinessCheck(false);
+          setReadinessSubmitted(false);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Failed to submit readiness:', error);
+    } finally {
+      setSubmittingReadiness(false);
+    }
+  };
+
+  const handleDismissReadinessCheck = () => {
+    setShowReadinessCheck(false);
+    // Don't update localStorage - will ask again next session
+  };
 
   // Fetch AI insights (once per day, cached in localStorage)
   useEffect(() => {
@@ -956,6 +1008,65 @@ export default function DashboardPage() {
         {ersData && (
           <div className="mb-6">
             <CommunityInsights />
+          </div>
+        )}
+
+        {/* Readiness Check Card */}
+        {showReadinessCheck && ersData && (
+          <div
+            className="mb-6 rounded-2xl p-5 animate-fadeIn"
+            style={{ background: 'var(--bg-warm)', border: '1px solid var(--border-light)' }}
+          >
+            {readinessSubmitted ? (
+              <div className="text-center py-2">
+                <p className="text-[15px] font-medium" style={{ color: 'var(--primary)' }}>
+                  Thanks for sharing
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-[15px] font-semibold" style={{ color: 'var(--text)' }}>
+                    Quick check
+                  </h3>
+                  <button
+                    onClick={handleDismissReadinessCheck}
+                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: 'var(--bg-card)' }}
+                    aria-label="Dismiss"
+                  >
+                    <svg className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-[14px] mb-4" style={{ color: 'var(--text-sec)' }}>
+                  How ready do you feel to move forward emotionally?
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: 'Not at all', value: 'not_at_all' },
+                    { label: 'A little', value: 'a_little' },
+                    { label: 'Mostly', value: 'mostly' },
+                    { label: 'Completely', value: 'completely' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => handleReadinessResponse(option.value)}
+                      disabled={submittingReadiness}
+                      className="px-4 py-2 rounded-full text-[13px] font-medium transition-all disabled:opacity-50"
+                      style={{
+                        background: 'var(--bg-card)',
+                        color: 'var(--text-sec)',
+                        border: '1px solid var(--border-light)',
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 

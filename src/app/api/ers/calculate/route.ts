@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateAndStoreERSScore } from '@/lib/ers-calculator';
+import { createClient } from '@supabase/supabase-js';
+import { captureTrajectorySnapshotAsync } from '@/lib/trajectory-snapshot';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +12,17 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await calculateAndStoreERSScore(userId);
+
+    // Fire-and-forget: Capture trajectory snapshot for training data
+    try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      captureTrajectorySnapshotAsync(userId, supabase);
+    } catch {
+      // Silent failure
+    }
 
     return NextResponse.json({
       success: true,
