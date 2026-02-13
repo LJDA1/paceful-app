@@ -126,8 +126,18 @@ function Sidebar({ activeSection }: { activeSection: string }) {
     { id: 'getting-started', label: 'Getting Started', icon: '🚀' },
     { id: 'authentication', label: 'Authentication', icon: '🔐' },
     {
-      id: 'endpoints',
-      label: 'Endpoints',
+      id: 'ers-endpoints',
+      label: 'ERS Endpoints',
+      icon: '📊',
+      children: [
+        { id: 'endpoint-ers-single', label: 'GET /ers/:userId', method: 'GET' as const },
+        { id: 'endpoint-ers-batch', label: 'GET /ers/batch', method: 'GET' as const },
+        { id: 'endpoint-analytics', label: 'GET /analytics/summary', method: 'GET' as const },
+      ]
+    },
+    {
+      id: 'prediction-endpoints',
+      label: 'Prediction Endpoints',
       icon: '📡',
       children: [
         { id: 'endpoint-aggregate', label: 'GET /aggregate', method: 'GET' as const },
@@ -192,9 +202,10 @@ export default function ApiDocsPage() {
   useEffect(() => {
     const handleScroll = () => {
       const sections = [
-        'getting-started', 'authentication', 'endpoint-aggregate',
-        'endpoint-individual', 'endpoint-health', 'code-examples',
-        'error-handling', 'rate-limits', 'support'
+        'getting-started', 'authentication',
+        'endpoint-ers-single', 'endpoint-ers-batch', 'endpoint-analytics',
+        'endpoint-aggregate', 'endpoint-individual', 'endpoint-health',
+        'code-examples', 'error-handling', 'rate-limits', 'support'
       ];
 
       for (const id of sections) {
@@ -320,6 +331,182 @@ export default function ApiDocsPage() {
                 </div>
               </div>
             </section>
+
+            {/* ============================================================ */}
+            {/* ERS ENDPOINTS */}
+            {/* ============================================================ */}
+            <section id="endpoint-ers-single" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-lg font-mono text-slate-700">/api/v1/ers/:userId</code>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Get User ERS</h2>
+              <p className="text-slate-600 mb-6">
+                Retrieve the latest Emotional Readiness Score for a specific user. Returns
+                score, stage, dimensions, and trend data.
+              </p>
+
+              <h3 className="text-lg font-semibold text-slate-900 mb-3">Path Parameters</h3>
+              <ParamTable params={[
+                { name: 'userId', type: 'string (UUID)', required: true, description: 'Unique identifier for the user' },
+              ]} />
+
+              <div className="mt-4 mb-6 p-3 bg-slate-50 rounded-lg">
+                <span className="text-sm text-slate-600">Required permission: </span>
+                <code className="text-sm bg-slate-200 px-1.5 py-0.5 rounded">read_ers</code>
+              </div>
+
+              <h3 className="text-lg font-semibold text-slate-900 mt-8 mb-3">Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/ers/550e8400-e29b-41d4-a716-446655440000" \\
+  -H "Authorization: Bearer pk_your_api_key"`}
+                language="bash"
+              />
+
+              <h3 className="text-lg font-semibold text-slate-900 mt-8 mb-3">Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-sm text-slate-600">Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "ers_score": 42,
+  "ers_stage": "healing",
+  "dimensions": {
+    "emotional_stability": 52,
+    "self_reflection": 45,
+    "engagement_consistency": 38,
+    "trust_openness": 41,
+    "recovery_behavior": 44,
+    "social_readiness": 35
+  },
+  "calculated_at": "2026-02-13T10:30:00Z",
+  "trend": {
+    "direction": "improving",
+    "weekly_change": 3.2
+  }
+}`}
+                language="json"
+                title="Response Body"
+              />
+            </section>
+
+            <section id="endpoint-ers-batch" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-lg font-mono text-slate-700">/api/v1/ers/batch</code>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Batch ERS Lookup</h2>
+              <p className="text-slate-600 mb-6">
+                Retrieve ERS scores for multiple users in a single request. Useful for dating apps
+                checking compatibility across multiple users at once.
+              </p>
+
+              <h3 className="text-lg font-semibold text-slate-900 mb-3">Query Parameters</h3>
+              <ParamTable params={[
+                { name: 'user_ids', type: 'string', required: true, description: 'Comma-separated list of user IDs (max 50)' },
+              ]} />
+
+              <div className="mt-4 mb-6 p-3 bg-slate-50 rounded-lg">
+                <span className="text-sm text-slate-600">Required permission: </span>
+                <code className="text-sm bg-slate-200 px-1.5 py-0.5 rounded">read_ers</code>
+              </div>
+
+              <h3 className="text-lg font-semibold text-slate-900 mt-8 mb-3">Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/ers/batch?user_ids=abc123,xyz789,def456" \\
+  -H "Authorization: Bearer pk_your_api_key"`}
+                language="bash"
+              />
+
+              <h3 className="text-lg font-semibold text-slate-900 mt-8 mb-3">Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-sm text-slate-600">Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "results": [
+    {
+      "user_id": "abc123",
+      "found": true,
+      "ers_score": 42,
+      "ers_stage": "healing",
+      "dimensions": { ... },
+      "calculated_at": "2026-02-13T10:30:00Z",
+      "trend": {
+        "direction": "improving",
+        "weekly_change": 3.2
+      }
+    },
+    {
+      "user_id": "xyz789",
+      "found": false,
+      "ers_score": null,
+      "ers_stage": null,
+      "dimensions": null,
+      "calculated_at": null,
+      "trend": null
+    }
+  ],
+  "total_requested": 3,
+  "total_found": 2
+}`}
+                language="json"
+                title="Response Body"
+              />
+            </section>
+
+            <section id="endpoint-analytics" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-lg font-mono text-slate-700">/api/v1/analytics/summary</code>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Analytics Summary</h2>
+              <p className="text-slate-600 mb-6">
+                Retrieve anonymized aggregate statistics across all users. No individual user data
+                is exposed — only summary metrics for your integration dashboards.
+              </p>
+
+              <div className="mt-4 mb-6 p-3 bg-slate-50 rounded-lg">
+                <span className="text-sm text-slate-600">Required permission: </span>
+                <code className="text-sm bg-slate-200 px-1.5 py-0.5 rounded">read_analytics</code>
+              </div>
+
+              <h3 className="text-lg font-semibold text-slate-900 mt-8 mb-3">Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/analytics/summary" \\
+  -H "Authorization: Bearer pk_your_api_key"`}
+                language="bash"
+              />
+
+              <h3 className="text-lg font-semibold text-slate-900 mt-8 mb-3">Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-sm text-slate-600">Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "total_active_users": 1250,
+  "average_ers_score": 48.3,
+  "stage_distribution": {
+    "healing": 42,
+    "rebuilding": 35,
+    "ready": 23
+  },
+  "average_days_to_rebuilding": null,
+  "data_points_collected": 15420,
+  "generated_at": "2026-02-13T10:30:00Z"
+}`}
+                language="json"
+                title="Response Body"
+              />
+            </section>
+
+            {/* ============================================================ */}
+            {/* PREDICTION ENDPOINTS */}
+            {/* ============================================================ */}
 
             {/* ============================================================ */}
             {/* ENDPOINT: AGGREGATE */}
