@@ -14,11 +14,42 @@ const ADMIN_EMAILS = ['lewisjohnson004@gmail.com'];
 // Types
 // ============================================================================
 
-interface OverviewStats {
+interface KeyMetrics {
   totalUsers: number;
-  activeUsers7d: number;
-  totalMoodEntries: number;
-  totalJournalEntries: number;
+  dau: number;
+  wau: number;
+  mau: number;
+}
+
+interface RetentionData {
+  d1: number;
+  d7: number;
+  d30: number;
+  curve: { day: number; percent: number }[];
+}
+
+interface FeatureAdoption {
+  feature: string;
+  users: number;
+  percentOfMAU: number;
+}
+
+interface EngagementDepth {
+  avgMoodsPerUserPerWeek: number;
+  avgJournalsPerUserPerWeek: number;
+  avgWordsPerJournal: number;
+  avgSessionsPerUserPerWeek: number;
+  mostActiveHour: number;
+  mostActiveDay: string;
+}
+
+interface UserJourney {
+  signedUp: number;
+  completedOnboarding: number;
+  loggedFirstMood: number;
+  wroteFirstJournal: number;
+  returnedDay7: number;
+  stillActive30: number;
 }
 
 interface ERSDistribution {
@@ -27,32 +58,11 @@ interface ERSDistribution {
   ready: number;
 }
 
-interface EngagementMetrics {
-  avgMoodsPerUserPerWeek: number;
-  avgJournalsPerUserPerWeek: number;
-  avgWordsPerJournal: number;
-  mostActiveHour: number;
-}
-
 interface ActivityLog {
   id: string;
   user_id: string;
   event_type: string;
   created_at: string;
-}
-
-interface ApiKeyInfo {
-  id: string;
-  partner_name: string;
-  last_used_at: string | null;
-  is_active: boolean;
-}
-
-interface ConversionFunnel {
-  landingViews: number;
-  ctaClicks: number;
-  signupPageViews: number;
-  signupsCompleted: number;
 }
 
 // ============================================================================
@@ -63,21 +73,230 @@ function StatCard({
   label,
   value,
   subtext,
+  highlight,
 }: {
   label: string;
   value: string | number;
   subtext?: string;
+  highlight?: 'green' | 'amber' | 'rose';
 }) {
+  const highlightColors = {
+    green: 'var(--primary)',
+    amber: '#D4973B',
+    rose: '#B86B64',
+  };
+
   return (
     <div className="bg-white rounded-2xl p-5 border border-stone-200">
       <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
       <p
         className="text-3xl font-bold"
-        style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+        style={{
+          fontFamily: 'var(--font-fraunces), Fraunces, serif',
+          color: highlight ? highlightColors[highlight] : 'var(--text)',
+        }}
       >
         {value}
       </p>
       {subtext && <p className="text-xs mt-1" style={{ color: 'var(--text-faint)' }}>{subtext}</p>}
+    </div>
+  );
+}
+
+// ============================================================================
+// Retention Card
+// ============================================================================
+
+function RetentionCard({ label, value }: { label: string; value: number }) {
+  const color = value >= 50 ? 'green' : value >= 25 ? 'amber' : 'rose';
+  const colorMap = {
+    green: 'var(--primary)',
+    amber: '#D4973B',
+    rose: '#B86B64',
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-5 border border-stone-200 text-center">
+      <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>{label}</p>
+      <p
+        className="text-4xl font-bold"
+        style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: colorMap[color] }}
+      >
+        {value}%
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
+// Retention Curve Chart
+// ============================================================================
+
+function RetentionCurve({ data }: { data: { day: number; percent: number }[] }) {
+  if (data.length === 0) return null;
+
+  const width = 400;
+  const height = 150;
+  const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  const maxDay = Math.max(...data.map(d => d.day), 30);
+  const xScale = (day: number) => (day / maxDay) * chartWidth + padding.left;
+  const yScale = (percent: number) => chartHeight - (percent / 100) * chartHeight + padding.top;
+
+  const pathD = data
+    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(d.day)} ${yScale(d.percent)}`)
+    .join(' ');
+
+  const areaD = pathD + ` L ${xScale(data[data.length - 1].day)} ${yScale(0)} L ${xScale(data[0].day)} ${yScale(0)} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full max-w-md">
+      {/* Grid lines */}
+      {[0, 25, 50, 75, 100].map(y => (
+        <g key={y}>
+          <line
+            x1={padding.left}
+            y1={yScale(y)}
+            x2={width - padding.right}
+            y2={yScale(y)}
+            stroke="var(--border-light)"
+            strokeDasharray="4,4"
+          />
+          <text
+            x={padding.left - 8}
+            y={yScale(y) + 4}
+            textAnchor="end"
+            fontSize="10"
+            fill="var(--text-muted)"
+          >
+            {y}%
+          </text>
+        </g>
+      ))}
+
+      {/* X axis labels */}
+      {[1, 7, 14, 30].map(day => (
+        <text
+          key={day}
+          x={xScale(day)}
+          y={height - 8}
+          textAnchor="middle"
+          fontSize="10"
+          fill="var(--text-muted)"
+        >
+          D{day}
+        </text>
+      ))}
+
+      {/* Area fill */}
+      <path d={areaD} fill="rgba(91,138,114,0.15)" />
+
+      {/* Line */}
+      <path d={pathD} fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" />
+
+      {/* Data points */}
+      {data.map((d, i) => (
+        <circle key={i} cx={xScale(d.day)} cy={yScale(d.percent)} r="4" fill="var(--primary)" />
+      ))}
+    </svg>
+  );
+}
+
+// ============================================================================
+// Feature Adoption Bar
+// ============================================================================
+
+function FeatureAdoptionBar({ features }: { features: FeatureAdoption[] }) {
+  const maxPercent = Math.max(...features.map(f => f.percentOfMAU), 1);
+
+  return (
+    <div className="space-y-4">
+      {features.map((feature) => (
+        <div key={feature.feature}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
+              {feature.feature}
+            </span>
+            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              {feature.users} users ({feature.percentOfMAU}%)
+            </span>
+          </div>
+          <div className="h-3 rounded-full overflow-hidden" style={{ background: 'var(--border-light)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${(feature.percentOfMAU / maxPercent) * 100}%`,
+                background: 'linear-gradient(90deg, var(--primary-light) 0%, var(--primary) 100%)',
+                minWidth: feature.percentOfMAU > 0 ? '8px' : '0',
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// User Journey Funnel
+// ============================================================================
+
+function UserJourneyFunnel({ journey }: { journey: UserJourney }) {
+  const steps = [
+    { label: 'Signed up', value: journey.signedUp, color: '#5E8DB0' },
+    { label: 'Completed onboarding', value: journey.completedOnboarding, color: '#7E71B5' },
+    { label: 'Logged first mood', value: journey.loggedFirstMood, color: '#D4973B' },
+    { label: 'Wrote first journal', value: journey.wroteFirstJournal, color: '#B86B64' },
+    { label: 'Returned day 7', value: journey.returnedDay7, color: '#7BA896' },
+    { label: 'Still active (30d)', value: journey.stillActive30, color: '#5B8A72' },
+  ];
+
+  const maxValue = Math.max(journey.signedUp, 1);
+
+  const calcDropoff = (current: number, previous: number) => {
+    if (previous === 0) return null;
+    return Math.round((current / previous) * 100);
+  };
+
+  return (
+    <div className="space-y-3">
+      {steps.map((step, idx) => {
+        const widthPct = Math.max((step.value / maxValue) * 100, 8);
+        const prevValue = idx > 0 ? steps[idx - 1].value : step.value;
+        const convRate = idx > 0 ? calcDropoff(step.value, prevValue) : null;
+
+        return (
+          <div key={step.label}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm" style={{ color: 'var(--text)' }}>
+                {step.label}
+              </span>
+              <div className="flex items-center gap-2">
+                {convRate !== null && (
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{ background: 'var(--bg-warm)', color: 'var(--text-muted)' }}
+                  >
+                    {convRate}%
+                  </span>
+                )}
+                <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+                  {step.value}
+                </span>
+              </div>
+            </div>
+            <div
+              className="h-6 rounded-lg transition-all duration-500 mx-auto"
+              style={{
+                width: `${widthPct}%`,
+                background: step.color,
+              }}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -94,35 +313,40 @@ function ERSDistributionBar({ distribution }: { distribution: ERSDistribution })
 
   return (
     <div className="bg-white rounded-2xl p-5 border border-stone-200">
-      <h3 className="font-semibold mb-4" style={{ color: 'var(--text)' }}>ERS Distribution</h3>
+      <h3
+        className="font-semibold mb-4"
+        style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+      >
+        ERS Distribution
+      </h3>
 
       {total === 0 ? (
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No ERS data available</p>
       ) : (
         <>
           <div className="h-6 rounded-lg overflow-hidden flex mb-4">
-            <div className="bg-amber-500 transition-all" style={{ width: `${healingPct}%` }} />
-            <div className="bg-paceful-calm transition-all" style={{ width: `${rebuildingPct}%` }} />
-            <div className="bg-paceful-primary transition-all" style={{ width: `${readyPct}%` }} />
+            <div className="transition-all" style={{ width: `${healingPct}%`, background: '#7E71B5' }} />
+            <div className="transition-all" style={{ width: `${rebuildingPct}%`, background: 'var(--calm)' }} />
+            <div className="transition-all" style={{ width: `${readyPct}%`, background: 'var(--primary)' }} />
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-amber-500" />
+              <div className="w-3 h-3 rounded" style={{ background: '#7E71B5' }} />
               <div>
                 <p className="font-medium" style={{ color: 'var(--text)' }}>{healingPct.toFixed(0)}%</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Healing ({distribution.healing})</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-paceful-calm" />
+              <div className="w-3 h-3 rounded" style={{ background: 'var(--calm)' }} />
               <div>
                 <p className="font-medium" style={{ color: 'var(--text)' }}>{rebuildingPct.toFixed(0)}%</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Rebuilding ({distribution.rebuilding})</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-paceful-primary" />
+              <div className="w-3 h-3 rounded" style={{ background: 'var(--primary)' }} />
               <div>
                 <p className="font-medium" style={{ color: 'var(--text)' }}>{readyPct.toFixed(0)}%</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Ready ({distribution.ready})</p>
@@ -157,7 +381,12 @@ function ActivityFeed({ activities }: { activities: ActivityLog[] }) {
 
   return (
     <div className="bg-white rounded-2xl p-5 border border-stone-200">
-      <h3 className="font-semibold mb-4" style={{ color: 'var(--text)' }}>Recent Activity</h3>
+      <h3
+        className="font-semibold mb-4"
+        style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+      >
+        Recent Activity
+      </h3>
 
       {activities.length === 0 ? (
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No recent activity</p>
@@ -172,7 +401,7 @@ function ActivityFeed({ activities }: { activities: ActivityLog[] }) {
               </tr>
             </thead>
             <tbody>
-              {activities.map((activity, idx) => (
+              {activities.slice(0, 10).map((activity, idx) => (
                 <tr
                   key={activity.id}
                   className={idx % 2 === 0 ? '' : 'bg-stone-50'}
@@ -198,99 +427,46 @@ function ActivityFeed({ activities }: { activities: ActivityLog[] }) {
 }
 
 // ============================================================================
-// Conversion Funnel
-// ============================================================================
-
-function ConversionFunnel({ funnel }: { funnel: ConversionFunnel }) {
-  const steps = [
-    { label: 'Landing Views', value: funnel.landingViews, color: '#6366f1' },
-    { label: 'CTA Clicks', value: funnel.ctaClicks, color: '#8b5cf6' },
-    { label: 'Signup Page Views', value: funnel.signupPageViews, color: '#a855f7' },
-    { label: 'Signups Completed', value: funnel.signupsCompleted, color: '#22c55e' },
-  ];
-
-  const maxValue = Math.max(funnel.landingViews, 1);
-
-  const calcRate = (current: number, previous: number) => {
-    if (previous === 0) return '--';
-    return `${((current / previous) * 100).toFixed(1)}%`;
-  };
-
-  return (
-    <div className="bg-white rounded-3xl p-6 border border-stone-200">
-      <h3 className="font-semibold mb-6" style={{ color: 'var(--text)' }}>Conversion Funnel</h3>
-
-      {funnel.landingViews === 0 ? (
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No conversion data available yet</p>
-      ) : (
-        <div className="space-y-4">
-          {steps.map((step, idx) => {
-            const widthPct = Math.max((step.value / maxValue) * 100, 5);
-            const prevValue = idx > 0 ? steps[idx - 1].value : step.value;
-            const convRate = idx > 0 ? calcRate(step.value, prevValue) : null;
-
-            return (
-              <div key={step.label}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                    {step.label}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    {convRate && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-stone-100" style={{ color: 'var(--text-muted)' }}>
-                        {convRate}
-                      </span>
-                    )}
-                    <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                      {step.value.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className="h-8 rounded-lg transition-all duration-500"
-                  style={{
-                    width: `${widthPct}%`,
-                    background: step.color,
-                    minWidth: '40px',
-                  }}
-                />
-              </div>
-            );
-          })}
-
-          {/* Overall conversion rate */}
-          <div className="pt-4 mt-4 border-t border-stone-100">
-            <div className="flex items-center justify-between">
-              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                Overall Conversion Rate
-              </span>
-              <span
-                className="text-lg font-bold"
-                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: '#22c55e' }}
-              >
-                {calcRate(funnel.signupsCompleted, funnel.landingViews)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
 // Main Dashboard
 // ============================================================================
 
 function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [hasEnoughData, setHasEnoughData] = useState(true);
 
-  const [overview, setOverview] = useState<OverviewStats>({
+  const [keyMetrics, setKeyMetrics] = useState<KeyMetrics>({
     totalUsers: 0,
-    activeUsers7d: 0,
-    totalMoodEntries: 0,
-    totalJournalEntries: 0,
+    dau: 0,
+    wau: 0,
+    mau: 0,
+  });
+
+  const [retention, setRetention] = useState<RetentionData>({
+    d1: 0,
+    d7: 0,
+    d30: 0,
+    curve: [],
+  });
+
+  const [featureAdoption, setFeatureAdoption] = useState<FeatureAdoption[]>([]);
+
+  const [engagement, setEngagement] = useState<EngagementDepth>({
+    avgMoodsPerUserPerWeek: 0,
+    avgJournalsPerUserPerWeek: 0,
+    avgWordsPerJournal: 0,
+    avgSessionsPerUserPerWeek: 0,
+    mostActiveHour: 12,
+    mostActiveDay: 'Monday',
+  });
+
+  const [userJourney, setUserJourney] = useState<UserJourney>({
+    signedUp: 0,
+    completedOnboarding: 0,
+    loggedFirstMood: 0,
+    wroteFirstJournal: 0,
+    returnedDay7: 0,
+    stillActive30: 0,
   });
 
   const [ersDistribution, setErsDistribution] = useState<ERSDistribution>({
@@ -299,21 +475,7 @@ function AnalyticsDashboard() {
     ready: 0,
   });
 
-  const [engagement, setEngagement] = useState<EngagementMetrics>({
-    avgMoodsPerUserPerWeek: 0,
-    avgJournalsPerUserPerWeek: 0,
-    avgWordsPerJournal: 0,
-    mostActiveHour: 12,
-  });
-
   const [activities, setActivities] = useState<ActivityLog[]>([]);
-  const [apiKeys, setApiKeys] = useState<ApiKeyInfo[]>([]);
-  const [conversionFunnel, setConversionFunnel] = useState<ConversionFunnel>({
-    landingViews: 0,
-    ctaClicks: 0,
-    signupPageViews: 0,
-    signupsCompleted: 0,
-  });
 
   const supabase = createClient();
 
@@ -321,37 +483,254 @@ function AnalyticsDashboard() {
     setLoading(true);
 
     try {
-      // 1. Overview Stats
-      const [
-        { count: totalUsers },
-        { count: totalMoodEntries },
-        { count: totalJournalEntries },
-      ] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('mood_logs').select('*', { count: 'exact', head: true }),
-        supabase.from('journal_entries').select('*', { count: 'exact', head: true }),
-      ]);
-
-      // Active users in last 7 days
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: activeData } = await supabase
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      // ========== 1. KEY METRICS ==========
+      const { count: totalUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Check if we have enough data
+      if ((totalUsers || 0) < 5) {
+        setHasEnoughData(false);
+        setKeyMetrics({ totalUsers: totalUsers || 0, dau: 0, wau: 0, mau: 0 });
+        setLoading(false);
+        return;
+      }
+      setHasEnoughData(true);
+
+      // DAU
+      const { data: dauData } = await supabase
         .from('activity_logs')
         .select('user_id')
+        .gte('created_at', todayStart);
+      const dau = new Set((dauData || []).map(a => a.user_id)).size;
+
+      // WAU
+      const { data: wauData } = await supabase
+        .from('activity_logs')
+        .select('user_id, created_at')
         .gte('created_at', sevenDaysAgo);
+      const wau = new Set((wauData || []).map(a => a.user_id)).size;
 
-      const activeUsers7d = new Set((activeData || []).map(a => a.user_id)).size;
+      // MAU
+      const { data: mauData } = await supabase
+        .from('activity_logs')
+        .select('user_id')
+        .gte('created_at', thirtyDaysAgo);
+      const mau = new Set((mauData || []).map(a => a.user_id)).size;
 
-      setOverview({
-        totalUsers: totalUsers || 0,
-        activeUsers7d,
-        totalMoodEntries: totalMoodEntries || 0,
-        totalJournalEntries: totalJournalEntries || 0,
+      setKeyMetrics({ totalUsers: totalUsers || 0, dau, wau, mau });
+
+      // ========== 2. RETENTION ==========
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, created_at, onboarding_completed');
+
+      const { data: allActivityLogs } = await supabase
+        .from('activity_logs')
+        .select('user_id, created_at');
+
+      // Build activity map: user_id -> set of dates (YYYY-MM-DD)
+      const userActivityDates = new Map<string, Set<string>>();
+      (allActivityLogs || []).forEach(log => {
+        const dateStr = new Date(log.created_at).toISOString().split('T')[0];
+        if (!userActivityDates.has(log.user_id)) {
+          userActivityDates.set(log.user_id, new Set());
+        }
+        userActivityDates.get(log.user_id)!.add(dateStr);
       });
 
-      // 2. ERS Distribution
+      // Calculate retention
+      let d1Count = 0, d7Count = 0, d30Count = 0;
+      const eligibleD1 = (profiles || []).filter(p => {
+        const signupDate = new Date(p.created_at);
+        return Date.now() - signupDate.getTime() >= 1 * 24 * 60 * 60 * 1000;
+      });
+      const eligibleD7 = (profiles || []).filter(p => {
+        const signupDate = new Date(p.created_at);
+        return Date.now() - signupDate.getTime() >= 7 * 24 * 60 * 60 * 1000;
+      });
+      const eligibleD30 = (profiles || []).filter(p => {
+        const signupDate = new Date(p.created_at);
+        return Date.now() - signupDate.getTime() >= 30 * 24 * 60 * 60 * 1000;
+      });
+
+      eligibleD1.forEach(p => {
+        const signupDate = new Date(p.created_at);
+        const nextDay = new Date(signupDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const nextDayStr = nextDay.toISOString().split('T')[0];
+        if (userActivityDates.get(p.user_id)?.has(nextDayStr)) {
+          d1Count++;
+        }
+      });
+
+      eligibleD7.forEach(p => {
+        const signupDate = new Date(p.created_at);
+        const day7 = new Date(signupDate);
+        day7.setDate(day7.getDate() + 7);
+        const day7Str = day7.toISOString().split('T')[0];
+        if (userActivityDates.get(p.user_id)?.has(day7Str)) {
+          d7Count++;
+        }
+      });
+
+      eligibleD30.forEach(p => {
+        const signupDate = new Date(p.created_at);
+        const day30 = new Date(signupDate);
+        day30.setDate(day30.getDate() + 30);
+        const day30Str = day30.toISOString().split('T')[0];
+        if (userActivityDates.get(p.user_id)?.has(day30Str)) {
+          d30Count++;
+        }
+      });
+
+      const d1Pct = eligibleD1.length > 0 ? Math.round((d1Count / eligibleD1.length) * 100) : 0;
+      const d7Pct = eligibleD7.length > 0 ? Math.round((d7Count / eligibleD7.length) * 100) : 0;
+      const d30Pct = eligibleD30.length > 0 ? Math.round((d30Count / eligibleD30.length) * 100) : 0;
+
+      // Retention curve
+      const curveDays = [1, 3, 7, 14, 30];
+      const curve = curveDays.map(day => {
+        const eligible = (profiles || []).filter(p => {
+          const signupDate = new Date(p.created_at);
+          return Date.now() - signupDate.getTime() >= day * 24 * 60 * 60 * 1000;
+        });
+        let retained = 0;
+        eligible.forEach(p => {
+          const signupDate = new Date(p.created_at);
+          const targetDay = new Date(signupDate);
+          targetDay.setDate(targetDay.getDate() + day);
+          const targetDayStr = targetDay.toISOString().split('T')[0];
+          if (userActivityDates.get(p.user_id)?.has(targetDayStr)) {
+            retained++;
+          }
+        });
+        return { day, percent: eligible.length > 0 ? Math.round((retained / eligible.length) * 100) : 0 };
+      });
+
+      setRetention({ d1: d1Pct, d7: d7Pct, d30: d30Pct, curve });
+
+      // ========== 3. FEATURE ADOPTION ==========
+      const featureEvents = [
+        { event: 'mood_logged', label: 'Mood logging' },
+        { event: 'journal_saved', label: 'Journaling' },
+        { event: 'exercise_completed', label: 'Exercises' },
+        { event: 'ers_recalculated', label: 'ERS recalculation' },
+        { event: 'page_view', label: 'Predictions viewed' },
+      ];
+
+      const featureData: FeatureAdoption[] = [];
+      for (const f of featureEvents) {
+        const { data: eventData } = await supabase
+          .from('activity_logs')
+          .select('user_id')
+          .eq('event_type', f.event)
+          .gte('created_at', thirtyDaysAgo);
+
+        const uniqueUsers = new Set((eventData || []).map(e => e.user_id)).size;
+        const percentOfMAU = mau > 0 ? Math.round((uniqueUsers / mau) * 100) : 0;
+        featureData.push({ feature: f.label, users: uniqueUsers, percentOfMAU });
+      }
+
+      featureData.sort((a, b) => b.percentOfMAU - a.percentOfMAU);
+      setFeatureAdoption(featureData);
+
+      // ========== 4. ENGAGEMENT DEPTH ==========
+      const { data: moodData } = await supabase
+        .from('mood_entries')
+        .select('user_id, logged_at')
+        .gte('logged_at', sevenDaysAgo);
+
+      const { data: journalData } = await supabase
+        .from('journal_entries')
+        .select('user_id, created_at, word_count')
+        .gte('created_at', sevenDaysAgo)
+        .is('deleted_at', null);
+
+      const moodUsers = new Set((moodData || []).map(m => m.user_id)).size || 1;
+      const journalUsers = new Set((journalData || []).map(j => j.user_id)).size || 1;
+      const avgMoodsPerUserPerWeek = (moodData?.length || 0) / moodUsers;
+      const avgJournalsPerUserPerWeek = (journalData?.length || 0) / journalUsers;
+
+      const totalWords = (journalData || []).reduce((sum, j) => sum + (j.word_count || 0), 0);
+      const avgWordsPerJournal = journalData?.length ? totalWords / journalData.length : 0;
+
+      // Sessions per user
+      const sessionUsers = new Set((wauData || []).map(a => a.user_id)).size || 1;
+      const avgSessionsPerUserPerWeek = (wauData?.length || 0) / sessionUsers;
+
+      // Most active hour
+      const hourCounts: Record<number, number> = {};
+      (wauData || []).forEach(a => {
+        const hour = new Date(a.created_at).getHours();
+        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+      });
+      let mostActiveHour = 12;
+      let maxHourCount = 0;
+      Object.entries(hourCounts).forEach(([hour, count]) => {
+        if (count > maxHourCount) {
+          maxHourCount = count;
+          mostActiveHour = parseInt(hour);
+        }
+      });
+
+      // Most active day
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayCounts: Record<number, number> = {};
+      (wauData || []).forEach(a => {
+        const day = new Date(a.created_at).getDay();
+        dayCounts[day] = (dayCounts[day] || 0) + 1;
+      });
+      let mostActiveDay = 'Monday';
+      let maxDayCount = 0;
+      Object.entries(dayCounts).forEach(([day, count]) => {
+        if (count > maxDayCount) {
+          maxDayCount = count;
+          mostActiveDay = dayNames[parseInt(day)];
+        }
+      });
+
+      setEngagement({
+        avgMoodsPerUserPerWeek: Math.round(avgMoodsPerUserPerWeek * 10) / 10,
+        avgJournalsPerUserPerWeek: Math.round(avgJournalsPerUserPerWeek * 10) / 10,
+        avgWordsPerJournal: Math.round(avgWordsPerJournal),
+        avgSessionsPerUserPerWeek: Math.round(avgSessionsPerUserPerWeek * 10) / 10,
+        mostActiveHour,
+        mostActiveDay,
+      });
+
+      // ========== 5. USER JOURNEY FUNNEL ==========
+      const completedOnboarding = (profiles || []).filter(p => p.onboarding_completed).length;
+
+      const { data: moodUsers2 } = await supabase
+        .from('mood_entries')
+        .select('user_id');
+      const loggedFirstMood = new Set((moodUsers2 || []).map(m => m.user_id)).size;
+
+      const { data: journalUsers2 } = await supabase
+        .from('journal_entries')
+        .select('user_id')
+        .is('deleted_at', null);
+      const wroteFirstJournal = new Set((journalUsers2 || []).map(j => j.user_id)).size;
+
+      setUserJourney({
+        signedUp: totalUsers || 0,
+        completedOnboarding,
+        loggedFirstMood,
+        wroteFirstJournal,
+        returnedDay7: d7Count,
+        stillActive30: d30Count,
+      });
+
+      // ========== 6. ERS Distribution ==========
       const { data: ersScores } = await supabase
         .from('ers_scores')
-        .select('user_id, ers_score, ers_stage')
+        .select('user_id, ers_stage')
         .order('calculated_at', { ascending: false });
 
       const latestByUser = new Map<string, string>();
@@ -369,59 +748,7 @@ function AnalyticsDashboard() {
       });
       setErsDistribution(distribution);
 
-      // 3. Engagement Metrics
-      const { data: moodData } = await supabase
-        .from('mood_logs')
-        .select('user_id, logged_at')
-        .gte('logged_at', sevenDaysAgo);
-
-      const { data: journalData } = await supabase
-        .from('journal_entries')
-        .select('user_id, created_at, content')
-        .gte('created_at', sevenDaysAgo);
-
-      const moodUsers = new Set((moodData || []).map(m => m.user_id)).size || 1;
-      const journalUsers = new Set((journalData || []).map(j => j.user_id)).size || 1;
-      const avgMoodsPerUserPerWeek = (moodData?.length || 0) / moodUsers;
-      const avgJournalsPerUserPerWeek = (journalData?.length || 0) / journalUsers;
-
-      // Average words per journal
-      let totalWords = 0;
-      (journalData || []).forEach(j => {
-        if (j.content) {
-          totalWords += j.content.split(/\s+/).length;
-        }
-      });
-      const avgWordsPerJournal = journalData?.length ? totalWords / journalData.length : 0;
-
-      // Most active hour
-      const { data: allActivity } = await supabase
-        .from('activity_logs')
-        .select('created_at')
-        .gte('created_at', sevenDaysAgo);
-
-      const hourCounts: Record<number, number> = {};
-      (allActivity || []).forEach(a => {
-        const hour = new Date(a.created_at).getHours();
-        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-      });
-      let mostActiveHour = 12;
-      let maxCount = 0;
-      Object.entries(hourCounts).forEach(([hour, count]) => {
-        if (count > maxCount) {
-          maxCount = count;
-          mostActiveHour = parseInt(hour);
-        }
-      });
-
-      setEngagement({
-        avgMoodsPerUserPerWeek: Math.round(avgMoodsPerUserPerWeek * 10) / 10,
-        avgJournalsPerUserPerWeek: Math.round(avgJournalsPerUserPerWeek * 10) / 10,
-        avgWordsPerJournal: Math.round(avgWordsPerJournal),
-        mostActiveHour,
-      });
-
-      // 4. Recent Activity Feed
+      // ========== 7. Recent Activity ==========
       const { data: recentActivity } = await supabase
         .from('activity_logs')
         .select('id, user_id, event_type, created_at')
@@ -429,47 +756,6 @@ function AnalyticsDashboard() {
         .limit(20);
 
       setActivities(recentActivity || []);
-
-      // 5. API Keys
-      try {
-        const { data: apiKeysData } = await supabase
-          .from('api_keys')
-          .select('id, partner_name, last_used_at, is_active')
-          .eq('is_active', true)
-          .order('last_used_at', { ascending: false, nullsFirst: false });
-
-        setApiKeys(apiKeysData || []);
-      } catch {
-        // Table might not exist
-        setApiKeys([]);
-      }
-
-      // 6. Conversion Funnel
-      try {
-        const { data: conversionEvents } = await supabase
-          .from('activity_logs')
-          .select('event_type')
-          .like('event_type', 'conversion_%');
-
-        const counts = {
-          landingViews: 0,
-          ctaClicks: 0,
-          signupPageViews: 0,
-          signupsCompleted: 0,
-        };
-
-        (conversionEvents || []).forEach(e => {
-          if (e.event_type === 'conversion_landing_view') counts.landingViews++;
-          else if (e.event_type === 'conversion_cta_click') counts.ctaClicks++;
-          else if (e.event_type === 'conversion_signup_page_view') counts.signupPageViews++;
-          else if (e.event_type === 'conversion_signup_complete') counts.signupsCompleted++;
-        });
-
-        setConversionFunnel(counts);
-      } catch {
-        // Table might not have conversion events yet
-      }
-
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -532,113 +818,163 @@ function AnalyticsDashboard() {
           </button>
         </div>
 
-        {/* Overview Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Total Users" value={overview.totalUsers} subtext="Registered accounts" />
-          <StatCard label="Active Users (7d)" value={overview.activeUsers7d} subtext="Last 7 days" />
-          <StatCard label="Mood Entries" value={overview.totalMoodEntries} subtext="Total logged" />
-          <StatCard label="Journal Entries" value={overview.totalJournalEntries} subtext="Total written" />
-        </div>
-
-        {/* Conversion Funnel */}
-        <ConversionFunnel funnel={conversionFunnel} />
-
-        {/* ERS Distribution */}
-        <ERSDistributionBar distribution={ersDistribution} />
-
-        {/* Engagement Metrics */}
-        <div className="bg-white rounded-2xl p-5 border border-stone-200">
-          <h3 className="font-semibold mb-4" style={{ color: 'var(--text)' }}>Engagement Metrics</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Moods/User/Week</p>
-              <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
-                {engagement.avgMoodsPerUserPerWeek}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Journals/User/Week</p>
-              <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
-                {engagement.avgJournalsPerUserPerWeek}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Avg Words/Journal</p>
-              <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
-                {engagement.avgWordsPerJournal}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Peak Activity Hour</p>
-              <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
-                {formatHour(engagement.mostActiveHour)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Activity Feed */}
-        <ActivityFeed activities={activities} />
-
-        {/* API Usage */}
-        {apiKeys.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 border border-stone-200">
-            <h3 className="font-semibold mb-4" style={{ color: 'var(--text)' }}>Active API Keys</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-stone-100">
-                    <th className="text-left py-2 font-medium" style={{ color: 'var(--text-muted)' }}>Partner</th>
-                    <th className="text-left py-2 font-medium" style={{ color: 'var(--text-muted)' }}>Last Used</th>
-                    <th className="text-center py-2 font-medium" style={{ color: 'var(--text-muted)' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {apiKeys.map((key, idx) => (
-                    <tr
-                      key={key.id}
-                      className={idx % 2 === 0 ? '' : 'bg-stone-50'}
-                      style={{ borderBottom: '1px solid var(--border-light)' }}
-                    >
-                      <td className="py-2" style={{ color: 'var(--text)' }}>{key.partner_name}</td>
-                      <td className="py-2" style={{ color: 'var(--text-muted)' }}>
-                        {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}
-                      </td>
-                      <td className="py-2 text-center">
-                        <span className={`inline-flex w-2 h-2 rounded-full ${key.is_active ? 'bg-paceful-primary' : 'bg-stone-300'}`} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {/* Low Data Warning */}
+        {!hasEnoughData && (
+          <div
+            className="rounded-2xl p-6 text-center"
+            style={{ background: 'var(--bg-warm)', border: '1px solid var(--border-light)' }}
+          >
+            <svg className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+            </svg>
+            <h3
+              className="text-lg font-semibold mb-2"
+              style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+            >
+              Gathering data
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              Metrics will populate as users join. Currently {keyMetrics.totalUsers} users registered.
+            </p>
           </div>
         )}
 
-        {/* Quick Links */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <a
-            href="/admin/api-keys"
-            className="bg-white rounded-2xl p-5 border border-stone-200 hover:border-stone-300 transition-colors"
-          >
-            <h4 className="font-medium mb-1" style={{ color: 'var(--text)' }}>API Key Management</h4>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Create and manage B2B API keys</p>
-          </a>
-          <a
-            href="/admin/usage"
-            className="bg-white rounded-2xl p-5 border border-stone-200 hover:border-stone-300 transition-colors"
-          >
-            <h4 className="font-medium mb-1" style={{ color: 'var(--text)' }}>API Usage Logs</h4>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>View detailed API request logs</p>
-          </a>
-          <a
-            href="/admin/predictions"
-            className="bg-white rounded-2xl p-5 border border-stone-200 hover:border-stone-300 transition-colors"
-          >
-            <h4 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Prediction Analytics</h4>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>View prediction accuracy metrics</p>
-          </a>
-        </div>
+        {hasEnoughData && (
+          <>
+            {/* Key Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard label="Total Users" value={keyMetrics.totalUsers} subtext="Registered accounts" />
+              <StatCard label="DAU" value={keyMetrics.dau} subtext="Daily active" />
+              <StatCard label="WAU" value={keyMetrics.wau} subtext="Weekly active" />
+              <StatCard label="MAU" value={keyMetrics.mau} subtext="Monthly active" />
+            </div>
+
+            {/* Retention Section */}
+            <div className="bg-white rounded-2xl p-6 border border-stone-200">
+              <h2
+                className="text-xl font-semibold mb-6"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+              >
+                Retention
+              </h2>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Retention metrics */}
+                <div className="grid grid-cols-3 gap-4">
+                  <RetentionCard label="D1" value={retention.d1} />
+                  <RetentionCard label="D7" value={retention.d7} />
+                  <RetentionCard label="D30" value={retention.d30} />
+                </div>
+
+                {/* Retention curve */}
+                <div className="flex items-center justify-center">
+                  <RetentionCurve data={retention.curve} />
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Adoption */}
+            <div className="bg-white rounded-2xl p-6 border border-stone-200">
+              <h2
+                className="text-xl font-semibold mb-6"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+              >
+                Feature Adoption
+              </h2>
+              <FeatureAdoptionBar features={featureAdoption} />
+            </div>
+
+            {/* Engagement Depth */}
+            <div className="rounded-2xl p-6" style={{ background: 'var(--bg-warm)' }}>
+              <h2
+                className="text-xl font-semibold mb-6"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+              >
+                Engagement Depth
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="bg-white rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
+                    {engagement.avgMoodsPerUserPerWeek}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Moods/user/week</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
+                    {engagement.avgJournalsPerUserPerWeek}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Journals/user/week</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
+                    {engagement.avgWordsPerJournal}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Words/journal</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
+                    {engagement.avgSessionsPerUserPerWeek}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Sessions/user/week</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
+                    {formatHour(engagement.mostActiveHour)}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Peak hour</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}>
+                    {engagement.mostActiveDay.slice(0, 3)}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Peak day</p>
+                </div>
+              </div>
+            </div>
+
+            {/* User Journey Funnel */}
+            <div className="bg-white rounded-2xl p-6 border border-stone-200">
+              <h2
+                className="text-xl font-semibold mb-6"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+              >
+                User Journey
+              </h2>
+              <UserJourneyFunnel journey={userJourney} />
+            </div>
+
+            {/* ERS Distribution */}
+            <ERSDistributionBar distribution={ersDistribution} />
+
+            {/* Activity Feed */}
+            <ActivityFeed activities={activities} />
+
+            {/* Quick Links */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <a
+                href="/admin/api-keys"
+                className="bg-white rounded-2xl p-5 border border-stone-200 hover:border-stone-300 transition-colors"
+              >
+                <h4 className="font-medium mb-1" style={{ color: 'var(--text)' }}>API Key Management</h4>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Create and manage B2B API keys</p>
+              </a>
+              <a
+                href="/admin/usage"
+                className="bg-white rounded-2xl p-5 border border-stone-200 hover:border-stone-300 transition-colors"
+              >
+                <h4 className="font-medium mb-1" style={{ color: 'var(--text)' }}>API Usage Logs</h4>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>View detailed API request logs</p>
+              </a>
+              <a
+                href="/admin/predictions"
+                className="bg-white rounded-2xl p-5 border border-stone-200 hover:border-stone-300 transition-colors"
+              >
+                <h4 className="font-medium mb-1" style={{ color: 'var(--text)' }}>Prediction Analytics</h4>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>View prediction accuracy metrics</p>
+              </a>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
