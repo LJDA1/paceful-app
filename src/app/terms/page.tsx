@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 export const metadata = {
   title: 'Terms of Service - Paceful',
@@ -8,18 +10,9 @@ export const metadata = {
 export default function TermsPage() {
   return (
     <div className="min-h-screen" style={{ background: '#F9F6F2' }}>
-      <div className="max-w-[680px] mx-auto px-4 py-12">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-[14px] font-medium mb-8 transition-opacity hover:opacity-80"
-          style={{ color: '#5B8A72' }}
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Home
-        </Link>
+      <MarketingNav />
 
+      <div className="max-w-[680px] mx-auto px-4 pt-[88px] pb-12">
         <div
           className="bg-white rounded-3xl p-8 sm:p-10"
           style={{ border: '1px solid #F0EBE4' }}
@@ -163,6 +156,8 @@ export default function TermsPage() {
           </div>
         </div>
       </div>
+
+      <MarketingFooter />
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 // ============================================================================
 // SVG ICONS
@@ -359,53 +361,9 @@ export default function ApiDocsPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F9F6F2' }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-50"
-        style={{
-          background: 'rgba(249,246,242,0.9)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid #F0EBE4'
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2">
-                <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center"
-                  style={{ background: '#5B8A72' }}
-                >
-                  <span className="text-white text-[14px] font-semibold" style={{ fontFamily: "'Fraunces', serif" }}>P</span>
-                </div>
-                <span
-                  className="font-semibold text-[16px]"
-                  style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
-                >
-                  Paceful
-                </span>
-              </Link>
-              <span style={{ color: '#E8E2DA' }}>|</span>
-              <span className="text-[14px]" style={{ color: '#5C574F' }}>API Documentation</span>
-              <span
-                className="px-2 py-0.5 text-[11px] font-medium rounded-full"
-                style={{ background: 'rgba(91,138,114,0.1)', color: '#5B8A72' }}
-              >
-                v1.0
-              </span>
-            </div>
-            <Link
-              href="/design-partners"
-              className="px-4 py-2 text-[14px] font-semibold text-white rounded-full transition-opacity hover:opacity-90"
-              style={{ background: '#5B8A72' }}
-            >
-              Get API Key
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingNav />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[88px] pb-8">
         <div className="flex gap-12">
           <Sidebar activeSection={activeSection} />
 
@@ -973,21 +931,11 @@ console.log(\`Total predictions: \${data.data.total_predictions}\`);`}
               </div>
             </section>
 
-            {/* Footer */}
-            <footer className="pt-8 text-center text-[13px]" style={{ borderTop: '1px solid #F0EBE4', color: '#9A938A' }}>
-              <p>Paceful API v1.0 - Last updated February 2026</p>
-              <p className="mt-2">
-                <Link href="/terms" className="hover:underline">Terms</Link>
-                {' '}-{' '}
-                <Link href="/privacy" className="hover:underline">Privacy</Link>
-                {' '}-{' '}
-                <a href="mailto:api-support@paceful.app" className="hover:underline">Contact</a>
-              </p>
-            </footer>
-
           </main>
         </div>
       </div>
+
+      <MarketingFooter />
     </div>
   );
 }

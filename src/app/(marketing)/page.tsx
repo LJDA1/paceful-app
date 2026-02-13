@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { trackConversion } from '@/lib/conversion-track';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 // ============================================================================
 // SVG Icons
@@ -181,53 +183,10 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F9F6F2' }}>
-      {/* Navigation */}
-      <nav
-        className="fixed top-0 w-full z-50"
-        style={{
-          background: 'rgba(249,246,242,0.85)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid #F0EBE4',
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-[22px] font-semibold"
-            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
-          >
-            Paceful
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/pricing"
-              className="text-[15px] font-medium hidden sm:block"
-              style={{ color: '#5C574F' }}
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/auth/login"
-              className="text-[15px] font-medium hidden sm:block"
-              style={{ color: '#5C574F' }}
-            >
-              Log in
-            </Link>
-            <Link
-              href="/auth/signup"
-              onClick={() => handleCtaClick('nav')}
-              className="px-5 py-2.5 text-[15px] font-semibold text-white rounded-full transition-opacity hover:opacity-90"
-              style={{ background: '#5B8A72' }}
-            >
-              Get started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <MarketingNav />
 
       {/* Hero Section */}
-      <section className="pt-28 pb-16 px-6" style={{ background: '#F9F6F2' }}>
+      <section className="pt-[88px] pb-16 px-6" style={{ background: '#F9F6F2' }}>
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* Left content */}
@@ -679,51 +638,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6" style={{ background: '#1F1D1A' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-10">
-            {/* Logo */}
-            <div>
-              <span
-                className="text-[20px] font-semibold"
-                style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}
-              >
-                Paceful
-              </span>
-              <p className="mt-2 text-[14px]" style={{ color: '#9A938A' }}>
-                Heal at your pace.
-              </p>
-            </div>
-
-            {/* Links */}
-            <div className="flex flex-wrap gap-x-10 gap-y-4">
-              <Link href="/pricing" className="text-[14px]" style={{ color: '#9A938A' }}>
-                Pricing
-              </Link>
-              <Link href="/privacy" className="text-[14px]" style={{ color: '#9A938A' }}>
-                Privacy
-              </Link>
-              <Link href="/terms" className="text-[14px]" style={{ color: '#9A938A' }}>
-                Terms
-              </Link>
-              <Link href="/api-docs" className="text-[14px]" style={{ color: '#9A938A' }}>
-                API Docs
-              </Link>
-              <Link href="/design-partners" className="text-[14px]" style={{ color: '#9A938A' }}>
-                Design Partners
-              </Link>
-            </div>
-          </div>
-
-          <div
-            className="pt-8 text-center text-[13px]"
-            style={{ borderTop: '1px solid #333', color: '#9A938A' }}
-          >
-            Made with care by Paceful. © 2026 All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

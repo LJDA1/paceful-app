@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 // ============================================================================
 // Icons
@@ -195,37 +197,10 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      {/* Navigation */}
-      <nav className="py-5 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-[22px] font-semibold"
-            style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--primary)' }}
-          >
-            Paceful
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/auth/login"
-              className="text-[14px] font-medium"
-              style={{ color: 'var(--text-sec)' }}
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="px-5 py-2.5 rounded-full text-[14px] font-semibold text-white"
-              style={{ background: 'var(--primary)' }}
-            >
-              Get started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <MarketingNav />
 
       {/* Header */}
-      <header className="text-center px-6 pt-12 pb-16">
+      <header className="text-center px-6 pt-[88px] pb-16">
         <h1
           className="text-[36px] md:text-[44px] font-medium mb-4 leading-tight"
           style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
@@ -367,34 +342,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer
-        className="py-8 px-6 border-t"
-        style={{ borderColor: 'var(--border-light)' }}
-      >
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span
-            className="text-[18px] font-semibold"
-            style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--primary)' }}
-          >
-            Paceful
-          </span>
-          <div className="flex items-center gap-6">
-            <Link href="/privacy" className="text-[14px]" style={{ color: 'var(--text-muted)' }}>
-              Privacy
-            </Link>
-            <Link href="/terms" className="text-[14px]" style={{ color: 'var(--text-muted)' }}>
-              Terms
-            </Link>
-            <Link href="/design-partners" className="text-[14px]" style={{ color: 'var(--text-muted)' }}>
-              Partners
-            </Link>
-          </div>
-          <span className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
-            Made with care for healing hearts
-          </span>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

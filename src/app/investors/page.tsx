@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
+import MarketingNav from '@/components/MarketingNav';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -380,53 +381,10 @@ export default function InvestorPitchPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#F9F6F2' }}>
-      {/* Navigation */}
-      <nav
-        className="sticky top-0 z-50"
-        style={{
-          background: 'rgba(249,246,242,0.85)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid #F0EBE4'
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: '#5B8A72' }}
-            >
-              <span className="text-white text-[15px] font-semibold" style={{ fontFamily: "'Fraunces', serif" }}>P</span>
-            </div>
-            <span
-              className="text-[18px] font-semibold"
-              style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
-            >
-              Paceful
-            </span>
-            <span style={{ color: '#E8E2DA' }}>|</span>
-            <span className="text-[14px]" style={{ color: '#5C574F' }}>Investors</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/api-docs"
-              className="hidden sm:block text-[14px] font-medium"
-              style={{ color: '#5C574F' }}
-            >
-              API Docs
-            </Link>
-            <a
-              href="mailto:investors@paceful.app"
-              className="px-5 py-2.5 text-[14px] font-semibold text-white rounded-full transition-opacity hover:opacity-90"
-              style={{ background: '#5B8A72' }}
-            >
-              Contact Us
-            </a>
-          </div>
-        </div>
-      </nav>
+      <MarketingNav />
 
       {/* Hero Section */}
-      <header className="relative overflow-hidden" style={{ background: '#F9F6F2' }}>
+      <header className="relative overflow-hidden pt-[72px]" style={{ background: '#F9F6F2' }}>
         <div className="absolute inset-0 opacity-30">
           <div
             className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl"
