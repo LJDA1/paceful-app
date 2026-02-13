@@ -1,3 +1,4 @@
+// TODO: Post-MVP feature - not active in current version
 'use client';
 
 import { useEffect, useState } from 'react';
