@@ -11,6 +11,13 @@ import {
 } from '@/lib/mood-calculator';
 import { trackEvent } from '@/lib/track';
 import { EmptyState, HeartIcon as EmptyHeartIcon } from '@/components/ui/EmptyState';
+import {
+  calculateStreak,
+  getMilestones,
+  getNewlyAchievedMilestones,
+  type Milestone,
+} from '@/lib/streaks';
+import MilestoneToast from '@/components/MilestoneToast';
 
 // ============================================================================
 // Mood Configuration
@@ -94,6 +101,10 @@ export default function MoodPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // Milestone toast state
+  const [showMilestoneToast, setShowMilestoneToast] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
+
   const supabase = createClient();
 
   // Redirect if not authenticated
@@ -170,6 +181,43 @@ export default function MoodPage() {
       });
 
       setSaved(true);
+
+      // Check for new milestones after saving
+      try {
+        // Fetch all mood dates for streak calculation
+        const { data: allMoods } = await supabase
+          .from('mood_entries')
+          .select('logged_at')
+          .eq('user_id', userId)
+          .gte('logged_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
+          .order('logged_at', { ascending: false });
+
+        const moodDates = allMoods?.map(m => m.logged_at) || [];
+        const streak = calculateStreak(moodDates);
+        const totalDays = new Set(moodDates.map(d => new Date(d).toISOString().split('T')[0])).size;
+
+        // Get milestones (simplified - just streak milestones for mood page)
+        const computedMilestones = getMilestones(totalDays, 0, 0, streak.current, 0);
+        const streakMilestones = computedMilestones.filter(m => m.category === 'streak');
+
+        // Check for newly achieved milestones
+        const celebratedKey = 'paceful_celebrated_milestones';
+        const celebrated = JSON.parse(localStorage.getItem(celebratedKey) || '[]');
+        const newlyAchieved = getNewlyAchievedMilestones(streakMilestones, celebrated);
+
+        if (newlyAchieved.length > 0) {
+          // Show first new milestone after save animation
+          setTimeout(() => {
+            setCurrentMilestone(newlyAchieved[0]);
+            setShowMilestoneToast(true);
+            // Mark as celebrated
+            localStorage.setItem(celebratedKey, JSON.stringify([...celebrated, newlyAchieved[0].id]));
+          }, 2000);
+        }
+      } catch (err) {
+        // Ignore milestone check errors
+      }
+
       setTimeout(() => {
         setSelectedMood(null);
         setNote('');
@@ -718,6 +766,17 @@ export default function MoodPage() {
           animation: fadeUp 0.3s ease-out;
         }
       `}</style>
+
+      {/* Milestone Toast */}
+      {showMilestoneToast && currentMilestone && (
+        <MilestoneToast
+          milestone={currentMilestone}
+          onDismiss={() => {
+            setShowMilestoneToast(false);
+            setCurrentMilestone(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -8,6 +8,15 @@ import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState, HomeIcon } from '@/components/ui/EmptyState';
+import {
+  calculateStreak,
+  getMilestones,
+  getWeekLoggingStatus,
+  getNewlyAchievedMilestones,
+  type Milestone,
+} from '@/lib/streaks';
+import MilestoneToast from '@/components/MilestoneToast';
+import WeeklyRecap from '@/components/WeeklyRecap';
 
 // ============================================================================
 // Types
@@ -84,6 +93,130 @@ function ArrowUpIcon({ className, style }: { className?: string; style?: React.C
 }
 
 // ============================================================================
+// Milestone Icons
+// ============================================================================
+
+const MilestoneIcons: Record<string, (color: string) => React.ReactNode> = {
+  star: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill={color}>
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  ),
+  flame: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill={color}>
+      <path d="M12 23c-3.866 0-7-3.134-7-7 0-2.42 1.112-4.468 2.39-6.217.812-1.11 1.69-2.09 2.431-2.925.356-.4.67-.742.93-1.031.166.189.371.44.609.74.616.777 1.37 1.85 2.06 3.03.69 1.178 1.32 2.468 1.71 3.75.39 1.284.54 2.513.37 3.578C15.19 19.13 13.8 21 12 23z" />
+    </svg>
+  ),
+  pen: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 19l7-7 3 3-7 7-3-3z" />
+      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+    </svg>
+  ),
+  heart: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill={color}>
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+  ),
+  sparkle: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill={color}>
+      <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z" />
+    </svg>
+  ),
+  shield: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill={color}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
+  trophy: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill={color}>
+      <path d="M12 15c-1.93 0-3.5-1.57-3.5-3.5V5h7v6.5c0 1.93-1.57 3.5-3.5 3.5z" />
+      <path d="M8.5 5H5c0 2.5 1.5 4.5 3.5 5V5z" />
+      <path d="M15.5 5H19c0 2.5-1.5 4.5-3.5 5V5z" />
+      <path d="M14 17h-4v2H8v2h8v-2h-2v-2z" />
+    </svg>
+  ),
+  book: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill={color}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15zM6.5 17H6v2.5c0 .28.22.5.5.5H20v-3H6.5z" />
+    </svg>
+  ),
+  check: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  target: (color: string) => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+};
+
+// ============================================================================
+// Milestone Card Component
+// ============================================================================
+
+function MilestoneCard({ milestone, streakData }: { milestone: Milestone; streakData: { current: number; longest: number } }) {
+  const IconComponent = MilestoneIcons[milestone.icon];
+
+  // Calculate progress for unachieved milestones
+  let progress = 0;
+  if (!milestone.achieved) {
+    if (milestone.category === 'streak') {
+      progress = Math.min(100, Math.round((streakData.current / milestone.threshold) * 100));
+    }
+  }
+
+  return (
+    <div
+      className={`flex-shrink-0 w-[140px] p-4 rounded-2xl ${milestone.achieved ? '' : 'opacity-60'}`}
+      style={{
+        background: milestone.achieved ? 'var(--bg-card)' : 'var(--bg)',
+        border: `1px solid ${milestone.achieved ? 'var(--border-light)' : 'var(--border)'}`,
+      }}
+    >
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+        style={{
+          background: milestone.achieved ? `${milestone.color}20` : 'var(--border-light)',
+        }}
+      >
+        {IconComponent && IconComponent(milestone.achieved ? milestone.color : 'var(--text-muted)')}
+      </div>
+      <p
+        className="text-[13px] font-medium mb-1 leading-tight"
+        style={{ color: milestone.achieved ? 'var(--text)' : 'var(--text-muted)' }}
+      >
+        {milestone.title}
+      </p>
+      {milestone.achieved ? (
+        <div className="flex items-center gap-1">
+          <svg className="w-3 h-3" fill={milestone.color} viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+          <span className="text-[11px]" style={{ color: milestone.color }}>Achieved</span>
+        </div>
+      ) : (
+        <div>
+          <div className="h-1.5 rounded-full overflow-hidden mb-1" style={{ background: 'var(--border)' }}>
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${progress}%`, background: milestone.color }}
+            />
+          </div>
+          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            {milestone.description}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // Main Dashboard
 // ============================================================================
 
@@ -102,6 +235,25 @@ export default function DashboardPage() {
   // ERS Info modal state
   const [showERSInfo, setShowERSInfo] = useState(false);
 
+  // Streak and milestone state
+  const [streakData, setStreakData] = useState<{ current: number; longest: number }>({ current: 0, longest: 0 });
+  const [weekLogging, setWeekLogging] = useState<boolean[]>([false, false, false, false, false, false, false]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [showMilestoneToast, setShowMilestoneToast] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
+  const [showWeeklyRecap, setShowWeeklyRecap] = useState(false);
+  const [weeklyRecapData, setWeeklyRecapData] = useState<{
+    daysLogged: number;
+    avgMood: number;
+    moodTrend: 'up' | 'down' | 'steady';
+    moodChange: number;
+    journalEntries: number;
+    journalWords: number;
+    ersChange: number;
+    currentStreak: number;
+    aiInsight?: string;
+  } | null>(null);
+
   const supabase = createClient();
 
   // Check if ERS has been explained before (first visit)
@@ -119,6 +271,16 @@ export default function DashboardPage() {
   const handleCloseERSInfo = () => {
     setShowERSInfo(false);
     localStorage.setItem('ers_explained', 'true');
+  };
+
+  const handleDismissMilestone = () => {
+    setShowMilestoneToast(false);
+    setCurrentMilestone(null);
+  };
+
+  const handleDismissWeeklyRecap = () => {
+    setShowWeeklyRecap(false);
+    localStorage.setItem('paceful_last_recap_seen', Date.now().toString());
   };
 
   // Greeting - client-side only to prevent hydration mismatch
@@ -145,7 +307,7 @@ export default function DashboardPage() {
       const weekStartStr = weekStart.toISOString();
 
       // Fetch all data in parallel
-      const [profileRes, ersRes, moodRes, journalRes, exerciseRes, streakRes] = await Promise.all([
+      const [profileRes, ersRes, moodRes, journalRes, exerciseRes, allMoodsRes, totalJournalRes, totalExerciseRes] = await Promise.all([
         // Profile
         supabase
           .from('profiles')
@@ -162,17 +324,17 @@ export default function DashboardPage() {
           .limit(1)
           .single(),
 
-        // Moods this week
+        // Moods this week (with dates for streak calculation)
         supabase
           .from('mood_entries')
-          .select('id', { count: 'exact' })
+          .select('id, logged_at, mood_value')
           .eq('user_id', userId)
           .gte('logged_at', weekStartStr),
 
         // Journal entries this week
         supabase
           .from('journal_entries')
-          .select('id', { count: 'exact' })
+          .select('id, word_count', { count: 'exact' })
           .eq('user_id', userId)
           .gte('created_at', weekStartStr)
           .is('deleted_at', null),
@@ -184,24 +346,107 @@ export default function DashboardPage() {
           .eq('user_id', userId)
           .gte('completed_at', weekStartStr),
 
-        // Streak
+        // All moods for streak calculation (last 90 days)
         supabase
-          .from('user_streaks')
-          .select('current_streak_days')
+          .from('mood_entries')
+          .select('logged_at')
           .eq('user_id', userId)
-          .single(),
+          .gte('logged_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
+          .order('logged_at', { ascending: false }),
+
+        // Total journal entries for milestones
+        supabase
+          .from('journal_entries')
+          .select('id', { count: 'exact' })
+          .eq('user_id', userId)
+          .is('deleted_at', null),
+
+        // Total exercises for milestones
+        supabase
+          .from('exercise_completions')
+          .select('id', { count: 'exact' })
+          .eq('user_id', userId),
       ]);
 
       setProfile(profileRes.data);
       setErsData(ersRes.data);
 
+      // Calculate streak from mood dates
+      const moodDates = allMoodsRes.data?.map(m => m.logged_at) || [];
+      const streak = calculateStreak(moodDates);
+      setStreakData(streak);
+
+      // Get week logging status (Mon-Sun)
+      const weekStatus = getWeekLoggingStatus(moodDates);
+      setWeekLogging(weekStatus);
+
+      // Calculate milestones
+      const totalDays = new Set(moodDates.map(d => new Date(d).toISOString().split('T')[0])).size;
+      const totalJournalEntries = totalJournalRes.count || 0;
+      const totalExercises = totalExerciseRes.count || 0;
+      const ersScore = ersRes.data?.ers_score || 0;
+      const computedMilestones = getMilestones(
+        totalDays,
+        totalJournalEntries,
+        totalExercises,
+        streak.current,
+        ersScore
+      );
+      setMilestones(computedMilestones);
+
+      // Check for newly achieved milestones
+      const celebratedKey = 'paceful_celebrated_milestones';
+      const celebrated = JSON.parse(localStorage.getItem(celebratedKey) || '[]');
+      const newlyAchieved = getNewlyAchievedMilestones(computedMilestones, celebrated);
+
+      if (newlyAchieved.length > 0) {
+        // Show first new milestone
+        setCurrentMilestone(newlyAchieved[0]);
+        setShowMilestoneToast(true);
+        // Mark as celebrated
+        localStorage.setItem(celebratedKey, JSON.stringify([...celebrated, newlyAchieved[0].id]));
+      }
+
       setWeeklyProgress({
-        moodsLogged: moodRes.count || 0,
+        moodsLogged: moodRes.data?.length || 0,
         journalEntries: journalRes.count || 0,
         exercisesCompleted: exerciseRes.count || 0,
-        currentStreak: streakRes.data?.current_streak_days || 0,
+        currentStreak: streak.current,
         ersChange: ersRes.data?.ers_delta || null,
       });
+
+      // Calculate weekly recap data
+      const weekMoods = moodRes.data || [];
+      const avgMood = weekMoods.length > 0
+        ? weekMoods.reduce((sum, m) => sum + (m.mood_value || 5), 0) / weekMoods.length
+        : 0;
+      const journalWords = journalRes.data?.reduce((sum, j) => sum + (j.word_count || 0), 0) || 0;
+
+      setWeeklyRecapData({
+        daysLogged: weekStatus.filter(Boolean).length,
+        avgMood,
+        moodTrend: ersRes.data?.ers_delta && ersRes.data.ers_delta > 0 ? 'up' : ersRes.data?.ers_delta && ersRes.data.ers_delta < 0 ? 'down' : 'steady',
+        moodChange: Math.abs(ersRes.data?.ers_delta || 0) / 10,
+        journalEntries: journalRes.count || 0,
+        journalWords,
+        ersChange: Math.round(ersRes.data?.ers_delta || 0),
+        currentStreak: streak.current,
+      });
+
+      // Check if we should show weekly recap (once per week)
+      const lastRecapKey = 'paceful_last_recap_seen';
+      const lastRecap = localStorage.getItem(lastRecapKey);
+      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+      if (!lastRecap || parseInt(lastRecap) < oneWeekAgo) {
+        // Only show if user has some activity
+        if (weekMoods.length > 0 || (journalRes.count || 0) > 0) {
+          // Delay showing recap to not overlap with milestone
+          setTimeout(() => {
+            setShowWeeklyRecap(true);
+          }, newlyAchieved.length > 0 ? 6000 : 1000);
+        }
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
@@ -517,6 +762,52 @@ export default function DashboardPage() {
           </Link>
         </div>
 
+        {/* Streak Card */}
+        {streakData.current > 0 && (
+          <div
+            className="mb-6 p-5 rounded-[22px] flex items-center gap-4"
+            style={{ background: 'linear-gradient(135deg, rgba(212,151,59,0.12) 0%, rgba(212,151,59,0.06) 100%)', border: '1px solid rgba(212,151,59,0.15)' }}
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(212,151,59,0.15)' }}
+            >
+              <svg className="w-7 h-7" style={{ color: '#D4973B' }} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 23c-3.866 0-7-3.134-7-7 0-2.42 1.112-4.468 2.39-6.217.812-1.11 1.69-2.09 2.431-2.925.356-.4.67-.742.93-1.031.166.189.371.44.609.74.616.777 1.37 1.85 2.06 3.03.69 1.178 1.32 2.468 1.71 3.75.39 1.284.54 2.513.37 3.578C15.19 19.13 13.8 21 12 23zm0-19c-.94 1.094-3 3.6-3 6.5C9 12.68 10.343 15 12 15s3-2.32 3-4.5c0-2.9-2.06-5.406-3-6.5z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2">
+                <span
+                  className="text-[32px] font-medium"
+                  style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+                >
+                  {streakData.current}
+                </span>
+                <span className="text-[15px]" style={{ color: 'var(--text-sec)' }}>
+                  day streak
+                </span>
+              </div>
+              <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                Longest: {streakData.longest} days
+              </p>
+            </div>
+            {/* Week dots */}
+            <div className="flex gap-1.5">
+              {weekLogging.map((logged, i) => (
+                <div
+                  key={i}
+                  className={`w-2.5 h-2.5 rounded-full ${logged ? '' : 'border'}`}
+                  style={{
+                    background: logged ? '#D4973B' : 'transparent',
+                    borderColor: logged ? 'transparent' : 'var(--border)',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* This Week Section */}
         <h2
           className="text-[20px] font-semibold mb-4"
@@ -600,7 +891,7 @@ export default function DashboardPage() {
         {/* Weekly Insight Card */}
         {ersData && (
           <div
-            className="rounded-3xl overflow-hidden"
+            className="rounded-3xl overflow-hidden mb-6"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
           >
             {/* Gradient bar */}
@@ -639,6 +930,23 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Milestones Section */}
+        {milestones.length > 0 && (
+          <div className="mb-6">
+            <h2
+              className="text-[20px] font-semibold mb-4"
+              style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+            >
+              Milestones
+            </h2>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+              {milestones.map((milestone) => (
+                <MilestoneCard key={milestone.id} milestone={milestone} streakData={streakData} />
+              ))}
             </div>
           </div>
         )}
@@ -727,6 +1035,25 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Milestone Toast */}
+      {showMilestoneToast && currentMilestone && (
+        <MilestoneToast
+          milestone={currentMilestone}
+          onDismiss={handleDismissMilestone}
+        />
+      )}
+
+      {/* Weekly Recap */}
+      {showWeeklyRecap && weeklyRecapData && (
+        <WeeklyRecap
+          data={{
+            ...weeklyRecapData,
+            aiInsight: aiInsight || undefined,
+          }}
+          onDismiss={handleDismissWeeklyRecap}
+        />
       )}
     </div>
   );
