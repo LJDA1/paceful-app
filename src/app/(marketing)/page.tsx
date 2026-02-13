@@ -6,19 +6,19 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-indigo-50">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
+      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-stone-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
               <span className="text-white text-xl">💜</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">Paceful</span>
+            <span className="text-xl font-bold text-stone-900">Paceful</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/demo" className="text-gray-600 hover:text-gray-900">
+            <Link href="/demo" className="text-stone-600 hover:text-stone-900">
               Demo
             </Link>
-            <Link href="/auth/login" className="text-gray-600 hover:text-gray-900">
+            <Link href="/auth/login" className="text-stone-600 hover:text-stone-900">
               Login
             </Link>
             <Link
@@ -38,12 +38,12 @@ export default function LandingPage() {
             <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
             Now with AI-powered predictions
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <h1 className="text-5xl md:text-6xl font-bold text-stone-900 mb-6 leading-tight">
             Heal at your pace.
             <br />
             <span className="text-indigo-600">See the progress.</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-stone-600 mb-8 max-w-2xl mx-auto">
             The science-backed platform that helps you navigate emotional recovery
             with personalized insights, predictions, and support.
           </p>
@@ -56,7 +56,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/demo"
-              className="px-8 py-4 bg-white text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition border border-gray-200"
+              className="px-8 py-4 bg-white text-stone-700 rounded-xl font-semibold hover:bg-stone-50 transition border border-stone-200"
             >
               View Demo
             </Link>
@@ -82,7 +82,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-center mb-4">
             Everything you need to heal
           </h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+          <p className="text-stone-600 text-center mb-12 max-w-2xl mx-auto">
             Track your journey with tools designed by psychologists and data scientists.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -150,7 +150,7 @@ export default function LandingPage() {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to start healing?</h2>
-          <p className="text-gray-600 mb-8">
+          <p className="text-stone-600 mb-8">
             Join thousands of people who are tracking their emotional recovery journey.
           </p>
           <Link
@@ -163,7 +163,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 bg-gray-900 text-gray-400">
+      <footer className="py-12 px-6 bg-stone-900 text-stone-400">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
@@ -199,7 +199,7 @@ export default function LandingPage() {
               </ul>
             </div>
           </div>
-          <div className="pt-8 border-t border-gray-800 text-sm text-center">
+          <div className="pt-8 border-t border-stone-800 text-sm text-center">
             © 2026 Paceful, Inc. All rights reserved.
           </div>
         </div>
@@ -212,17 +212,17 @@ function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="text-center">
       <p className="text-3xl font-bold text-indigo-600">{value}</p>
-      <p className="text-gray-600">{label}</p>
+      <p className="text-stone-600">{label}</p>
     </div>
   );
 }
 
 function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
   return (
-    <div className="p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition">
+    <div className="p-6 bg-white rounded-2xl border border-stone-100 hover:shadow-lg transition">
       <div className="text-3xl mb-3">{icon}</div>
-      <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 text-sm">{description}</p>
+      <h3 className="font-semibold text-stone-900 mb-2">{title}</h3>
+      <p className="text-stone-600 text-sm">{description}</p>
     </div>
   );
 }
@@ -233,8 +233,8 @@ function Step({ number, title, description }: { number: number; title: string; d
       <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 font-bold text-xl flex items-center justify-center mx-auto mb-4">
         {number}
       </div>
-      <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <h3 className="font-semibold text-stone-900 mb-2">{title}</h3>
+      <p className="text-stone-600">{description}</p>
     </div>
   );
 }
