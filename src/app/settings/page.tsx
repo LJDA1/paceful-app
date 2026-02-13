@@ -90,6 +90,7 @@ export default function SettingsPage() {
 
   // Data actions state
   const [isExporting, setIsExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -205,6 +206,7 @@ export default function SettingsPage() {
   // Export data
   const handleExportData = async () => {
     setIsExporting(true);
+    setExportSuccess(false);
 
     try {
       const response = await fetch('/api/user/export', {
@@ -219,11 +221,14 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `paceful-data-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `paceful-export-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 4000);
     } catch (err) {
       console.error('Error exporting data:', err);
       alert('Failed to export data. Please try again.');
@@ -481,15 +486,26 @@ export default function SettingsPage() {
           </h2>
 
           <div className="space-y-3">
-            <button
-              onClick={handleExportData}
-              disabled={isExporting}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-[14px] font-medium transition-colors disabled:opacity-50"
-              style={{ background: 'var(--bg-warm)', color: 'var(--text)' }}
-            >
-              <DownloadIcon className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
-              {isExporting ? 'Exporting...' : 'Export my data'}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleExportData}
+                disabled={isExporting}
+                className="flex items-center gap-3 flex-1 px-4 py-3 rounded-2xl text-[14px] font-medium transition-colors disabled:opacity-50"
+                style={{ background: 'var(--bg-warm)', color: 'var(--text)' }}
+              >
+                <DownloadIcon className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+                {isExporting ? 'Exporting...' : 'Export my data'}
+              </button>
+              {exportSuccess && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap"
+                  style={{ background: 'rgba(91,138,114,0.1)', color: 'var(--primary)' }}
+                >
+                  <CheckIcon className="w-3.5 h-3.5" />
+                  Exported
+                </span>
+              )}
+            </div>
 
             {!showDeleteConfirm ? (
               <button

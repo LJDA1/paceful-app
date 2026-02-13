@@ -33,43 +33,49 @@ export async function POST() {
     // Delete user data in order (respecting foreign key constraints)
     // Start with tables that reference others, then move to base tables
 
-    // Delete activity logs
+    // 1. Delete activity logs
     await supabase
       .from('activity_logs')
       .delete()
       .eq('user_id', userId);
 
-    // Delete ERS scores
+    // 2. Delete consent records
+    await supabase
+      .from('consent_records')
+      .delete()
+      .eq('user_id', userId);
+
+    // 3. Delete ERS scores
     await supabase
       .from('ers_scores')
       .delete()
       .eq('user_id', userId);
 
-    // Delete mood entries
+    // 4. Delete mood entries
     await supabase
       .from('mood_entries')
       .delete()
       .eq('user_id', userId);
 
-    // Delete journal entries
+    // 5. Delete journal entries
     await supabase
       .from('journal_entries')
       .delete()
       .eq('user_id', userId);
 
-    // Delete exercise completions
+    // 6. Delete exercise completions
     await supabase
       .from('exercise_completions')
       .delete()
       .eq('user_id', userId);
 
-    // Delete user streaks
+    // 7. Delete user streaks
     await supabase
       .from('user_streaks')
       .delete()
       .eq('user_id', userId);
 
-    // Delete profile
+    // 8. Delete profile (last, as other tables may reference it)
     await supabase
       .from('profiles')
       .delete()

@@ -34,6 +34,7 @@ export async function POST() {
       moodRes,
       journalRes,
       ersRes,
+      consentRes,
       activityRes,
     ] = await Promise.all([
       supabase
@@ -45,40 +46,52 @@ export async function POST() {
         .from('mood_entries')
         .select('*')
         .eq('user_id', user.id)
-        .order('logged_at', { ascending: false }),
+        .order('logged_at', { ascending: true }),
       supabase
         .from('journal_entries')
         .select('*')
         .eq('user_id', user.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: true }),
       supabase
         .from('ers_scores')
         .select('*')
         .eq('user_id', user.id)
-        .order('calculated_at', { ascending: false }),
+        .order('calculated_at', { ascending: true }),
+      supabase
+        .from('consent_records')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true }),
       supabase
         .from('activity_logs')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: true }),
     ]);
 
     const exportData = {
-      exportedAt: new Date().toISOString(),
+      exported_at: new Date().toISOString(),
       user: {
         id: user.id,
         email: user.email,
-        createdAt: user.created_at,
+        created_at: user.created_at,
       },
       profile: profileRes.data || null,
-      moodEntries: moodRes.data || [],
-      journalEntries: journalRes.data || [],
-      ersScores: ersRes.data || [],
-      activityLogs: activityRes.data || [],
+      mood_entries: moodRes.data || [],
+      journal_entries: journalRes.data || [],
+      ers_scores: ersRes.data || [],
+      consents: consentRes.data || [],
+      activity_log: activityRes.data || [],
     };
 
-    return NextResponse.json(exportData);
+    const dateStr = new Date().toISOString().split('T')[0];
+    return new NextResponse(JSON.stringify(exportData, null, 2), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="paceful-export-${dateStr}.json"`,
+      },
+    });
   } catch (error) {
     console.error('Export error:', error);
     return NextResponse.json({ error: 'Export failed' }, { status: 500 });
