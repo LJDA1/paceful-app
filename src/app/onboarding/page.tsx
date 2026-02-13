@@ -53,7 +53,7 @@ const initialData: OnboardingData = {
 // ============================================================================
 
 function StepIndicator({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
-  const stepLabels = ['Basic Info', 'Breakup', 'Current State', 'Consent'];
+  const stepLabels = ['Basic Info', 'Breakup', 'Current State', 'Your ERS', 'Consent'];
 
   return (
     <div className="mb-8">
@@ -454,10 +454,141 @@ function Step3CurrentState({
 }
 
 // ============================================================================
-// Step 4: Consent (updated from Step 3)
+// Step 4: ERS Explanation (NEW)
 // ============================================================================
 
-function Step4Consent({
+function Step4ERSExplanation({
+  onNext,
+  onBack,
+}: {
+  onNext: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2
+          className="text-xl font-semibold text-stone-800"
+          style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif' }}
+        >
+          Your Emotional Readiness Score
+        </h2>
+        <p className="text-stone-500 mt-1">Understanding how we measure your healing journey</p>
+      </div>
+
+      {/* Main explanation */}
+      <div className="p-4 bg-stone-50 rounded-2xl">
+        <p className="text-[15px] text-stone-700 leading-relaxed">
+          Paceful tracks your <strong>Emotional Readiness Score</strong> — a number from 0 to 100
+          that reflects where you are in your healing journey.
+        </p>
+      </div>
+
+      {/* Stage indicators */}
+      <div className="space-y-3">
+        {/* Healing */}
+        <div className="flex items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(126,113,181,0.08)' }}>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(126,113,181,0.15)' }}
+          >
+            <div className="w-3 h-3 rounded-full" style={{ background: '#7E71B5' }} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[15px] font-semibold" style={{ color: '#7E71B5' }}>Healing</span>
+              <span className="text-[12px] text-stone-400">0-49</span>
+            </div>
+            <p className="text-[14px] text-stone-600 leading-relaxed">
+              The early days. You&apos;re processing and adjusting. This is normal and important.
+            </p>
+          </div>
+        </div>
+
+        {/* Rebuilding */}
+        <div className="flex items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(91,138,114,0.08)' }}>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(91,138,114,0.15)' }}
+          >
+            <div className="w-3 h-3 rounded-full" style={{ background: '#5B8A72' }} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[15px] font-semibold" style={{ color: '#5B8A72' }}>Rebuilding</span>
+              <span className="text-[12px] text-stone-400">50-74</span>
+            </div>
+            <p className="text-[14px] text-stone-600 leading-relaxed">
+              You&apos;re finding your footing. Patterns are stabilizing and growth is happening.
+            </p>
+          </div>
+        </div>
+
+        {/* Ready */}
+        <div className="flex items-start gap-4 p-4 rounded-xl" style={{ background: 'rgba(212,151,59,0.08)' }}>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(212,151,59,0.15)' }}
+          >
+            <div className="w-3 h-3 rounded-full" style={{ background: '#D4973B' }} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[15px] font-semibold" style={{ color: '#D4973B' }}>Ready</span>
+              <span className="text-[12px] text-stone-400">75-100</span>
+            </div>
+            <p className="text-[14px] text-stone-600 leading-relaxed">
+              You&apos;ve built emotional resilience. You&apos;re ready for whatever comes next.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Visual progress bar */}
+      <div className="py-2">
+        <div className="h-3 rounded-full overflow-hidden flex">
+          <div className="flex-1" style={{ background: '#7E71B5' }} />
+          <div className="flex-1" style={{ background: '#5B8A72' }} />
+          <div className="flex-1" style={{ background: '#D4973B' }} />
+        </div>
+        <div className="flex justify-between mt-2 text-[11px] text-stone-400">
+          <span>0</span>
+          <span>50</span>
+          <span>75</span>
+          <span>100</span>
+        </div>
+      </div>
+
+      {/* Bottom note */}
+      <p className="text-[13px] text-stone-500 text-center leading-relaxed">
+        Your score updates based on your mood logs, journal entries, and engagement.
+        The more you use Paceful, the more accurate it becomes.
+      </p>
+
+      {/* Navigation */}
+      <div className="flex gap-3 mt-6">
+        <button
+          onClick={onBack}
+          className="flex-1 py-3 border border-stone-300 text-stone-600 rounded-xl hover:bg-stone-50 transition-colors font-medium"
+        >
+          Back
+        </button>
+        <button
+          onClick={onNext}
+          className="flex-1 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium"
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Step 5: Consent (updated from Step 4)
+// ============================================================================
+
+function Step5Consent({
   data,
   onChange,
   onSubmit,
@@ -474,7 +605,7 @@ function Step4Consent({
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <h2 className="text-xl font-semibold text-stone-800">Your privacy matters</h2>
         <p className="text-stone-500 mt-1">Review how we use your data to help you heal</p>
       </div>
@@ -839,7 +970,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step Indicator */}
-        <StepIndicator currentStep={step} totalSteps={4} />
+        <StepIndicator currentStep={step} totalSteps={5} />
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
@@ -878,11 +1009,18 @@ export default function OnboardingPage() {
           )}
 
           {step === 4 && (
-            <Step4Consent
+            <Step4ERSExplanation
+              onNext={() => setStep(5)}
+              onBack={() => setStep(3)}
+            />
+          )}
+
+          {step === 5 && (
+            <Step5Consent
               data={data}
               onChange={updateData}
               onSubmit={handleSubmit}
-              onBack={() => setStep(3)}
+              onBack={() => setStep(4)}
               isSubmitting={isSubmitting}
             />
           )}

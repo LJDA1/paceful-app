@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
@@ -132,7 +132,24 @@ export default function JournalPage() {
   // Search and filter state
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounce search query
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   // New entry overlay state
   const [showNewEntry, setShowNewEntry] = useState(false);
@@ -345,9 +362,9 @@ export default function JournalPage() {
   const filteredEntries = useMemo(() => {
     let result = entries;
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // Apply search filter (debounced)
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
       result = result.filter(e =>
         (e.entry_title?.toLowerCase().includes(query)) ||
         e.entry_content.toLowerCase().includes(query)
@@ -355,15 +372,25 @@ export default function JournalPage() {
     }
 
     // Apply sentiment filter
+    // Entries without sentiment data (emotion_primary is null AND sentiment_score is null)
+    // only appear under "All" filter
     if (activeFilter !== 'all') {
       result = result.filter(e => {
+        // Skip entries without any sentiment data
+        if (e.emotion_primary === null && e.sentiment_score === null) {
+          return false;
+        }
         const sentiment = getSentimentStyle(e.emotion_primary, e.sentiment_score);
         return sentiment.filter === activeFilter;
       });
     }
 
     return result;
-  }, [entries, searchQuery, activeFilter]);
+  }, [entries, debouncedSearchQuery, activeFilter]);
+
+  // Check if we have search/filter active for messaging
+  const hasActiveSearch = debouncedSearchQuery.trim().length > 0;
+  const hasActiveFilter = activeFilter !== 'all';
 
   // Stats - client-side only to prevent hydration mismatch
   const [stats, setStats] = useState<{ totalWords: number; streak: number }>({ totalWords: 0, streak: 0 });
@@ -449,6 +476,11 @@ export default function JournalPage() {
                 onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
                 onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
               />
+              {hasActiveSearch && (
+                <p className="text-[12px] mt-2 px-1" style={{ color: 'var(--text-muted)' }}>
+                  {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'} found
+                </p>
+              )}
             </div>
           )}
 
@@ -585,17 +617,27 @@ export default function JournalPage() {
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
                 style={{ background: 'var(--bg-warm)' }}
               >
-                <PenIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+                {hasActiveSearch ? (
+                  <SearchIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+                ) : (
+                  <PenIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+                )}
               </div>
               <h3 className="text-[17px] font-semibold mb-2" style={{ color: 'var(--text)' }}>
-                {searchQuery || activeFilter !== 'all' ? 'No entries found' : 'Your journal awaits'}
+                {hasActiveSearch
+                  ? 'No entries match your search'
+                  : hasActiveFilter
+                  ? `No ${activeFilter} entries`
+                  : 'Your journal awaits'}
               </h3>
               <p className="text-[14px] mb-6" style={{ color: 'var(--text-muted)' }}>
-                {searchQuery || activeFilter !== 'all'
-                  ? 'Try adjusting your search or filter.'
+                {hasActiveSearch
+                  ? `No entries contain "${debouncedSearchQuery}". Try different keywords.`
+                  : hasActiveFilter
+                  ? 'Try selecting a different filter or "All" to see all entries.'
                   : 'Writing helps process emotions and track your healing. Start with today\'s prompt above.'}
               </p>
-              {!searchQuery && activeFilter === 'all' && (
+              {!hasActiveSearch && !hasActiveFilter && (
                 <button
                   onClick={() => setShowNewEntry(true)}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium text-white"
@@ -605,11 +647,25 @@ export default function JournalPage() {
                   Write your first entry
                 </button>
               )}
+              {(hasActiveSearch || hasActiveFilter) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setDebouncedSearchQuery('');
+                    setActiveFilter('all');
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-medium"
+                  style={{ background: 'var(--bg-warm)', color: 'var(--text-sec)' }}
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
               {filteredEntries.map((entry) => {
-                const sentiment = getSentimentStyle(entry.emotion_primary, entry.sentiment_score);
+                const hasSentimentData = entry.emotion_primary !== null || entry.sentiment_score !== null;
+                const sentiment = hasSentimentData ? getSentimentStyle(entry.emotion_primary, entry.sentiment_score) : null;
                 const preview = entry.entry_content.slice(0, 120) + (entry.entry_content.length > 120 ? '...' : '');
                 const title = entry.entry_title || 'Untitled entry';
 
@@ -636,14 +692,14 @@ export default function JournalPage() {
                           </svg>
                           Analyzing...
                         </span>
-                      ) : (
+                      ) : sentiment ? (
                         <span
                           className="px-2.5 py-1 rounded-full text-[11px] font-medium"
                           style={{ color: sentiment.color, background: sentiment.bg }}
                         >
                           {sentiment.label}
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
                     {/* Title */}

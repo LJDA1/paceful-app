@@ -97,7 +97,27 @@ export default function DashboardPage() {
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
 
+  // ERS Info modal state
+  const [showERSInfo, setShowERSInfo] = useState(false);
+
   const supabase = createClient();
+
+  // Check if ERS has been explained before (first visit)
+  useEffect(() => {
+    const ersExplained = localStorage.getItem('ers_explained');
+    if (!ersExplained && isAuthenticated && !userLoading) {
+      // Show on first visit after a brief delay
+      const timer = setTimeout(() => {
+        setShowERSInfo(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, userLoading]);
+
+  const handleCloseERSInfo = () => {
+    setShowERSInfo(false);
+    localStorage.setItem('ers_explained', 'true');
+  };
 
   // Greeting - client-side only to prevent hydration mismatch
   const [greeting, setGreeting] = useState('');
@@ -329,9 +349,25 @@ export default function DashboardPage() {
             <div className="relative flex items-center justify-between">
               {/* Left side: Score info */}
               <div className="flex-1">
-                <p className="text-[11px] font-medium tracking-wider uppercase mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  Emotional Readiness
-                </p>
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-[11px] font-medium tracking-wider uppercase" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    Emotional Readiness
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowERSInfo(true);
+                    }}
+                    className="w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.2)' }}
+                    aria-label="Learn more about Emotional Readiness Score"
+                  >
+                    <svg className="w-2.5 h-2.5" fill="white" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="flex items-baseline gap-2 mb-3">
                   <span
                     className="text-[54px] font-medium leading-none"
@@ -583,6 +619,90 @@ export default function DashboardPage() {
         )}
 
       </div>
+
+      {/* ERS Info Modal */}
+      {showERSInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={handleCloseERSInfo}
+            role="presentation"
+            aria-hidden="true"
+          />
+
+          {/* Modal */}
+          <div
+            className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-xl"
+            style={{ background: 'var(--bg-card)' }}
+          >
+            {/* Gradient header */}
+            <div
+              className="px-6 pt-6 pb-4"
+              style={{ background: 'linear-gradient(155deg, #3D6B54 0%, #5B8A72 40%, #7BA896 100%)' }}
+            >
+              <h2
+                className="text-xl font-semibold text-white mb-2"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif' }}
+              >
+                Emotional Readiness Score
+              </h2>
+              <p className="text-[14px] text-white/80 leading-relaxed">
+                Your ERS is a number from 0-100 that reflects where you are in your healing journey.
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Stages */}
+              <div className="space-y-3">
+                {/* Healing */}
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: '#7E71B5' }} />
+                  <div>
+                    <span className="text-[14px] font-semibold" style={{ color: '#7E71B5' }}>Healing</span>
+                    <span className="text-[12px] text-stone-400 ml-2">0-49</span>
+                    <p className="text-[13px] text-stone-500">Processing and adjusting</p>
+                  </div>
+                </div>
+
+                {/* Rebuilding */}
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: '#5B8A72' }} />
+                  <div>
+                    <span className="text-[14px] font-semibold" style={{ color: '#5B8A72' }}>Rebuilding</span>
+                    <span className="text-[12px] text-stone-400 ml-2">50-74</span>
+                    <p className="text-[13px] text-stone-500">Finding your footing</p>
+                  </div>
+                </div>
+
+                {/* Ready */}
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: '#D4973B' }} />
+                  <div>
+                    <span className="text-[14px] font-semibold" style={{ color: '#D4973B' }}>Ready</span>
+                    <span className="text-[12px] text-stone-400 ml-2">75-100</span>
+                    <p className="text-[13px] text-stone-500">Emotionally resilient</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Note */}
+              <p className="text-[13px] text-stone-500 pt-2">
+                Your score updates based on mood logs, journal entries, and engagement.
+              </p>
+
+              {/* Close button */}
+              <button
+                onClick={handleCloseERSInfo}
+                className="w-full py-3 rounded-xl font-medium text-white mt-2"
+                style={{ background: 'var(--primary)' }}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

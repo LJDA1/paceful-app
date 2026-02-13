@@ -253,6 +253,7 @@ export default function ERSPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recalculating, setRecalculating] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   const supabase = createClient();
 
@@ -507,7 +508,7 @@ export default function ERSPage() {
 
         {/* Change Indicator */}
         {delta !== null && (
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <div
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full"
               style={{ background: 'rgba(91,138,114,0.06)' }}
@@ -522,6 +523,53 @@ export default function ERSPage() {
             </div>
           </div>
         )}
+
+        {/* What does this mean? Collapsible */}
+        <div className="mb-8">
+          <button
+            onClick={() => setShowExplanation(!showExplanation)}
+            className="w-full flex items-center justify-center gap-2 py-2 transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <span className="text-[13px] font-medium">What does this mean?</span>
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${showExplanation ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-out ${
+              showExplanation ? 'max-h-48 opacity-100 mt-3' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div
+              className="rounded-2xl p-4 text-[13px] leading-relaxed"
+              style={{ background: 'var(--bg-warm)', color: 'var(--text-sec)' }}
+            >
+              {stage === 'healing' && (
+                <p>
+                  You&apos;re in the <strong style={{ color: 'var(--accent)' }}>Healing</strong> stage — a time for processing emotions and building self-awareness. Your score reflects six dimensions: emotional stability, self-reflection depth, engagement consistency, trust and openness, recovery behaviors, and social readiness. Focus on consistent journaling and mood tracking to build momentum.
+                </p>
+              )}
+              {stage === 'rebuilding' && (
+                <p>
+                  You&apos;re in the <strong style={{ color: 'var(--primary)' }}>Rebuilding</strong> stage — you&apos;ve done significant healing work and are establishing new patterns. Your score combines emotional stability, self-reflection depth, engagement consistency, trust and openness, recovery behaviors, and social readiness. Keep nurturing the dimensions where you&apos;re growing.
+                </p>
+              )}
+              {stage === 'ready' && (
+                <p>
+                  You&apos;re in the <strong style={{ color: 'var(--primary)' }}>Ready</strong> stage — you&apos;ve built strong emotional foundations. Your score reflects emotional stability, self-reflection depth, engagement consistency, trust and openness, recovery behaviors, and social readiness. You have the tools to navigate future challenges with resilience.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Recalculate button */}
         <div className="flex justify-center mb-8">
