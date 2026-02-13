@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import Anthropic from '@anthropic-ai/sdk';
 import { getMemories, addMemories, formatMemoriesForPrompt } from '@/lib/ai-memory';
 import { extractMemories } from '@/lib/ai-memory-extract';
+import { extractStructuredDataAsync } from '@/lib/data-extraction';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -136,6 +137,23 @@ ${memoriesContext}`;
         console.error('Memory extraction error:', error);
       }
     })();
+
+    // Fire-and-forget: Extract structured insights from chat message
+    try {
+      extractStructuredDataAsync(
+        user.id,
+        'chat',
+        message,
+        {
+          moodScore: typeof moodScore === 'number' ? moodScore : undefined,
+          ersScore: typeof ersScore === 'number' ? ersScore : undefined,
+          ersStage: typeof ersStage === 'string' ? ersStage : undefined,
+        },
+        supabase
+      );
+    } catch {
+      // Silent failure
+    }
 
     return NextResponse.json({ response: responseText });
   } catch (error) {

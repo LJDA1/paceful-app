@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { extractStructuredDataAsync } from '@/lib/data-extraction';
 
 export async function POST(request: NextRequest) {
   try {
@@ -117,6 +118,41 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Failed to update journal entry:', updateError);
+    }
+
+    // Fire-and-forget: Extract structured insights from journal text
+    try {
+      // Fetch context for extraction
+      const [moodRes, ersRes] = await Promise.all([
+        supabase
+          .from('mood_entries')
+          .select('mood_value')
+          .eq('user_id', user.id)
+          .order('logged_at', { ascending: false })
+          .limit(1)
+          .single(),
+        supabase
+          .from('ers_scores')
+          .select('ers_score, ers_stage')
+          .eq('user_id', user.id)
+          .order('calculated_at', { ascending: false })
+          .limit(1)
+          .single(),
+      ]);
+
+      extractStructuredDataAsync(
+        user.id,
+        'journal_sentiment',
+        truncatedText,
+        {
+          moodScore: moodRes.data?.mood_value,
+          ersScore: ersRes.data?.ers_score,
+          ersStage: ersRes.data?.ers_stage,
+        },
+        supabase
+      );
+    } catch {
+      // Silent failure
     }
 
     return NextResponse.json({

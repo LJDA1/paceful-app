@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Anthropic from '@anthropic-ai/sdk';
+import { extractStructuredDataAsync } from '@/lib/data-extraction';
 
 interface ReflectRequest {
   entryText: string;
@@ -112,6 +113,21 @@ Context: ${firstName ? `The writer's name is ${firstName}.` : ''} Their current 
         .update({ ai_reflection: reflection })
         .eq('id', entryId)
         .eq('user_id', user.id);
+    }
+
+    // Fire-and-forget: Extract structured insights from journal text
+    try {
+      extractStructuredDataAsync(
+        user.id,
+        'journal_reflection',
+        entryText,
+        {
+          ersStage: ersStage,
+        },
+        supabase
+      );
+    } catch {
+      // Silent failure
     }
 
     return NextResponse.json({ reflection, isGeneric: false });

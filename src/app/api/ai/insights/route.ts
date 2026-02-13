@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { extractStructuredDataAsync } from '@/lib/data-extraction';
 
 export async function POST(request: NextRequest) {
   try {
@@ -100,6 +101,34 @@ Provide ONE specific, actionable insight about their emotional patterns.`;
     // Extract text from response
     const textBlock = message.content.find(block => block.type === 'text');
     const insight = textBlock ? textBlock.text : "Continue your healing journey one day at a time. Your consistency in tracking shows real commitment to growth.";
+
+    // Fire-and-forget: Extract structured insights from underlying data
+    try {
+      // Combine mood notes and journal previews for extraction
+      const combinedText = [
+        ...moodData.filter(m => m.note).map(m => m.note),
+        ...journalData.map(j => j.preview),
+      ].join(' ');
+
+      if (combinedText.length > 30) {
+        // Calculate average mood score for context
+        const avgMood = moodData.length > 0
+          ? moodData.reduce((sum, m) => sum + m.score, 0) / moodData.length
+          : undefined;
+
+        extractStructuredDataAsync(
+          user.id,
+          'mood_insight',
+          combinedText,
+          {
+            moodScore: avgMood,
+          },
+          supabase
+        );
+      }
+    } catch {
+      // Silent failure
+    }
 
     return NextResponse.json({ insight });
 
