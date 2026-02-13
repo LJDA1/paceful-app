@@ -816,7 +816,7 @@ export default function OnboardingPage() {
         }
       }
 
-      router.push('/dashboard');
+      router.push('/first-session');
     } catch (err) {
       console.error('Onboarding error:', err);
       setError(err instanceof Error ? err.message : 'Failed to complete setup');

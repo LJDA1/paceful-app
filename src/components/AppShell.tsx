@@ -4,9 +4,10 @@ import { usePathname } from 'next/navigation';
 import Navigation from './Navigation';
 import ErrorBoundary from './ErrorBoundary';
 import OfflineBanner from './OfflineBanner';
+import ChatFAB from './ChatFAB';
 
 const noNavRoutes = ['/auth', '/onboarding', '/login', '/signup'];
-const marketingRoutes = ['/design-partners', '/investors', '/api-docs', '/privacy', '/terms', '/demo'];
+const marketingRoutes = ['/design-partners', '/investors', '/api-docs', '/privacy', '/terms', '/demo', '/pricing'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -36,6 +37,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
+      <ChatFAB />
     </ErrorBoundary>
   );
 }
