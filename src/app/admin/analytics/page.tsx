@@ -48,6 +48,13 @@ interface ApiKeyInfo {
   is_active: boolean;
 }
 
+interface ConversionFunnel {
+  landingViews: number;
+  ctaClicks: number;
+  signupPageViews: number;
+  signupsCompleted: number;
+}
+
 // ============================================================================
 // Stat Card Component
 // ============================================================================
@@ -191,6 +198,87 @@ function ActivityFeed({ activities }: { activities: ActivityLog[] }) {
 }
 
 // ============================================================================
+// Conversion Funnel
+// ============================================================================
+
+function ConversionFunnel({ funnel }: { funnel: ConversionFunnel }) {
+  const steps = [
+    { label: 'Landing Views', value: funnel.landingViews, color: '#6366f1' },
+    { label: 'CTA Clicks', value: funnel.ctaClicks, color: '#8b5cf6' },
+    { label: 'Signup Page Views', value: funnel.signupPageViews, color: '#a855f7' },
+    { label: 'Signups Completed', value: funnel.signupsCompleted, color: '#22c55e' },
+  ];
+
+  const maxValue = Math.max(funnel.landingViews, 1);
+
+  const calcRate = (current: number, previous: number) => {
+    if (previous === 0) return '--';
+    return `${((current / previous) * 100).toFixed(1)}%`;
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-6 border border-stone-200">
+      <h3 className="font-semibold mb-6" style={{ color: 'var(--text)' }}>Conversion Funnel</h3>
+
+      {funnel.landingViews === 0 ? (
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No conversion data available yet</p>
+      ) : (
+        <div className="space-y-4">
+          {steps.map((step, idx) => {
+            const widthPct = Math.max((step.value / maxValue) * 100, 5);
+            const prevValue = idx > 0 ? steps[idx - 1].value : step.value;
+            const convRate = idx > 0 ? calcRate(step.value, prevValue) : null;
+
+            return (
+              <div key={step.label}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
+                    {step.label}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    {convRate && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-stone-100" style={{ color: 'var(--text-muted)' }}>
+                        {convRate}
+                      </span>
+                    )}
+                    <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+                      {step.value.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className="h-8 rounded-lg transition-all duration-500"
+                  style={{
+                    width: `${widthPct}%`,
+                    background: step.color,
+                    minWidth: '40px',
+                  }}
+                />
+              </div>
+            );
+          })}
+
+          {/* Overall conversion rate */}
+          <div className="pt-4 mt-4 border-t border-stone-100">
+            <div className="flex items-center justify-between">
+              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                Overall Conversion Rate
+              </span>
+              <span
+                className="text-lg font-bold"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: '#22c55e' }}
+              >
+                {calcRate(funnel.signupsCompleted, funnel.landingViews)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // Main Dashboard
 // ============================================================================
 
@@ -220,6 +308,12 @@ function AnalyticsDashboard() {
 
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyInfo[]>([]);
+  const [conversionFunnel, setConversionFunnel] = useState<ConversionFunnel>({
+    landingViews: 0,
+    ctaClicks: 0,
+    signupPageViews: 0,
+    signupsCompleted: 0,
+  });
 
   const supabase = createClient();
 
@@ -350,6 +444,32 @@ function AnalyticsDashboard() {
         setApiKeys([]);
       }
 
+      // 6. Conversion Funnel
+      try {
+        const { data: conversionEvents } = await supabase
+          .from('activity_logs')
+          .select('event_type')
+          .like('event_type', 'conversion_%');
+
+        const counts = {
+          landingViews: 0,
+          ctaClicks: 0,
+          signupPageViews: 0,
+          signupsCompleted: 0,
+        };
+
+        (conversionEvents || []).forEach(e => {
+          if (e.event_type === 'conversion_landing_view') counts.landingViews++;
+          else if (e.event_type === 'conversion_cta_click') counts.ctaClicks++;
+          else if (e.event_type === 'conversion_signup_page_view') counts.signupPageViews++;
+          else if (e.event_type === 'conversion_signup_complete') counts.signupsCompleted++;
+        });
+
+        setConversionFunnel(counts);
+      } catch {
+        // Table might not have conversion events yet
+      }
+
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -419,6 +539,9 @@ function AnalyticsDashboard() {
           <StatCard label="Mood Entries" value={overview.totalMoodEntries} subtext="Total logged" />
           <StatCard label="Journal Entries" value={overview.totalJournalEntries} subtext="Total written" />
         </div>
+
+        {/* Conversion Funnel */}
+        <ConversionFunnel funnel={conversionFunnel} />
 
         {/* ERS Distribution */}
         <ERSDistributionBar distribution={ersDistribution} />

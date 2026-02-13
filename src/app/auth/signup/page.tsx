@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
+import { trackConversion, flushConversionEvents } from '@/lib/conversion-track';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -12,6 +13,11 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Track signup page view
+  useEffect(() => {
+    trackConversion('signup_page_view');
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +54,10 @@ export default function SignupPage() {
           date_of_birth: '2000-01-01',
           onboarding_completed: false,
         }, { onConflict: 'user_id' });
+
+        // Track signup completion and flush all conversion events
+        trackConversion('signup_complete');
+        await flushConversionEvents(signUpData.user.id, supabase);
       }
 
       router.push('/onboarding');

@@ -1,8 +1,41 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { trackConversion } from '@/lib/conversion-track';
 
 export default function LandingPage() {
+  const scrollMidpointRef = useRef<HTMLDivElement>(null);
+  const hasTrackedScroll = useRef(false);
+
+  // Track landing page view
+  useEffect(() => {
+    trackConversion('landing_view');
+  }, []);
+
+  // Track scroll depth at 50%
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasTrackedScroll.current) {
+          hasTrackedScroll.current = true;
+          trackConversion('scroll_50');
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (scrollMidpointRef.current) {
+      observer.observe(scrollMidpointRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleCtaClick = (button: string) => {
+    trackConversion('cta_click', { button });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-indigo-50">
       {/* Navigation */}
@@ -23,6 +56,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/auth/signup"
+              onClick={() => handleCtaClick('nav')}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
             >
               Start Free
@@ -50,12 +84,14 @@ export default function LandingPage() {
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/auth/signup"
+              onClick={() => handleCtaClick('hero')}
               className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
             >
               Start Free Journey
             </Link>
             <Link
               href="/demo"
+              onClick={() => handleCtaClick('hero_demo')}
               className="px-8 py-4 bg-white text-stone-700 rounded-xl font-semibold hover:bg-stone-50 transition border border-stone-200"
             >
               View Demo
@@ -63,6 +99,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Scroll tracking midpoint */}
+      <div ref={scrollMidpointRef} className="h-0" aria-hidden="true" />
 
       {/* Stats */}
       <section className="py-12 bg-white">
@@ -155,6 +194,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/auth/signup"
+            onClick={() => handleCtaClick('footer_cta')}
             className="inline-block px-8 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
           >
             Start Your Free Journey
