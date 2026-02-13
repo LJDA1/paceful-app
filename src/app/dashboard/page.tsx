@@ -17,6 +17,7 @@ import {
 } from '@/lib/streaks';
 import MilestoneToast from '@/components/MilestoneToast';
 import WeeklyRecap from '@/components/WeeklyRecap';
+import CommunityInsights from '@/components/CommunityInsights';
 
 // ============================================================================
 // Types
@@ -948,6 +949,13 @@ export default function DashboardPage() {
                 <MilestoneCard key={milestone.id} milestone={milestone} streakData={streakData} />
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Community Insights */}
+        {ersData && (
+          <div className="mb-6">
+            <CommunityInsights />
           </div>
         )}
 

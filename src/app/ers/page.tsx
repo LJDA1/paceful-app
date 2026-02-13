@@ -8,6 +8,7 @@ import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
 import { ERSSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState, ChartIcon } from '@/components/ui/EmptyState';
+import { CommunityInsightsCondensed } from '@/components/CommunityInsights';
 
 // ============================================================================
 // Types
@@ -619,7 +620,7 @@ export default function ERSPage() {
 
         {/* Focus Area Tip */}
         {lowestDimension && lowestDimension.value < 60 && (
-          <div className="rounded-[22px] p-5" style={{ background: 'var(--bg-warm)' }}>
+          <div className="rounded-[22px] p-5 mb-5" style={{ background: 'var(--bg-warm)' }}>
             <div className="flex items-start gap-4">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -639,6 +640,9 @@ export default function ERSPage() {
             </div>
           </div>
         )}
+
+        {/* Community Insights (Condensed) */}
+        <CommunityInsightsCondensed />
 
         {/* Error Toast */}
         {error && ersData && (
