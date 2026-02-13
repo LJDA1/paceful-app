@@ -9,6 +9,7 @@ import {
   getMoodLabel,
   type MoodEntry,
 } from '@/lib/mood-calculator';
+import { trackEvent } from '@/lib/track';
 
 // ============================================================================
 // Mood Configuration
@@ -122,30 +123,62 @@ export default function MoodPage() {
 
     setIsSaving(true);
     try {
-      // Store triggers in note field as JSON if triggers exist
-      const noteData = triggers.length > 0
-        ? JSON.stringify({ text: note.trim() || '', triggers })
-        : note.trim() || null;
+      // Get mood label based on score
+      const moodLabel = selectedMood <= 3 ? 'low' : selectedMood <= 6 ? 'moderate' : 'high';
+
+      // Get time of day
+      const hour = new Date().getHours();
+      const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+
+      // Combine note with triggers if note is provided
+      let triggerDescription = note.trim() || null;
+      if (triggers.length > 0 && triggerDescription) {
+        triggerDescription = `${triggerDescription} [triggers: ${triggers.join(', ')}]`;
+      } else if (triggers.length > 0) {
+        triggerDescription = `[triggers: ${triggers.join(', ')}]`;
+      }
 
       const { error } = await supabase.from('mood_entries').insert({
         user_id: userId,
-        mood_score: selectedMood,
-        note: noteData,
-        logged_at: new Date().toISOString(),
+        mood_value: selectedMood,
+        mood_label: moodLabel,
+        emotions: triggers.length > 0 ? triggers : null,
+        trigger_description: triggerDescription,
+        time_of_day: timeOfDay,
       });
 
-      if (!error) {
-        setSaved(true);
-        setTimeout(() => {
-          setSelectedMood(null);
-          setNote('');
-          setTriggers([]);
-          setSaved(false);
-          fetchData();
-        }, 2500);
+      if (error) {
+        console.error('Error saving mood:', error);
+        alert('Failed to save mood. Please try again.');
+        setIsSaving(false);
+        return;
       }
+
+      // Trigger ERS recalculation in background (fire-and-forget)
+      fetch('/api/ers/calculate', {
+        method: 'POST',
+        body: JSON.stringify({ userId }),
+        headers: { 'Content-Type': 'application/json' },
+      }).catch(() => {}); // Ignore errors
+
+      // Track mood logged event
+      trackEvent('mood_logged', {
+        score: selectedMood,
+        hasTriggers: triggers.length > 0,
+        hasNote: note.trim().length > 0,
+      });
+
+      setSaved(true);
+      setTimeout(() => {
+        setSelectedMood(null);
+        setNote('');
+        setTriggers([]);
+        setSaved(false);
+        fetchData();
+      }, 2500);
     } catch (err) {
       console.error('Error saving mood:', err);
+      alert('Failed to save mood. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -244,24 +277,38 @@ export default function MoodPage() {
     setStats({ avg, streak, common });
   }, [entries]);
 
-  // Parse triggers from note
-  const parseTriggers = (noteStr: string | null): string[] => {
+  // Parse triggers from note or emotions array
+  const parseTriggers = (entry: MoodEntry): string[] => {
+    // First check the emotions array from the entry
+    if (entry.emotions && entry.emotions.length > 0) {
+      return entry.emotions;
+    }
+    // Fallback: parse from note string (legacy format)
+    const noteStr = entry.note;
     if (!noteStr) return [];
+    // Try JSON format first (old format)
     try {
       const parsed = JSON.parse(noteStr);
       return parsed.triggers || [];
     } catch {
+      // Try [triggers: ...] format
+      const match = noteStr.match(/\[triggers:\s*([^\]]+)\]/);
+      if (match) {
+        return match[1].split(',').map(t => t.trim());
+      }
       return [];
     }
   };
 
   const parseNoteText = (noteStr: string | null): string => {
     if (!noteStr) return '';
+    // Try JSON format first (old format)
     try {
       const parsed = JSON.parse(noteStr);
       return parsed.text || noteStr;
     } catch {
-      return noteStr;
+      // Remove [triggers: ...] suffix if present
+      return noteStr.replace(/\s*\[triggers:[^\]]+\]$/, '').trim();
     }
   };
 
@@ -577,7 +624,7 @@ export default function MoodPage() {
                   {entries.slice(0, 10).map((entry, index) => {
                     const moodColor = getMoodColor(entry.mood_score);
                     const isLast = index === Math.min(entries.length, 10) - 1;
-                    const entryTriggers = parseTriggers(entry.note);
+                    const entryTriggers = parseTriggers(entry);
                     const noteText = parseNoteText(entry.note);
 
                     return (

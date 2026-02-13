@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
+import { trackEvent } from '@/lib/track';
 
 // ============================================================================
 // Types
@@ -288,7 +289,24 @@ export default function JournalPage() {
         .select('id')
         .single();
 
-      if (!error && newEntry) {
+      if (error) {
+        console.error('Error saving entry:', error);
+        alert('Failed to save entry. Please try again.');
+        setIsSavingEntry(false);
+        return;
+      }
+
+      if (newEntry) {
+        // Trigger ERS recalculation in background (fire-and-forget)
+        fetch('/api/ers/calculate', {
+          method: 'POST',
+          body: JSON.stringify({ userId }),
+          headers: { 'Content-Type': 'application/json' },
+        }).catch(() => {}); // Ignore errors
+
+        // Track journal saved event
+        trackEvent('journal_saved', { wordCount });
+
         setShowNewEntry(false);
         setEntryText('');
         setEntryTitle('');
@@ -317,6 +335,7 @@ export default function JournalPage() {
       }
     } catch (err) {
       console.error('Error saving entry:', err);
+      alert('Failed to save entry. Please try again.');
     } finally {
       setIsSavingEntry(false);
     }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
+import { trackEvent } from '@/lib/track';
 
 // ============================================================================
 // Types
@@ -189,6 +190,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (userId) {
       fetchDashboardData();
+      trackEvent('page_view', { page: 'dashboard' });
     }
   }, [userId, fetchDashboardData]);
 

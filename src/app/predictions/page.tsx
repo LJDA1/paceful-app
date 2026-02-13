@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
+import { trackEvent } from '@/lib/track';
 
 // ============================================================================
 // Types
@@ -139,6 +140,7 @@ export default function PredictionsPage() {
   useEffect(() => {
     if (userId) {
       fetchData();
+      trackEvent('page_view', { page: 'forecast' });
     }
   }, [userId, fetchData]);
 

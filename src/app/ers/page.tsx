@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
+import { trackEvent } from '@/lib/track';
 
 // ============================================================================
 // Types
@@ -304,6 +305,7 @@ export default function ERSPage() {
   useEffect(() => {
     if (userId) {
       fetchERSData();
+      trackEvent('page_view', { page: 'ers' });
     }
   }, [userId, fetchERSData]);
 
@@ -373,6 +375,9 @@ export default function ERSPage() {
       });
 
       fetchERSData();
+
+      // Track recalculation event
+      trackEvent('ers_recalculated', { score: result.ersScore });
     } catch (err) {
       console.error('Recalculation failed:', err);
       setError(err instanceof Error ? err.message : 'Recalculation failed');
