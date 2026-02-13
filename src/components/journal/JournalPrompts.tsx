@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 
 // ============================================================================
 // Types
@@ -114,7 +114,7 @@ function PromptCard({
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             {isPromptOfDay && (
               <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-medium">
-                Today's Prompt
+                Today&apos;s Prompt
               </span>
             )}
             {prompt.prompt_category && (
@@ -239,6 +239,8 @@ export default function JournalPrompts({
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [showAll, setShowAll] = useState(false);
 
+  const supabase = createClient();
+
   // Fetch prompts
   useEffect(() => {
     async function fetchPrompts() {
@@ -327,7 +329,7 @@ export default function JournalPrompts({
             </div>
 
             <p className="text-stone-700 leading-relaxed mb-4">
-              "{promptOfDay.prompt_text}"
+              &quot;{promptOfDay.prompt_text}&quot;
             </p>
 
             <button

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 
 // ============================================================================
 // Types
@@ -465,6 +465,8 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
   const [ersData, setErsData] = useState<ERSData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const supabase = createClient();
 
   const fetchERSData = useCallback(async () => {
     try {

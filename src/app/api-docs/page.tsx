@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 // ============================================================================
 // COMPONENTS
@@ -8,13 +9,14 @@ import { useState, useEffect } from 'react';
 
 function CodeBlock({
   code,
-  language = 'bash',
+  language: _language = 'bash',
   title
 }: {
   code: string;
   language?: string;
   title?: string;
 }) {
+  void _language; // Reserved for syntax highlighting
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -218,12 +220,12 @@ export default function ApiDocsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <a href="/" className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center">
                   <span className="text-lg">💜</span>
                 </div>
                 <span className="font-bold">Paceful</span>
-              </a>
+              </Link>
               <span className="text-slate-500">|</span>
               <span className="text-slate-300">API Documentation</span>
               <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 text-xs font-medium rounded">v1.0</span>

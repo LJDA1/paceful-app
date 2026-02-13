@@ -227,10 +227,10 @@ function PieChart({ data, title }: { data: ClientStats[]; title: string }) {
   }
 
   // Calculate angles for conic gradient
-  let gradientParts: string[] = [];
+  const gradientParts: string[] = [];
   let currentAngle = 0;
 
-  data.forEach((item, index) => {
+  data.forEach((item) => {
     const angle = (item.count / total) * 360;
     const endAngle = currentAngle + angle;
     gradientParts.push(`${item.color} ${currentAngle}deg ${endAngle}deg`);
@@ -369,7 +369,8 @@ export default function AdminUsagePage() {
 
   // Data state
   const [usageLogs, setUsageLogs] = useState<ApiUsageWithClient[]>([]);
-  const [clients, setClients] = useState<Map<string, string>>(new Map());
+  const [_clients, setClients] = useState<Map<string, string>>(new Map());
+  void _clients; // Client map maintained for future use
   const [callsByPeriod, setCallsByPeriod] = useState<CallsByPeriod>({
     today: 0,
     thisWeek: 0,

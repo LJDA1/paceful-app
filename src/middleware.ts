@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Create Supabase client
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },

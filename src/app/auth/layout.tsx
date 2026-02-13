@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Paceful - Authentication',
@@ -14,22 +15,22 @@ export default function AuthLayout({
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-stone-50">
       <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
         <div className="mb-8">
-          <a href="/" className="text-2xl font-bold text-indigo-600">
+          <Link href="/" className="text-2xl font-bold text-indigo-600">
             paceful
-          </a>
+          </Link>
         </div>
         <div className="w-full max-w-md">
           {children}
         </div>
         <p className="mt-8 text-center text-sm text-stone-500">
           By continuing, you agree to our{' '}
-          <a href="/terms" className="text-indigo-600 hover:underline">
+          <Link href="/terms" className="text-indigo-600 hover:underline">
             Terms of Service
-          </a>{' '}
+          </Link>{' '}
           and{' '}
-          <a href="/privacy" className="text-indigo-600 hover:underline">
+          <Link href="/privacy" className="text-indigo-600 hover:underline">
             Privacy Policy
-          </a>
+          </Link>
         </p>
       </div>
     </div>

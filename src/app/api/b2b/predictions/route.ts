@@ -233,7 +233,7 @@ async function handleAggregate(params: AggregateParams, client: ApiClient): Prom
   const demographicFilter = params.demographic_filter || {};
 
   // Get prediction statistics
-  let predictionsQuery = supabase
+  const predictionsQuery = supabase
     .from('user_predictions')
     .select('*', { count: 'exact' })
     .gte('predicted_at', startDate)

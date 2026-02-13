@@ -71,6 +71,8 @@ export default function JournalEntryPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formattedCreatedAt, setFormattedCreatedAt] = useState('');
+  const [formattedUpdatedAt, setFormattedUpdatedAt] = useState('');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -115,6 +117,21 @@ export default function JournalEntryPage() {
 
     fetchEntry();
   }, [entryId, userId, supabase, router]);
+
+  // Format dates client-side to prevent hydration mismatch
+  useEffect(() => {
+    if (entry) {
+      setFormattedCreatedAt(new Date(entry.created_at).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      }));
+      setFormattedUpdatedAt(new Date(entry.updated_at).toLocaleDateString());
+    }
+  }, [entry]);
 
   // Auto-resize textarea in edit mode
   useEffect(() => {
@@ -381,7 +398,7 @@ Exported from Paceful Journal
                       {entry.entry_title || 'Untitled Entry'}
                     </h1>
                     <div className="flex items-center gap-3 text-sm text-stone-500">
-                      <span>{formatDate(entry.created_at)}</span>
+                      <span>{formattedCreatedAt}</span>
                       {entry.is_private && (
                         <span className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -463,7 +480,7 @@ Exported from Paceful Journal
                   <div className="pt-3 border-t border-stone-200 flex items-center justify-between text-sm text-stone-500">
                     <span>{entry.word_count || countWords(entry.entry_content)} words</span>
                     {entry.updated_at !== entry.created_at && (
-                      <span>Last edited {new Date(entry.updated_at).toLocaleDateString()}</span>
+                      <span>Last edited {formattedUpdatedAt}</span>
                     )}
                   </div>
                 </div>

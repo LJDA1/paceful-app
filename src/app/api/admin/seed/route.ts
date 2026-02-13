@@ -33,24 +33,26 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomChoice<T>(arr: T[]): T {
+function _randomChoice<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
+void _randomChoice; // Available for future use
 
 function randomChoices<T>(arr: T[], count: number): T[] {
   const shuffled = [...arr].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 }
 
-function generateUUID(): string {
+function _generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
+void _generateUUID; // Available for future use
 
-function generateBreakupDate(stage: 'healing' | 'rebuilding' | 'ready'): string {
+function _generateBreakupDate(stage: 'healing' | 'rebuilding' | 'ready'): string {
   const ranges = {
     healing: { min: 15, max: 60 },
     rebuilding: { min: 45, max: 120 },
@@ -61,6 +63,7 @@ function generateBreakupDate(stage: 'healing' | 'rebuilding' | 'ready'): string 
   date.setDate(date.getDate() - daysAgo);
   return date.toISOString().split('T')[0];
 }
+void _generateBreakupDate; // Available for future use
 
 function generateMoodValue(
   stage: 'healing' | 'rebuilding' | 'ready',

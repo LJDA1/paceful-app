@@ -30,7 +30,7 @@ export function Footer() {
 
         <p className="text-center text-xs text-stone-400 mt-4">
           Paceful is not a substitute for professional mental health care.
-          If you're in crisis, please contact a mental health professional or crisis hotline.
+          If you&apos;re in crisis, please contact a mental health professional or crisis hotline.
         </p>
       </div>
     </footer>

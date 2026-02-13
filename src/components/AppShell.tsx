@@ -2,7 +2,6 @@
 
 import { usePathname } from 'next/navigation';
 import Navigation from './Navigation';
-import DemoBanner from './DemoBanner';
 
 const noNavRoutes = ['/auth', '/onboarding', '/login', '/signup'];
 const marketingRoutes = ['/design-partners', '/investors', '/api-docs', '/privacy', '/terms', '/demo'];
@@ -22,9 +21,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <DemoBanner />
       <Navigation />
-      <main className="pb-20 md:pb-0 md:ml-64">
+      <main
+        className="pb-24 md:pb-0 md:ml-64"
+        style={{ background: 'var(--bg)' }}
+      >
         {children}
       </main>
     </>

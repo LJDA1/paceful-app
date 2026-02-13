@@ -104,7 +104,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-stone-800 mb-4">8. Limitation of Liability</h2>
             <p className="text-stone-600 mb-4">
-              Paceful is provided "as is" without warranties of any kind. We are not liable for any damages arising from your use of the service, including but not limited to emotional distress, data loss, or service interruptions.
+              Paceful is provided &quot;as is&quot; without warranties of any kind. We are not liable for any damages arising from your use of the service, including but not limited to emotional distress, data loss, or service interruptions.
             </p>
           </section>
 

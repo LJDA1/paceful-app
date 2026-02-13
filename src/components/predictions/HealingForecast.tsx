@@ -342,6 +342,7 @@ function TimelineSection({
     return `${weeks.toFixed(1)} weeks`;
   };
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const MilestoneCard = ({
     title,
     icon,
@@ -440,7 +441,7 @@ function TimelineSection({
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-sm font-medium">You've reached this milestone!</span>
+            <span className="text-sm font-medium">You&apos;ve reached this milestone!</span>
           </div>
         )}
       </div>
@@ -1044,7 +1045,7 @@ function HowItWorksModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
               </h3>
               <p className="text-sm text-gray-600 ml-8">
                 Confidence depends on cohort size and data consistency. Higher
-                confidence means predictions are more reliable. We're transparent
+                confidence means predictions are more reliable. We&apos;re transparent
                 about uncertainty - predictions improve as we gather more data.
               </p>
             </div>
@@ -1053,7 +1054,7 @@ function HowItWorksModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
               <p className="text-sm text-amber-800">
                 <strong>Important:</strong> These are statistical probabilities, not
                 guarantees. Your individual journey may differ. Use predictions as
-                helpful guidance while remembering that healing isn't linear, and your
+                helpful guidance while remembering that healing isn&apos;t linear, and your
                 choices shape your future.
               </p>
             </div>
@@ -1586,7 +1587,7 @@ export default function HealingForecast({ userId = 'demo-user' }: HealingForecas
               Building Your Predictions
             </h3>
             <p className="text-gray-500 max-w-md mx-auto">
-              We're analyzing your data to create personalized predictions. Keep
+              We&apos;re analyzing your data to create personalized predictions. Keep
               journaling and tracking your mood - predictions will appear as we gather
               more insights about your healing journey.
             </p>

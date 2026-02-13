@@ -9,17 +9,29 @@ export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const supabase = createClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
@@ -29,18 +41,16 @@ export default function SignupPage() {
         return;
       }
 
-      if (data.user) {
-        // Create profile for new user
+      if (signUpData.user) {
         await supabase.from('profiles').upsert({
-          id: data.user.id,
-          email: data.user.email,
-          created_at: new Date().toISOString(),
-        });
-
-        // Redirect to onboarding
-        router.push('/onboarding');
-        router.refresh();
+          user_id: signUpData.user.id,
+          first_name: '',
+          date_of_birth: '2000-01-01',
+          onboarding_completed: false,
+        }, { onConflict: 'user_id' });
       }
+
+      router.push('/onboarding');
     } catch {
       setError('An unexpected error occurred');
     } finally {
@@ -53,7 +63,7 @@ export default function SignupPage() {
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold text-stone-900">Create your account</h1>
         <p className="mt-2 text-sm text-stone-600">
-          Start your healing journey today
+          Start your emotional recovery journey today
         </p>
       </div>
 
@@ -65,76 +75,35 @@ export default function SignupPage() {
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-stone-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
+          <label htmlFor="email" className="block text-sm font-medium text-stone-700">Email</label>
+          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
             className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            placeholder="you@example.com"
-          />
+            placeholder="you@example.com" />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-stone-700">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="new-password"
+          <label htmlFor="password" className="block text-sm font-medium text-stone-700">Password</label>
+          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" minLength={8}
             className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            placeholder="Create a password"
-          />
-          <p className="mt-1 text-xs text-stone-500">
-            Must be at least 6 characters
-          </p>
+            placeholder="At least 8 characters" />
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isLoading ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-              Creating account...
-            </span>
-          ) : (
-            'Create account'
-          )}
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-stone-700">Confirm Password</label>
+          <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password"
+            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            placeholder="Confirm your password" />
+        </div>
+
+        <button type="submit" disabled={isLoading}
+          className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+          {isLoading ? 'Creating account...' : 'Create account'}
         </button>
       </form>
 
       <div className="mt-6 text-center text-sm">
         <span className="text-stone-600">Already have an account?</span>{' '}
-        <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-          Sign in
-        </Link>
+        <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">Sign in</Link>
       </div>
     </div>
   );

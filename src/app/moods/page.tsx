@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 import { getMoodColor, getMoodLabel } from '@/lib/mood-calculator';
 
@@ -296,6 +296,8 @@ export default function MoodsPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const supabase = createClient();
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!userLoading && !isAuthenticated) {
@@ -412,7 +414,7 @@ export default function MoodsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-stone-800">Log Your Mood</h1>
-              <p className="text-stone-500 text-sm">Track how you're feeling right now</p>
+              <p className="text-stone-500 text-sm">Track how you&apos;re feeling right now</p>
             </div>
             <Link
               href="/moods/history"

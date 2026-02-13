@@ -390,9 +390,30 @@ function CalendarView({
   selectedDate: string | null;
   onSelectDate: (date: string) => void;
 }) {
-  const today = new Date();
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [viewYear, setViewYear] = useState(today.getFullYear());
+  // Initialize to 0 to prevent hydration mismatch, then set client-side
+  const [viewMonth, setViewMonth] = useState(0);
+  const [viewYear, setViewYear] = useState(2024);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [monthName, setMonthName] = useState('');
+  const [todayStr, setTodayStr] = useState('');
+  const [todayDate, setTodayDate] = useState<Date | null>(null);
+
+  // Set initial values client-side to prevent hydration mismatch
+  useEffect(() => {
+    const today = new Date();
+    setViewMonth(today.getMonth());
+    setViewYear(today.getFullYear());
+    setTodayStr(today.toISOString().split('T')[0]);
+    setTodayDate(today);
+    setIsInitialized(true);
+  }, []);
+
+  // Update month name client-side
+  useEffect(() => {
+    if (isInitialized) {
+      setMonthName(new Date(viewYear, viewMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+    }
+  }, [viewMonth, viewYear, isInitialized]);
 
   const summaryMap = useMemo(() => {
     const map = new Map<string, DailyMoodSummary>();
@@ -401,6 +422,7 @@ function CalendarView({
   }, [summaries]);
 
   const calendarDays = useMemo(() => {
+    if (!isInitialized) return [];
     const firstDay = new Date(viewYear, viewMonth, 1);
     const lastDay = new Date(viewYear, viewMonth + 1, 0);
     const startPadding = firstDay.getDay();
@@ -414,9 +436,7 @@ function CalendarView({
     }
 
     return days;
-  }, [viewMonth, viewYear]);
-
-  const monthName = new Date(viewYear, viewMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }, [viewMonth, viewYear, isInitialized]);
 
   return (
     <div className="bg-white rounded-xl p-5 border border-stone-200">
@@ -471,9 +491,9 @@ function CalendarView({
 
           const dateStr = date.toISOString().split('T')[0];
           const summary = summaryMap.get(dateStr);
-          const isToday = dateStr === today.toISOString().split('T')[0];
+          const isToday = dateStr === todayStr;
           const isSelected = dateStr === selectedDate;
-          const isFuture = date > today;
+          const isFuture = todayDate ? date > todayDate : false;
           const colors = summary ? getMoodColor(summary.averageMood) : null;
 
           return (
@@ -533,11 +553,29 @@ function DayDetailPanel({
   isLoading: boolean;
   onClose: () => void;
 }) {
-  const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const [formattedDate, setFormattedDate] = useState('');
+  const [entryTimes, setEntryTimes] = useState<Record<string, string>>({});
+
+  // Format date client-side to prevent hydration mismatch
+  useEffect(() => {
+    setFormattedDate(new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    }));
+  }, [date]);
+
+  // Format entry times client-side
+  useEffect(() => {
+    const times: Record<string, string> = {};
+    entries.forEach((entry) => {
+      times[entry.id] = new Date(entry.logged_at).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    });
+    setEntryTimes(times);
+  }, [entries]);
 
   return (
     <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
@@ -563,10 +601,6 @@ function DayDetailPanel({
           <div className="space-y-3">
             {entries.map((entry) => {
               const colors = getMoodColor(entry.mood_score);
-              const time = new Date(entry.logged_at).toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-              });
 
               return (
                 <div key={entry.id} className={`p-4 rounded-xl ${colors.bg}`}>
@@ -574,7 +608,7 @@ function DayDetailPanel({
                     <div className={`text-xl font-bold ${colors.text}`}>
                       {entry.mood_score} - {getMoodLabel(entry.mood_score)}
                     </div>
-                    <span className="text-sm text-stone-500">{time}</span>
+                    <span className="text-sm text-stone-500">{entryTimes[entry.id] || ''}</span>
                   </div>
                   {entry.emotions && entry.emotions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-2">

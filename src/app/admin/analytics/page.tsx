@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 
 // ============================================================================
 // Types
@@ -52,7 +52,12 @@ interface AnalyticsData {
 const ADMIN_PASSWORD = 'paceful_admin_2025'; // Simple password for demo
 
 function AdminAuthGate({ children }: { children: React.ReactNode }) {
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('admin_auth') === 'true';
+    }
+    return false;
+  });
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -65,12 +70,6 @@ function AdminAuthGate({ children }: { children: React.ReactNode }) {
       setError('Invalid password');
     }
   };
-
-  useEffect(() => {
-    if (sessionStorage.getItem('admin_auth') === 'true') {
-      setAuthenticated(true);
-    }
-  }, []);
 
   if (authenticated) {
     return <>{children}</>;
@@ -224,6 +223,17 @@ function MoodEntriesTrendChart({
 }: {
   data: Array<{ date: string; count: number }>;
 }) {
+  const [dateLabels, setDateLabels] = useState<Record<string, string>>({});
+
+  // Format date labels client-side to prevent hydration mismatch
+  useEffect(() => {
+    const labels: Record<string, string> = {};
+    data.forEach((day) => {
+      labels[day.date] = new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    setDateLabels(labels);
+  }, [data]);
+
   if (data.length === 0) {
     return (
       <div className="bg-stone-800 rounded-xl p-5 border border-stone-700">
@@ -251,7 +261,7 @@ function MoodEntriesTrendChart({
             />
             {i % 2 === 0 && (
               <span className="text-[10px] text-stone-500">
-                {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {dateLabels[day.date] || ''}
               </span>
             )}
           </div>
@@ -318,6 +328,8 @@ function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const supabase = createClient();
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);

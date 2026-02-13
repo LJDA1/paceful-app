@@ -1,457 +1,74 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
-import QuickMoodLog from '@/components/mood/QuickMoodLog';
+import { createClient } from '@/lib/supabase-browser';
 import {
   fetchMoodEntries,
-  calculateMoodStats,
-  calculateDailySummaries,
-  getEntriesForDate,
-  getMoodColor,
-  getMoodHexColor,
   getMoodLabel,
   type MoodEntry,
-  type MoodStats,
-  type DailyMoodSummary,
 } from '@/lib/mood-calculator';
 
 // ============================================================================
-// Stats Cards
+// Mood Configuration
 // ============================================================================
 
-function StatsCards({ stats, isLoading }: { stats: MoodStats; isLoading: boolean }) {
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white rounded-xl p-4 border border-stone-100 animate-pulse">
-            <div className="h-8 w-12 bg-stone-200 rounded mb-1" />
-            <div className="h-4 w-20 bg-stone-100 rounded" />
-          </div>
-        ))}
-      </div>
-    );
-  }
+const moodOptions = [
+  { value: 2, label: 'Struggling', description: 'Having a hard time', color: '#7E71B5' },
+  { value: 4, label: 'Low', description: 'Feeling down', color: '#5E8DB0' },
+  { value: 6, label: 'Okay', description: 'Getting by', color: '#D4973B' },
+  { value: 8, label: 'Good', description: 'Feeling positive', color: '#7BA896' },
+  { value: 10, label: 'Great', description: 'Thriving today', color: '#5B8A72' },
+];
 
-  const trendIcon =
-    stats.trend === 'improving' ? (
-      <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-      </svg>
-    ) : stats.trend === 'declining' ? (
-      <svg className="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181" />
-      </svg>
-    ) : (
-      <svg className="w-4 h-4 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-      </svg>
-    );
+const triggerOptions = [
+  'Sleep quality', 'Social interaction', 'Exercise', 'Memories', 'Loneliness',
+  'Work stress', 'Felt progress', 'Music/media', 'Time outdoors', 'Therapy/reflection',
+];
 
-  const avgColors = getMoodColor(stats.averageMood);
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div className="bg-white rounded-xl p-4 border border-stone-100">
-        <div className={`text-2xl font-bold ${avgColors.text}`}>{stats.averageMood || '-'}</div>
-        <p className="text-sm text-stone-500">Average Mood</p>
-      </div>
-      <div className="bg-white rounded-xl p-4 border border-stone-100">
-        <div className="flex items-center gap-2">
-          {trendIcon}
-          <span className={`text-lg font-bold ${
-            stats.trend === 'improving' ? 'text-emerald-600' :
-            stats.trend === 'declining' ? 'text-rose-600' : 'text-stone-600'
-          }`}>
-            {stats.trend === 'stable' ? 'Stable' : `${Math.abs(stats.trendPercentage)}%`}
-          </span>
-        </div>
-        <p className="text-sm text-stone-500 capitalize">{stats.trend} Trend</p>
-      </div>
-      <div className="bg-white rounded-xl p-4 border border-stone-100">
-        <div className="text-2xl font-bold text-stone-800">{stats.entryCount}</div>
-        <p className="text-sm text-stone-500">Entries (30d)</p>
-      </div>
-      <div className="bg-white rounded-xl p-4 border border-stone-100">
-        <div className="text-lg font-bold text-indigo-600 capitalize">{stats.mostCommonEmotion || '-'}</div>
-        <p className="text-sm text-stone-500">Top Emotion</p>
-      </div>
-    </div>
-  );
+function getMoodColor(score: number): string {
+  if (score <= 2) return '#7E71B5';
+  if (score <= 4) return '#5E8DB0';
+  if (score <= 6) return '#D4973B';
+  if (score <= 8) return '#7BA896';
+  return '#5B8A72';
 }
 
 // ============================================================================
-// Mini Line Chart (30-day trend)
+// Icons
 // ============================================================================
 
-function TrendChart({ dailySummaries }: { dailySummaries: DailyMoodSummary[] }) {
-  if (dailySummaries.length < 2) {
-    return (
-      <div className="bg-white rounded-xl p-4 border border-stone-100">
-        <h3 className="text-sm font-medium text-stone-700 mb-3">30-Day Mood Trend</h3>
-        <div className="h-32 flex items-center justify-center text-stone-500 text-sm">
-          Log more moods to see your trend
-        </div>
-      </div>
-    );
-  }
-
-  const maxMood = 10;
-  const chartHeight = 100;
-  const chartWidth = 100;
-
-  // Create points for the line
-  const points = dailySummaries.map((summary, index) => {
-    const x = (index / (dailySummaries.length - 1)) * chartWidth;
-    const y = chartHeight - (summary.averageMood / maxMood) * chartHeight;
-    return { x, y, mood: summary.averageMood, date: summary.date };
-  });
-
-  // Create SVG path
-  const pathD = points
-    .map((point, index) => (index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`))
-    .join(' ');
-
-  // Create area path (for fill)
-  const areaD = `${pathD} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`;
-
+function HeartIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className="bg-white rounded-xl p-4 border border-stone-100">
-      <h3 className="text-sm font-medium text-stone-700 mb-3">30-Day Mood Trend</h3>
-      <div className="relative h-32">
-        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full" preserveAspectRatio="none">
-          {/* Grid lines */}
-          <line x1="0" y1={chartHeight * 0.3} x2={chartWidth} y2={chartHeight * 0.3} stroke="#e7e5e4" strokeWidth="0.5" strokeDasharray="2" />
-          <line x1="0" y1={chartHeight * 0.6} x2={chartWidth} y2={chartHeight * 0.6} stroke="#e7e5e4" strokeWidth="0.5" strokeDasharray="2" />
-
-          {/* Area fill */}
-          <path d={areaD} fill="url(#gradient)" opacity="0.3" />
-
-          {/* Line */}
-          <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-
-          {/* Points */}
-          {points.map((point, index) => (
-            <circle
-              key={index}
-              cx={point.x}
-              cy={point.y}
-              r="3"
-              fill={getMoodHexColor(point.mood)}
-              stroke="white"
-              strokeWidth="1.5"
-            />
-          ))}
-
-          {/* Gradient definition */}
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs text-stone-500 -ml-6">
-          <span>10</span>
-          <span>5</span>
-          <span>1</span>
-        </div>
-      </div>
-
-      {/* X-axis labels */}
-      <div className="flex justify-between mt-2 text-xs text-stone-500">
-        <span>{dailySummaries[0]?.date.slice(5) || ''}</span>
-        <span>Today</span>
-      </div>
-    </div>
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+    </svg>
   );
 }
 
-// ============================================================================
-// Calendar View
-// ============================================================================
-
-function CalendarView({
-  dailySummaries,
-  selectedDate,
-  onSelectDate,
-}: {
-  dailySummaries: DailyMoodSummary[];
-  selectedDate: string | null;
-  onSelectDate: (date: string) => void;
-}) {
-  const today = new Date();
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-
-  // Create lookup map for daily summaries
-  const summaryMap = useMemo(() => {
-    const map = new Map<string, DailyMoodSummary>();
-    dailySummaries.forEach((s) => map.set(s.date, s));
-    return map;
-  }, [dailySummaries]);
-
-  // Generate calendar days
-  const calendarDays = useMemo(() => {
-    const firstDay = new Date(viewYear, viewMonth, 1);
-    const lastDay = new Date(viewYear, viewMonth + 1, 0);
-    const startPadding = firstDay.getDay();
-    const days: (Date | null)[] = [];
-
-    // Add padding for days before first of month
-    for (let i = 0; i < startPadding; i++) {
-      days.push(null);
-    }
-
-    // Add days of month
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      days.push(new Date(viewYear, viewMonth, d));
-    }
-
-    return days;
-  }, [viewMonth, viewYear]);
-
-  const monthName = new Date(viewYear, viewMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  const goToPrevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear(viewYear - 1);
-    } else {
-      setViewMonth(viewMonth - 1);
-    }
-  };
-
-  const goToNextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear(viewYear + 1);
-    } else {
-      setViewMonth(viewMonth + 1);
-    }
-  };
-
+function CheckIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className="bg-white rounded-xl p-4 border border-stone-100">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={goToPrevMonth}
-          className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors"
-        >
-          <svg className="w-5 h-5 text-stone-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-        <h3 className="text-sm font-semibold text-stone-800">{monthName}</h3>
-        <button
-          onClick={goToNextMonth}
-          className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors"
-        >
-          <svg className="w-5 h-5 text-stone-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Day headers */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-stone-500 py-1">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {calendarDays.map((date, index) => {
-          if (!date) {
-            return <div key={`empty-${index}`} className="aspect-square" />;
-          }
-
-          const dateStr = date.toISOString().split('T')[0];
-          const summary = summaryMap.get(dateStr);
-          const isToday = dateStr === today.toISOString().split('T')[0];
-          const isSelected = dateStr === selectedDate;
-          const isFuture = date > today;
-          const colors = summary ? getMoodColor(summary.averageMood) : null;
-
-          return (
-            <button
-              key={dateStr}
-              onClick={() => !isFuture && onSelectDate(dateStr)}
-              disabled={isFuture}
-              className={`aspect-square rounded-lg text-sm font-medium flex items-center justify-center transition-all ${
-                isSelected
-                  ? 'ring-2 ring-indigo-500 ring-offset-1'
-                  : ''
-              } ${
-                isFuture
-                  ? 'text-stone-300 cursor-not-allowed'
-                  : summary
-                  ? `${colors?.bg} ${colors?.text} hover:opacity-80`
-                  : isToday
-                  ? 'bg-stone-100 text-stone-800 hover:bg-stone-200'
-                  : 'text-stone-600 hover:bg-stone-50'
-              }`}
-            >
-              {date.getDate()}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mt-4 pt-3 border-t border-stone-100">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-rose-200" />
-          <span className="text-xs text-stone-500">1-3</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-amber-200" />
-          <span className="text-xs text-stone-500">4-6</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-emerald-200" />
-          <span className="text-xs text-stone-500">7-10</span>
-        </div>
-      </div>
-    </div>
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+    </svg>
   );
 }
 
-// ============================================================================
-// Day Detail Panel
-// ============================================================================
-
-function DayDetailPanel({
-  date,
-  entries,
-  isLoading,
-  onClose,
-}: {
-  date: string;
-  entries: MoodEntry[];
-  isLoading: boolean;
-  onClose: () => void;
-}) {
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-
+function FireIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
-        <h3 className="font-medium text-stone-800">{formattedDate}</h3>
-        <button onClick={onClose} className="p-1 hover:bg-stone-100 rounded-lg transition-colors">
-          <svg className="w-4 h-4 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2].map((i) => (
-              <div key={i} className="h-16 bg-stone-100 rounded-lg animate-pulse" />
-            ))}
-          </div>
-        ) : entries.length === 0 ? (
-          <p className="text-stone-500 text-sm text-center py-4">No mood entries for this day</p>
-        ) : (
-          <div className="space-y-3">
-            {entries.map((entry) => {
-              const colors = getMoodColor(entry.mood_score);
-              const time = new Date(entry.logged_at).toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-              });
-
-              return (
-                <div key={entry.id} className={`p-3 rounded-lg ${colors.bg}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`text-lg font-bold ${colors.text}`}>
-                      {entry.mood_score} - {getMoodLabel(entry.mood_score)}
-                    </div>
-                    <span className="text-xs text-stone-500">{time}</span>
-                  </div>
-                  {entry.emotions && entry.emotions.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {entry.emotions.map((emotion) => (
-                        <span
-                          key={emotion}
-                          className="px-2 py-0.5 text-xs rounded-full bg-white/50 text-stone-600 capitalize"
-                        >
-                          {emotion}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {entry.note && <p className="text-sm text-stone-600">{entry.note}</p>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+    </svg>
   );
 }
 
-// ============================================================================
-// Emotion Filter
-// ============================================================================
-
-function EmotionFilter({
-  emotions,
-  selectedEmotion,
-  onChange,
-}: {
-  emotions: string[];
-  selectedEmotion: string | null;
-  onChange: (emotion: string | null) => void;
-}) {
-  if (emotions.length === 0) return null;
-
+function ChartIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <div className="bg-white rounded-xl p-4 border border-stone-100">
-      <h3 className="text-sm font-medium text-stone-700 mb-3">Filter by Emotion</h3>
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => onChange(null)}
-          className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
-            selectedEmotion === null
-              ? 'bg-indigo-100 text-indigo-700'
-              : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-          }`}
-        >
-          All
-        </button>
-        {emotions.map((emotion) => (
-          <button
-            key={emotion}
-            onClick={() => onChange(emotion)}
-            className={`px-3 py-1.5 text-sm rounded-full capitalize transition-colors ${
-              selectedEmotion === emotion
-                ? 'bg-indigo-100 text-indigo-700'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            }`}
-          >
-            {emotion}
-          </button>
-        ))}
-      </div>
-    </div>
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+    </svg>
   );
 }
 
@@ -463,13 +80,19 @@ export default function MoodPage() {
   const router = useRouter();
   const { userId, loading: userLoading, isAuthenticated } = useUser();
   const [entries, setEntries] = useState<MoodEntry[]>([]);
-  const [stats, setStats] = useState<MoodStats | null>(null);
-  const [dailySummaries, setDailySummaries] = useState<DailyMoodSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [dateEntries, setDateEntries] = useState<MoodEntry[]>([]);
-  const [isLoadingDate, setIsLoadingDate] = useState(false);
-  const [emotionFilter, setEmotionFilter] = useState<string | null>(null);
+
+  // Tab state
+  const [tab, setTab] = useState<'log' | 'history'>('log');
+
+  // New mood state
+  const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const [note, setNote] = useState('');
+  const [triggers, setTriggers] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const supabase = createClient();
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -482,15 +105,8 @@ export default function MoodPage() {
   const fetchData = useCallback(async () => {
     if (!userId) return;
     setIsLoading(true);
-    const fetchedEntries = await fetchMoodEntries(userId, 60);
+    const fetchedEntries = await fetchMoodEntries(userId, 30);
     setEntries(fetchedEntries);
-
-    const calculatedStats = calculateMoodStats(fetchedEntries);
-    setStats(calculatedStats);
-
-    const summaries = calculateDailySummaries(fetchedEntries, 60);
-    setDailySummaries(summaries);
-
     setIsLoading(false);
   }, [userId]);
 
@@ -500,84 +116,572 @@ export default function MoodPage() {
     }
   }, [userId, fetchData]);
 
-  // Fetch entries for selected date
-  useEffect(() => {
-    if (selectedDate && userId) {
-      setIsLoadingDate(true);
-      getEntriesForDate(userId, selectedDate).then((entries) => {
-        setDateEntries(entries);
-        setIsLoadingDate(false);
-      });
-    }
-  }, [selectedDate, userId]);
+  // Save mood
+  const handleSaveMood = async () => {
+    if (!userId || selectedMood === null) return;
 
-  // Get unique emotions for filter
-  const uniqueEmotions = useMemo(() => {
-    const emotionSet = new Set<string>();
-    entries.forEach((e) => e.emotions?.forEach((em) => emotionSet.add(em)));
-    return Array.from(emotionSet).sort();
+    setIsSaving(true);
+    try {
+      // Store triggers in note field as JSON if triggers exist
+      const noteData = triggers.length > 0
+        ? JSON.stringify({ text: note.trim() || '', triggers })
+        : note.trim() || null;
+
+      const { error } = await supabase.from('mood_entries').insert({
+        user_id: userId,
+        mood_score: selectedMood,
+        note: noteData,
+        logged_at: new Date().toISOString(),
+      });
+
+      if (!error) {
+        setSaved(true);
+        setTimeout(() => {
+          setSelectedMood(null);
+          setNote('');
+          setTriggers([]);
+          setSaved(false);
+          fetchData();
+        }, 2500);
+      }
+    } catch (err) {
+      console.error('Error saving mood:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Toggle trigger
+  const toggleTrigger = (trigger: string) => {
+    setTriggers(prev =>
+      prev.includes(trigger)
+        ? prev.filter(t => t !== trigger)
+        : [...prev, trigger]
+    );
+  };
+
+  // Format date - client-side only to prevent hydration mismatch
+  const [dateString, setDateString] = useState('');
+  useEffect(() => {
+    setDateString(new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    }));
+  }, []);
+
+  // Format entry times - client-side only
+  const [entryTimes, setEntryTimes] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const times: Record<string, string> = {};
+    entries.forEach((entry) => {
+      times[entry.id] = new Date(entry.logged_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    });
+    setEntryTimes(times);
   }, [entries]);
 
-  // Filter summaries by emotion
-  const filteredSummaries = useMemo(() => {
-    if (!emotionFilter) return dailySummaries;
-    return dailySummaries.filter((s) => s.emotions.includes(emotionFilter));
-  }, [dailySummaries, emotionFilter]);
+  // Week data for history chart - client-side only to prevent hydration mismatch
+  const [weekData, setWeekData] = useState<{ day: string; score: number | null; date: string }[]>([]);
+  useEffect(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    const weekEntries: { day: string; score: number | null; date: string }[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayEntries = entries.filter(e => e.logged_at.startsWith(dateStr));
+      const avgScore = dayEntries.length > 0
+        ? dayEntries.reduce((sum, e) => sum + e.mood_score, 0) / dayEntries.length
+        : null;
+      weekEntries.push({
+        day: days[date.getDay()],
+        score: avgScore,
+        date: dateStr,
+      });
+    }
+    setWeekData(weekEntries);
+  }, [entries]);
+
+  // Stats for history - client-side only to prevent hydration mismatch
+  const [stats, setStats] = useState<{ avg: number; streak: number; common: string }>({ avg: 0, streak: 0, common: 'N/A' });
+  useEffect(() => {
+    if (entries.length === 0) {
+      setStats({ avg: 0, streak: 0, common: 'N/A' });
+      return;
+    }
+
+    const avg = entries.reduce((sum, e) => sum + e.mood_score, 0) / entries.length;
+
+    // Calculate streak
+    let streak = 0;
+    const today = new Date().toISOString().split('T')[0];
+    const dates = [...new Set(entries.map(e => e.logged_at.split('T')[0]))].sort().reverse();
+    for (let i = 0; i < dates.length; i++) {
+      const expected = new Date();
+      expected.setDate(expected.getDate() - i);
+      if (dates[i] === expected.toISOString().split('T')[0]) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    // Most common mood
+    const moodCounts: Record<string, number> = {};
+    entries.forEach(e => {
+      const label = getMoodLabel(e.mood_score);
+      moodCounts[label] = (moodCounts[label] || 0) + 1;
+    });
+    const common = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+    setStats({ avg, streak, common });
+  }, [entries]);
+
+  // Parse triggers from note
+  const parseTriggers = (noteStr: string | null): string[] => {
+    if (!noteStr) return [];
+    try {
+      const parsed = JSON.parse(noteStr);
+      return parsed.triggers || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const parseNoteText = (noteStr: string | null): string => {
+    if (!noteStr) return '';
+    try {
+      const parsed = JSON.parse(noteStr);
+      return parsed.text || noteStr;
+    } catch {
+      return noteStr;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50/30 pb-24 md:pb-8">
-      {/* Header */}
-      <header className="bg-white border-b border-stone-200 sticky top-0 z-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-stone-800">Mood Tracker</h1>
-              <p className="text-stone-500 mt-0.5 text-sm sm:text-base">Track your emotional patterns</p>
-            </div>
-            {userId && <QuickMoodLog userId={userId} onSave={fetchData} />}
-          </div>
+    <div className="min-h-screen pb-36 md:pb-8" style={{ background: 'var(--bg)' }}>
+      <div className="max-w-lg mx-auto px-5 py-6">
+
+        {/* Tab Switcher */}
+        <div
+          className="flex p-1 rounded-xl mb-6"
+          style={{ background: 'var(--bg-warm)' }}
+        >
+          <button
+            onClick={() => setTab('log')}
+            className="flex-1 py-2.5 rounded-lg text-[14px] font-medium transition-all"
+            style={{
+              background: tab === 'log' ? 'white' : 'transparent',
+              color: tab === 'log' ? 'var(--text)' : 'var(--text-muted)',
+              boxShadow: tab === 'log' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Check in
+          </button>
+          <button
+            onClick={() => setTab('history')}
+            className="flex-1 py-2.5 rounded-lg text-[14px] font-medium transition-all"
+            style={{
+              background: tab === 'history' ? 'white' : 'transparent',
+              color: tab === 'history' ? 'var(--text)' : 'var(--text-muted)',
+              boxShadow: tab === 'history' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            History
+          </button>
         </div>
-      </header>
 
-      {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Stats */}
-        <StatsCards stats={stats || { averageMood: 0, moodVariance: 0, entryCount: 0, trend: 'stable', trendPercentage: 0, highestMood: 0, lowestMood: 0, mostCommonEmotion: null }} isLoading={isLoading} />
-
-        {/* Trend Chart */}
-        <TrendChart dailySummaries={filteredSummaries} />
-
-        {/* Emotion Filter */}
-        <EmotionFilter
-          emotions={uniqueEmotions}
-          selectedEmotion={emotionFilter}
-          onChange={setEmotionFilter}
-        />
-
-        {/* Calendar & Day Detail */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <CalendarView
-            dailySummaries={filteredSummaries}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-          />
-
-          {selectedDate ? (
-            <DayDetailPanel
-              date={selectedDate}
-              entries={dateEntries}
-              isLoading={isLoadingDate}
-              onClose={() => setSelectedDate(null)}
-            />
-          ) : (
-            <div className="bg-stone-50 rounded-xl border border-stone-200 border-dashed flex items-center justify-center p-8">
-              <p className="text-stone-500 text-sm text-center">
-                Select a date on the calendar to view entries
+        {tab === 'log' ? (
+          <>
+            {/* Header */}
+            <div className="text-center mb-8">
+              <p className="text-[13px] mb-2" style={{ color: 'var(--text-muted)' }}>{dateString}</p>
+              <h1
+                className="text-[28px] font-bold mb-2"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+              >
+                How are you feeling?
+              </h1>
+              <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>
+                No wrong answers. Just check in with yourself.
               </p>
             </div>
-          )}
+
+            {/* Mood Selection - Vertical Cards */}
+            <div className="space-y-3 mb-6">
+              {moodOptions.map((mood) => {
+                const isSelected = selectedMood === mood.value;
+                return (
+                  <button
+                    key={mood.value}
+                    onClick={() => setSelectedMood(mood.value)}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-200"
+                    style={{
+                      background: isSelected ? mood.color : 'var(--bg-card)',
+                      border: isSelected ? 'none' : '1px solid var(--border-light)',
+                      boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                    }}
+                  >
+                    {/* Color indicator */}
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: isSelected ? 'rgba(255,255,255,0.2)' : `${mood.color}15` }}
+                    >
+                      <div
+                        className="w-[10px] h-[10px] rounded-full"
+                        style={{ background: isSelected ? 'white' : mood.color }}
+                      />
+                    </div>
+
+                    {/* Label and description */}
+                    <div className="flex-1 text-left">
+                      <p
+                        className="text-[15px] font-semibold"
+                        style={{ color: isSelected ? 'white' : 'var(--text)' }}
+                      >
+                        {mood.label}
+                      </p>
+                      <p
+                        className="text-[12px]"
+                        style={{ color: isSelected ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}
+                      >
+                        {mood.description}
+                      </p>
+                    </div>
+
+                    {/* Checkmark */}
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: isSelected ? 'white' : 'var(--border-light)',
+                        border: isSelected ? 'none' : '1.5px solid var(--border)',
+                      }}
+                    >
+                      {isSelected && (
+                        <CheckIcon className="w-4 h-4" style={{ color: mood.color }} />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Triggers and Note (appears after mood selected) */}
+            {selectedMood !== null && (
+              <div className="space-y-6 animate-fadeUp">
+                {/* Triggers Section */}
+                <div>
+                  <p className="text-[15px] font-semibold mb-1" style={{ color: 'var(--text)' }}>
+                    What&apos;s influencing your mood?
+                  </p>
+                  <p className="text-[12px] mb-4" style={{ color: 'var(--text-muted)' }}>
+                    Select all that apply (optional)
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {triggerOptions.map((trigger) => {
+                      const isActive = triggers.includes(trigger);
+                      return (
+                        <button
+                          key={trigger}
+                          onClick={() => toggleTrigger(trigger)}
+                          className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-all"
+                          style={{
+                            background: isActive ? 'rgba(91,138,114,0.12)' : 'var(--bg-card)',
+                            color: isActive ? 'var(--primary)' : 'var(--text-sec)',
+                            border: isActive ? '1.5px solid var(--primary)' : '1px solid var(--border-light)',
+                          }}
+                        >
+                          {trigger}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Note Textarea */}
+                <div
+                  className="rounded-2xl p-4"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+                >
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Write a note... (optional)"
+                    rows={3}
+                    maxLength={500}
+                    className="w-full p-3 rounded-xl text-[14px] resize-none outline-none transition-all"
+                    style={{
+                      background: 'var(--bg-warm)',
+                      border: '1.5px solid var(--border-light)',
+                      color: 'var(--text)',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-light)'}
+                  />
+                  {note.length > 0 && (
+                    <p className="text-right text-[11px] mt-2" style={{ color: 'var(--text-muted)' }}>
+                      {note.length}/500
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          /* History Tab */
+          <>
+            <h1
+              className="text-[28px] font-bold mb-6"
+              style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+            >
+              Mood History
+            </h1>
+
+            {isLoading ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-40 rounded-2xl" style={{ background: 'var(--border)' }} />
+                <div className="grid grid-cols-3 gap-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-24 rounded-xl" style={{ background: 'var(--border)' }} />
+                  ))}
+                </div>
+              </div>
+            ) : entries.length === 0 ? (
+              /* Empty State */
+              <div
+                className="rounded-3xl p-12 text-center"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+              >
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: 'var(--bg-warm)' }}
+                >
+                  <HeartIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+                </div>
+                <h3 className="text-[17px] font-semibold mb-2" style={{ color: 'var(--text)' }}>
+                  Start tracking your mood
+                </h3>
+                <p className="text-[14px] mb-6" style={{ color: 'var(--text-muted)' }}>
+                  Check in daily to see patterns and track your healing journey.
+                </p>
+                <button
+                  onClick={() => setTab('log')}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium text-white"
+                  style={{ background: 'var(--primary)' }}
+                >
+                  Log your first mood
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Week Chart */}
+                <div
+                  className="rounded-2xl p-5 mb-4"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+                >
+                  <p className="text-[13px] font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
+                    This Week
+                  </p>
+                  <div className="flex items-end justify-between gap-2 h-24">
+                    {weekData.map((day, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                        <div className="w-full flex-1 flex items-end">
+                          {day.score !== null ? (
+                            <div
+                              className="w-full rounded-t-lg transition-all"
+                              style={{
+                                height: `${(day.score / 10) * 100}%`,
+                                minHeight: '8px',
+                                background: getMoodColor(day.score),
+                              }}
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full rounded-lg border-2 border-dashed"
+                              style={{ borderColor: 'var(--border)' }}
+                            />
+                          )}
+                        </div>
+                        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                          {day.day}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div
+                    className="rounded-xl p-4 text-center"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+                  >
+                    <p
+                      className="text-[24px] font-bold"
+                      style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: getMoodColor(stats.avg) }}
+                    >
+                      {stats.avg.toFixed(1)}
+                    </p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Avg mood</p>
+                  </div>
+                  <div
+                    className="rounded-xl p-4 text-center"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <FireIcon className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                      <p
+                        className="text-[24px] font-bold"
+                        style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+                      >
+                        {stats.streak}
+                      </p>
+                    </div>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Day streak</p>
+                  </div>
+                  <div
+                    className="rounded-xl p-4 text-center"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+                  >
+                    <p
+                      className="text-[14px] font-semibold truncate"
+                      style={{ color: 'var(--primary)' }}
+                    >
+                      {stats.common}
+                    </p>
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>Most common</p>
+                  </div>
+                </div>
+
+                {/* All Entries */}
+                <div className="mb-4">
+                  <h2
+                    className="text-[18px] font-semibold mb-3"
+                    style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+                  >
+                    All entries
+                  </h2>
+                </div>
+
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+                >
+                  {entries.slice(0, 10).map((entry, index) => {
+                    const moodColor = getMoodColor(entry.mood_score);
+                    const isLast = index === Math.min(entries.length, 10) - 1;
+                    const entryTriggers = parseTriggers(entry.note);
+                    const noteText = parseNoteText(entry.note);
+
+                    return (
+                      <div
+                        key={entry.id}
+                        className="px-5 py-4"
+                        style={{ borderBottom: isLast ? 'none' : '1px solid var(--border-light)' }}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ background: `${moodColor}15` }}
+                          >
+                            <div
+                              className="w-[10px] h-[10px] rounded-full"
+                              style={{ background: moodColor }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="text-[14px] font-medium" style={{ color: 'var(--text)' }}>
+                                {getMoodLabel(entry.mood_score)}
+                              </span>
+                              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                                {entryTimes[entry.id] || ''}
+                              </span>
+                            </div>
+                            {noteText && (
+                              <p className="text-[13px] mb-2" style={{ color: 'var(--text-sec)' }}>
+                                {noteText}
+                              </p>
+                            )}
+                            {entryTriggers.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {entryTriggers.map((trigger) => (
+                                  <span
+                                    key={trigger}
+                                    className="px-2 py-0.5 rounded-full text-[10px]"
+                                    style={{ background: 'var(--bg-warm)', color: 'var(--text-muted)' }}
+                                  >
+                                    {trigger}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+      </div>
+
+      {/* Fixed Save Button */}
+      {tab === 'log' && selectedMood !== null && (
+        <div
+          className="fixed left-0 right-0 px-5 z-40"
+          style={{ bottom: '78px' }}
+        >
+          <div className="max-w-[393px] mx-auto">
+            <button
+              onClick={handleSaveMood}
+              disabled={isSaving || saved}
+              className="w-full py-4 rounded-full font-semibold text-white transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+              style={{
+                background: saved ? '#5B8A72' : 'var(--primary)',
+                boxShadow: '0 4px 20px rgba(91,138,114,0.35)',
+              }}
+            >
+              {saved ? (
+                <>
+                  <CheckIcon className="w-5 h-5" />
+                  Saved
+                </>
+              ) : isSaving ? (
+                'Saving...'
+              ) : (
+                'Save Check-in'
+              )}
+            </button>
+          </div>
         </div>
-      </main>
+      )}
+
+      <style jsx>{`
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeUp {
+          animation: fadeUp 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

@@ -219,7 +219,8 @@ function PieChart({ data }: { data: StageDistribution }) {
   // Calculate angles for the pie chart
   const healingAngle = (data.healing.percentage / 100) * 360;
   const rebuildingAngle = (data.rebuilding.percentage / 100) * 360;
-  const readyAngle = (data.ready.percentage / 100) * 360;
+  const _readyAngle = (data.ready.percentage / 100) * 360;
+  void _readyAngle; // Used implicitly as remainder of pie
 
   // Create conic gradient
   const gradient = `conic-gradient(

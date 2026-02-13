@@ -214,7 +214,7 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['messages']['Insert']>;
       };
     };
-    Views: {};
+    Views: Record<string, never>;
     Functions: {
       calculate_ers_score: {
         Args: { p_user_id: string; p_week_of: string };

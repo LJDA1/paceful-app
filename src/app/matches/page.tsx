@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 
 interface Match {
@@ -30,6 +30,9 @@ export default function MatchesPage() {
   const { userId, loading: userLoading, isAuthenticated } = useUser();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeStrings, setTimeStrings] = useState<Record<string, string>>({});
+
+  const supabase = createClient();
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -106,18 +109,30 @@ export default function MatchesPage() {
     return name.charAt(0).toUpperCase();
   };
 
-  const getTimeAgo = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  // Calculate time strings client-side to prevent hydration mismatch
+  useEffect(() => {
+    const getTimeAgo = (dateStr: string) => {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return date.toLocaleDateString();
-  };
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+      return date.toLocaleDateString();
+    };
+
+    const strings: Record<string, string> = {};
+    matches.forEach((match) => {
+      if (match.last_message_at) {
+        strings[`last_${match.id}`] = `Last message: ${getTimeAgo(match.last_message_at)}`;
+      }
+      strings[`matched_${match.id}`] = `Matched ${getTimeAgo(match.matched_at)}`;
+    });
+    setTimeStrings(strings);
+  }, [matches]);
 
   return (
     <div className="min-h-screen">
@@ -148,7 +163,7 @@ export default function MatchesPage() {
             <span className="text-6xl mb-4 block">💜</span>
             <h2 className="text-xl font-semibold text-gray-800 mb-2">No matches yet</h2>
             <p className="text-gray-600 mb-6">
-              Keep working on your healing journey. Matches happen when you're ready!
+              Keep working on your healing journey. Matches happen when you&apos;re ready!
             </p>
             <div className="bg-indigo-50 rounded-xl p-4 text-sm text-indigo-700">
               Tip: Complete journal entries and mood check-ins to improve your ERS score and find compatible matches.
@@ -181,8 +196,8 @@ export default function MatchesPage() {
                     </div>
                     <p className="text-sm text-gray-500">
                       {match.last_message_at
-                        ? `Last message: ${getTimeAgo(match.last_message_at)}`
-                        : `Matched ${getTimeAgo(match.matched_at)}`}
+                        ? timeStrings[`last_${match.id}`] || ''
+                        : timeStrings[`matched_${match.id}`] || ''}
                     </p>
                   </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import type { ERSScore } from '@/types/database';
 
 type ERSData = ERSScore;
@@ -173,6 +173,8 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
   const [ersData, setErsData] = useState<ERSData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const supabase = createClient();
 
   useEffect(() => {
     async function fetchERSData() {

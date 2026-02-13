@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 import {
   analyzeText,
   getSentimentLabel,
@@ -299,7 +299,7 @@ function PromptSelector({
         </div>
         {selectedPrompt && (
           <p className="mt-2 text-xs text-stone-500 line-clamp-1 pl-11">
-            "{selectedPrompt.prompt_text}"
+            &quot;{selectedPrompt.prompt_text}&quot;
           </p>
         )}
       </button>
@@ -439,6 +439,8 @@ export default function JournalEntryForm({
   const [encouragement, setEncouragement] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const supabase = createClient();
 
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -712,7 +714,7 @@ export default function JournalEntryForm({
         {/* Selected Prompt Display */}
         {selectedPromptText && (
           <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-            <p className="text-sm text-amber-800 italic leading-relaxed">"{selectedPromptText}"</p>
+            <p className="text-sm text-amber-800 italic leading-relaxed">&quot;{selectedPromptText}&quot;</p>
           </div>
         )}
 

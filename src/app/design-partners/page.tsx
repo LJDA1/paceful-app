@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 // ============================================================================
@@ -129,6 +129,12 @@ export default function DesignPartnersPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [currentYear, setCurrentYear] = useState('');
+
+  // Set year client-side to prevent hydration mismatch
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear().toString());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -738,7 +744,7 @@ export default function DesignPartnersPage() {
           </div>
 
           <p className="text-center text-sm text-gray-400 mt-8">
-            &copy; {new Date().getFullYear()} Paceful, Inc. All rights reserved.
+            &copy; {currentYear} Paceful, Inc. All rights reserved.
           </p>
         </div>
       </footer>

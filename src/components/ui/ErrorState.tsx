@@ -92,7 +92,7 @@ export function NotFoundState({ resourceName = 'Page' }: { resourceName?: string
       </div>
       <h3 className="text-lg font-medium text-stone-800 mb-2">{resourceName} Not Found</h3>
       <p className="text-stone-500 text-sm max-w-sm">
-        The {resourceName.toLowerCase()} you're looking for doesn't exist or has been removed.
+        The {resourceName.toLowerCase()} you&apos;re looking for doesn&apos;t exist or has been removed.
       </p>
     </div>
   );
@@ -118,7 +118,7 @@ export function PermissionDeniedState() {
       </div>
       <h3 className="text-lg font-medium text-stone-800 mb-2">Access Denied</h3>
       <p className="text-stone-500 text-sm max-w-sm">
-        You don't have permission to access this content.
+        You don&apos;t have permission to access this content.
       </p>
     </div>
   );

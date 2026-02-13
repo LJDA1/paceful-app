@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-browser';
 
 // ============================================================================
 // Types
@@ -672,6 +672,7 @@ export default function OnboardingPage() {
   // Get current user
   useEffect(() => {
     async function getUser() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
@@ -691,6 +692,8 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
+      const supabase = createClient();
+
       // Must have a user ID
       if (!userId) {
         setError('Not logged in. Please sign in first.');
@@ -718,7 +721,10 @@ export default function OnboardingPage() {
         });
 
       if (profileError) {
-        console.error('Profile error:', profileError);
+        console.error('Profile error:', JSON.stringify(profileError, null, 2));
+        console.error('Profile error code:', profileError.code);
+        console.error('Profile error message:', profileError.message);
+        console.error('Profile error details:', profileError.details);
         setError('Failed to save profile. Please try again.');
         setIsSubmitting(false);
         return;
