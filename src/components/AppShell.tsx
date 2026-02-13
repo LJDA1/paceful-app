@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Navigation from './Navigation';
+import ErrorBoundary from './ErrorBoundary';
 
 const noNavRoutes = ['/auth', '/onboarding', '/login', '/signup'];
 const marketingRoutes = ['/design-partners', '/investors', '/api-docs', '/privacy', '/terms', '/demo'];
@@ -16,11 +17,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const showNav = !isNoNav && !isMarketing && pathname !== '/';
 
   if (!showNav) {
-    return <>{children}</>;
+    return <ErrorBoundary>{children}</ErrorBoundary>;
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <Navigation />
       <main
         className="pb-24 md:pb-0 md:ml-64"
@@ -28,6 +29,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-    </>
+    </ErrorBoundary>
   );
 }

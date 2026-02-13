@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
+import { ForecastSkeleton } from '@/components/ui/Skeleton';
 
 // ============================================================================
 // Types
@@ -205,18 +206,9 @@ function HeartIcon({ className, style }: { className?: string; style?: React.CSS
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen pb-28 md:pb-8 animate-pulse" style={{ background: 'var(--bg)' }}>
-      <div className="max-w-lg mx-auto px-5 py-6">
-        <div className="h-8 w-32 rounded mb-2" style={{ background: 'var(--border)' }} />
-        <div className="h-4 w-48 rounded mb-6" style={{ background: 'var(--border-light)' }} />
-        <div className="h-36 rounded-3xl mb-6" style={{ background: 'var(--border)' }} />
-        <div className="h-40 rounded-3xl mb-6" style={{ background: 'var(--border-light)' }} />
-        <div className="h-6 w-24 rounded mb-4" style={{ background: 'var(--border)' }} />
-        <div className="space-y-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-16 rounded-[18px]" style={{ background: 'var(--border-light)' }} />
-          ))}
-        </div>
+    <div className="min-h-screen pb-28 md:pb-8" style={{ background: 'var(--bg)' }}>
+      <div className="max-w-lg mx-auto py-6">
+        <ForecastSkeleton />
       </div>
     </div>
   );

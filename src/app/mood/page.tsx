@@ -10,6 +10,7 @@ import {
   type MoodEntry,
 } from '@/lib/mood-calculator';
 import { trackEvent } from '@/lib/track';
+import { EmptyState, HeartIcon as EmptyHeartIcon } from '@/components/ui/EmptyState';
 
 // ============================================================================
 // Mood Configuration
@@ -503,28 +504,16 @@ export default function MoodPage() {
             ) : entries.length === 0 ? (
               /* Empty State */
               <div
-                className="rounded-3xl p-12 text-center"
+                className="rounded-3xl"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
               >
-                <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: 'var(--bg-warm)' }}
-                >
-                  <HeartIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
-                </div>
-                <h3 className="text-[17px] font-semibold mb-2" style={{ color: 'var(--text)' }}>
-                  Start tracking your mood
-                </h3>
-                <p className="text-[14px] mb-6" style={{ color: 'var(--text-muted)' }}>
-                  Check in daily to see patterns and track your healing journey.
-                </p>
-                <button
-                  onClick={() => setTab('log')}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium text-white"
-                  style={{ background: 'var(--primary)' }}
-                >
-                  Log your first mood
-                </button>
+                <EmptyState
+                  icon={<EmptyHeartIcon />}
+                  title="Start tracking your mood"
+                  description="Check in daily to see patterns and track your healing journey. It only takes a moment."
+                  actionLabel="Log your first mood"
+                  onAction={() => setTab('log')}
+                />
               </div>
             ) : (
               <>

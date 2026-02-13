@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
+import { ERSSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState, ChartIcon } from '@/components/ui/EmptyState';
 
 // ============================================================================
 // Types
@@ -116,24 +118,9 @@ const dimensionConfig = [
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen pb-28 md:pb-8 animate-pulse" style={{ background: 'var(--bg)' }}>
-      <div className="max-w-lg mx-auto px-5 py-8">
-        <div className="text-center mb-8">
-          <div className="h-8 w-32 mx-auto rounded mb-2" style={{ background: 'var(--border)' }} />
-          <div className="h-4 w-48 mx-auto rounded" style={{ background: 'var(--border-light)' }} />
-        </div>
-        <div className="flex justify-center mb-8">
-          <div className="w-[180px] h-[180px] rounded-full" style={{ background: 'var(--border)' }} />
-        </div>
-        <div className="h-10 w-32 mx-auto rounded-full mb-8" style={{ background: 'var(--border)' }} />
-        <div className="rounded-3xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="py-4" style={{ borderBottom: i < 6 ? '1px solid var(--border-light)' : 'none' }}>
-              <div className="h-4 w-32 rounded mb-3" style={{ background: 'var(--border)' }} />
-              <div className="h-[5px] rounded-full" style={{ background: 'var(--border-light)' }} />
-            </div>
-          ))}
-        </div>
+    <div className="min-h-screen pb-28 md:pb-8" style={{ background: 'var(--bg)' }}>
+      <div className="max-w-lg mx-auto py-8">
+        <ERSSkeleton />
       </div>
     </div>
   );
@@ -170,10 +157,10 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 }
 
 // ============================================================================
-// Empty State
+// ERS Empty State
 // ============================================================================
 
-function EmptyState({ onCalculate, isCalculating }: { onCalculate: () => void; isCalculating: boolean }) {
+function ERSEmptyState({ onCalculate, isCalculating }: { onCalculate: () => void; isCalculating: boolean }) {
   return (
     <div className="min-h-screen pb-28 md:pb-8" style={{ background: 'var(--bg)' }}>
       <div className="max-w-lg mx-auto px-5 py-8">
@@ -188,33 +175,27 @@ function EmptyState({ onCalculate, isCalculating }: { onCalculate: () => void; i
           <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>Emotional Readiness Score</p>
         </div>
 
-        {/* Empty illustration */}
-        <div className="flex justify-center mb-8">
-          <div
-            className="w-[180px] h-[180px] rounded-full flex items-center justify-center"
-            style={{ background: 'var(--bg-warm)' }}
-          >
-            <span className="text-[46px] font-bold" style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text-faint)' }}>
-              --
-            </span>
-          </div>
+        {/* Empty State Card */}
+        <div
+          className="rounded-3xl"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+        >
+          <EmptyState
+            icon={<ChartIcon />}
+            title="Building your score"
+            description="Log your mood for at least 3 days so we can calculate your Emotional Readiness Score."
+            actionLabel="Log mood"
+            actionHref="/mood"
+          />
         </div>
 
-        {/* Message */}
-        <div className="text-center mb-8">
-          <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>No score yet</h2>
-          <p className="text-sm max-w-xs mx-auto" style={{ color: 'var(--text-muted)' }}>
-            Log at least 3 moods in the past 14 days to calculate your Emotional Readiness Score.
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col gap-3">
+        {/* Calculate Button */}
+        <div className="mt-6">
           <button
             onClick={onCalculate}
             disabled={isCalculating}
-            className="w-full py-3.5 rounded-xl font-medium text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            style={{ background: 'var(--primary)' }}
+            className="w-full py-3.5 rounded-full font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: 'var(--bg-warm)', color: 'var(--text-sec)' }}
           >
             {isCalculating ? (
               <>
@@ -225,16 +206,9 @@ function EmptyState({ onCalculate, isCalculating }: { onCalculate: () => void; i
                 Calculating...
               </>
             ) : (
-              'Calculate My ERS'
+              'Try calculating anyway'
             )}
           </button>
-          <Link
-            href="/mood"
-            className="w-full py-3.5 rounded-xl font-medium text-center transition-colors"
-            style={{ background: 'var(--bg-warm)', color: 'var(--text-sec)' }}
-          >
-            Start Logging Moods
-          </Link>
         </div>
       </div>
     </div>
@@ -399,7 +373,7 @@ export default function ERSPage() {
 
   // Empty state
   if (!ersData) {
-    return <EmptyState onCalculate={handleRecalculate} isCalculating={recalculating} />;
+    return <ERSEmptyState onCalculate={handleRecalculate} isCalculating={recalculating} />;
   }
 
   const score = ersData.ers_score;

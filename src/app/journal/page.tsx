@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
+import { EmptyState, PenIcon as EmptyPenIcon } from '@/components/ui/EmptyState';
 
 // ============================================================================
 // Types
@@ -609,45 +610,26 @@ export default function JournalPage() {
               ))}
             </div>
           ) : filteredEntries.length === 0 ? (
-            <div
-              className="rounded-3xl p-12 text-center"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
-            >
+            hasActiveSearch || hasActiveFilter ? (
+              /* Search/filter empty state */
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: 'var(--bg-warm)' }}
+                className="rounded-3xl p-12 text-center"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
               >
-                {hasActiveSearch ? (
-                  <SearchIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
-                ) : (
-                  <PenIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
-                )}
-              </div>
-              <h3 className="text-[17px] font-semibold mb-2" style={{ color: 'var(--text)' }}>
-                {hasActiveSearch
-                  ? 'No entries match your search'
-                  : hasActiveFilter
-                  ? `No ${activeFilter} entries`
-                  : 'Your journal awaits'}
-              </h3>
-              <p className="text-[14px] mb-6" style={{ color: 'var(--text-muted)' }}>
-                {hasActiveSearch
-                  ? `No entries contain "${debouncedSearchQuery}". Try different keywords.`
-                  : hasActiveFilter
-                  ? 'Try selecting a different filter or "All" to see all entries.'
-                  : 'Writing helps process emotions and track your healing. Start with today\'s prompt above.'}
-              </p>
-              {!hasActiveSearch && !hasActiveFilter && (
-                <button
-                  onClick={() => setShowNewEntry(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium text-white"
-                  style={{ background: 'var(--primary)' }}
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: 'var(--bg-warm)' }}
                 >
-                  <PenIcon className="w-4 h-4" />
-                  Write your first entry
-                </button>
-              )}
-              {(hasActiveSearch || hasActiveFilter) && (
+                  <SearchIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+                </div>
+                <h3 className="text-[17px] font-semibold mb-2" style={{ color: 'var(--text)' }}>
+                  {hasActiveSearch ? 'No entries match your search' : `No ${activeFilter} entries`}
+                </h3>
+                <p className="text-[14px] mb-6" style={{ color: 'var(--text-muted)' }}>
+                  {hasActiveSearch
+                    ? `No entries contain "${debouncedSearchQuery}". Try different keywords.`
+                    : 'Try selecting a different filter or "All" to see all entries.'}
+                </p>
                 <button
                   onClick={() => {
                     setSearchQuery('');
@@ -659,8 +641,22 @@ export default function JournalPage() {
                 >
                   Clear filters
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              /* No entries empty state */
+              <div
+                className="rounded-3xl"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+              >
+                <EmptyState
+                  icon={<EmptyPenIcon />}
+                  title="Your journal awaits"
+                  description="Writing helps process emotions and track your healing. Start with today's prompt."
+                  actionLabel="Write your first entry"
+                  onAction={() => setShowNewEntry(true)}
+                />
+              </div>
+            )
           ) : (
             <div className="space-y-4">
               {filteredEntries.map((entry) => {

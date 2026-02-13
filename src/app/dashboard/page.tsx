@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
+import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState, HomeIcon } from '@/components/ui/EmptyState';
 
 // ============================================================================
 // Types
@@ -285,16 +287,39 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen pb-28 md:pb-8" style={{ background: 'var(--bg)' }}>
-        <div className="max-w-lg mx-auto px-5 py-6 animate-pulse">
-          <div className="h-4 w-24 rounded mb-2" style={{ background: 'var(--border)' }} />
-          <div className="h-8 w-48 rounded mb-8" style={{ background: 'var(--border)' }} />
-          <div className="h-48 rounded-3xl mb-5" style={{ background: 'var(--border)' }} />
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            {[1, 2, 3].map(i => <div key={i} className="h-24 rounded-[22px]" style={{ background: 'var(--border)' }} />)}
+        <div className="max-w-lg mx-auto py-6">
+          <DashboardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state for new users
+  const isNewUser = !ersData && weeklyProgress?.moodsLogged === 0 && weeklyProgress?.journalEntries === 0;
+  if (isNewUser) {
+    return (
+      <div className="min-h-screen pb-28 md:pb-8" style={{ background: 'var(--bg)' }}>
+        <div className="max-w-lg mx-auto px-5 py-6">
+          <div className="mb-6">
+            <p className="text-[13px] mb-1" style={{ color: 'var(--text-muted)' }}>{greeting}</p>
+            <h1
+              className="text-[28px] font-medium leading-tight"
+              style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+            >
+              Welcome, {firstName}
+            </h1>
           </div>
-          <div className="h-6 w-24 rounded mb-4" style={{ background: 'var(--border)' }} />
-          <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-28 rounded-[22px]" style={{ background: 'var(--border)' }} />)}
+          <div
+            className="rounded-3xl"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+          >
+            <EmptyState
+              icon={<HomeIcon />}
+              title="Welcome to Paceful"
+              description="Start by logging your mood or writing a journal entry. Your dashboard will come alive as you engage."
+              actionLabel="Log your first mood"
+              actionHref="/mood"
+            />
           </div>
         </div>
       </div>
