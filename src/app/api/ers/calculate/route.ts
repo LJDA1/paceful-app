@@ -33,15 +33,12 @@ export async function POST(request: NextRequest) {
         ersConfidence: result.ersConfidence,
         ersDelta: result.ersDelta,
         components: {
-          // New mood-focused components
-          moodStability: result.components.moodStability?.toFixed(3) ?? null,
-          engagementConsistency: result.components.engagementConsistency?.toFixed(3) ?? null,
-          // Map to old column names for backwards compatibility
-          emotionalStability: result.components.moodStability?.toFixed(3) ?? null,
-          selfReflection: null,
-          trustOpenness: null,
-          recoveryBehavior: null,
-          socialReadiness: null,
+          // 5-dimension ERS components
+          emotionalStability: result.components.emotionalStability?.toFixed(3) ?? null,
+          selfReflection: result.components.selfReflection?.toFixed(3) ?? null,
+          behavioralEngagement: result.components.behavioralEngagement?.toFixed(3) ?? null,
+          copingCapacity: result.components.copingCapacity?.toFixed(3) ?? null,
+          socialReadiness: result.components.socialReadiness?.toFixed(3) ?? null,
         },
         moodEntriesCount: result.moodEntriesCount,
         weekOf: result.weekOf,

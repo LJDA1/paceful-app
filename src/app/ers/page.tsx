@@ -79,37 +79,36 @@ const dimensionConfig = [
     key: 'emotional_stability_score',
     label: 'Emotional Stability',
     color: '#5B8A72',
-    description: 'Consistency in mood patterns'
+    description: 'Consistency in mood patterns',
+    tip: 'Try logging your mood at the same time each day to build awareness.'
   },
   {
     key: 'self_reflection_score',
     label: 'Self Reflection',
     color: '#5E8DB0',
-    description: 'Depth of journaling insights'
+    description: 'Depth of journaling insights',
+    tip: 'Writing even a few sentences helps. Try today\'s journal prompt.'
   },
   {
     key: 'engagement_consistency_score',
     label: 'Engagement',
     color: '#D4973B',
-    description: 'Daily activity consistency'
-  },
-  {
-    key: 'trust_openness_score',
-    label: 'Trust & Openness',
-    color: '#7E71B5',
-    description: 'Willingness to be vulnerable'
+    description: 'Daily activity consistency',
+    tip: 'Consistency matters more than intensity. Try one exercise today.'
   },
   {
     key: 'recovery_behavior_score',
-    label: 'Recovery Behavior',
+    label: 'Coping Capacity',
     color: '#B86B64',
-    description: 'Healthy coping patterns'
+    description: 'How you recover from tough moments',
+    tip: 'Next time a tough moment hits, try a grounding exercise before reacting.'
   },
   {
-    key: 'social_readiness_score',
+    key: 'trust_openness_score',
     label: 'Social Readiness',
-    color: '#3D6B54',
-    description: 'Openness to connection'
+    color: '#7E71B5',
+    description: 'Openness to connection',
+    tip: 'This takes time. The weekly readiness check-in helps track this.'
   },
 ];
 
@@ -331,6 +330,13 @@ export default function ERSPage() {
 
       const { result } = await response.json();
 
+      // Convert 0-1 scores to 0-100 for display
+      const toDisplayScale = (score: number | null | undefined): number | null => {
+        if (score === null || score === undefined) return null;
+        // Scores from calculator are 0-1, convert to 0-100
+        return Math.round(score * 100 * 100) / 100;
+      };
+
       setErsData({
         id: result.id || ersData?.id || '',
         user_id: result.userId,
@@ -338,14 +344,14 @@ export default function ERSPage() {
         ers_stage: result.ersStage,
         ers_confidence: result.ersConfidence,
         ers_delta: result.ersDelta,
-        self_reflection_score: result.components.selfReflection ? parseFloat(result.components.selfReflection) : null,
-        emotional_stability_score: result.components.emotionalStability ? parseFloat(result.components.emotionalStability) : null,
-        trust_openness_score: result.components.trustOpenness ? parseFloat(result.components.trustOpenness) : null,
-        engagement_consistency_score: result.components.engagementConsistency ? parseFloat(result.components.engagementConsistency) : null,
-        recovery_behavior_score: result.components.recoveryBehavior ? parseFloat(result.components.recoveryBehavior) : null,
-        social_readiness_score: result.components.socialReadiness ? parseFloat(result.components.socialReadiness) : null,
-        data_points_used: result.dataPointsUsed,
-        calculation_method: 'v1_weighted',
+        emotional_stability_score: toDisplayScale(result.components.emotionalStability),
+        self_reflection_score: toDisplayScale(result.components.selfReflection),
+        engagement_consistency_score: toDisplayScale(result.components.behavioralEngagement),
+        recovery_behavior_score: toDisplayScale(result.components.copingCapacity),
+        trust_openness_score: toDisplayScale(result.components.socialReadiness),
+        social_readiness_score: null, // Not used - socialReadiness maps to trust_openness_score
+        data_points_used: result.moodEntriesCount,
+        calculation_method: 'v3_five_dimensions',
         calculated_at: result.calculatedAt,
         week_of: result.weekOf,
       });
@@ -529,17 +535,17 @@ export default function ERSPage() {
             >
               {stage === 'healing' && (
                 <p>
-                  You&apos;re in the <strong style={{ color: 'var(--accent)' }}>Healing</strong> stage — a time for processing emotions and building self-awareness. Your score reflects six dimensions: emotional stability, self-reflection depth, engagement consistency, trust and openness, recovery behaviors, and social readiness. Focus on consistent journaling and mood tracking to build momentum.
+                  You&apos;re in the <strong style={{ color: 'var(--accent)' }}>Healing</strong> stage — a time for processing emotions and building self-awareness. Your score reflects five dimensions: emotional stability, self-reflection, engagement, coping capacity, and social readiness. Focus on consistent journaling and mood tracking to build momentum.
                 </p>
               )}
               {stage === 'rebuilding' && (
                 <p>
-                  You&apos;re in the <strong style={{ color: 'var(--primary)' }}>Rebuilding</strong> stage — you&apos;ve done significant healing work and are establishing new patterns. Your score combines emotional stability, self-reflection depth, engagement consistency, trust and openness, recovery behaviors, and social readiness. Keep nurturing the dimensions where you&apos;re growing.
+                  You&apos;re in the <strong style={{ color: 'var(--primary)' }}>Rebuilding</strong> stage — you&apos;ve done significant healing work and are establishing new patterns. Your score combines emotional stability, self-reflection, engagement, coping capacity, and social readiness. Keep nurturing the dimensions where you&apos;re growing.
                 </p>
               )}
               {stage === 'ready' && (
                 <p>
-                  You&apos;re in the <strong style={{ color: 'var(--primary)' }}>Ready</strong> stage — you&apos;ve built strong emotional foundations. Your score reflects emotional stability, self-reflection depth, engagement consistency, trust and openness, recovery behaviors, and social readiness. You have the tools to navigate future challenges with resilience.
+                  You&apos;re in the <strong style={{ color: 'var(--primary)' }}>Ready</strong> stage — you&apos;ve built strong emotional foundations. Your score reflects emotional stability, self-reflection, engagement, coping capacity, and social readiness. You have the tools to navigate future challenges with resilience.
                 </p>
               )}
             </div>
@@ -573,9 +579,10 @@ export default function ERSPage() {
         >
           {dimensionConfig.map((dim, index) => {
             const value = ersDataRecord[dim.key];
-            const normalizedValue = value !== null ? Math.min(100, Math.max(0, value)) : 0;
+            const isNull = value === null || value === undefined;
+            const normalizedValue = !isNull ? Math.min(100, Math.max(0, value)) : 0;
             const isLast = index === dimensionConfig.length - 1;
-            const trend = value !== null && value >= 50 ? 'up' : 'down';
+            const trend = !isNull && value >= 50 ? 'up' : 'down';
 
             return (
               <div
@@ -588,7 +595,14 @@ export default function ERSPage() {
                     {dim.label}
                   </span>
                   <div className="flex items-center gap-2">
-                    {value !== null && (
+                    {isNull ? (
+                      <span
+                        className="text-[11px] px-2 py-0.5 rounded-full"
+                        style={{ background: 'var(--bg-warm)', color: 'var(--text-muted)' }}
+                      >
+                        Needs data
+                      </span>
+                    ) : (
                       <span
                         className="text-[11px] px-2 py-0.5 rounded-full"
                         style={{
@@ -599,19 +613,28 @@ export default function ERSPage() {
                         {trend === 'up' ? 'Good' : 'Focus'}
                       </span>
                     )}
-                    <span className="text-[14px] font-semibold" style={{ color: 'var(--text)' }}>
-                      {value !== null ? Math.round(value) : '--'}
+                    <span className="text-[14px] font-semibold" style={{ color: isNull ? 'var(--text-muted)' : 'var(--text)' }}>
+                      {isNull ? '--' : Math.round(value)}
                     </span>
                   </div>
                 </div>
-                <div className="h-[5px] rounded-full overflow-hidden" style={{ background: 'var(--bg-warm)' }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${normalizedValue}%`,
-                      background: `linear-gradient(90deg, ${dim.color}88 0%, ${dim.color} 100%)`
-                    }}
-                  />
+                <div
+                  className="h-[5px] rounded-full overflow-hidden"
+                  style={{
+                    background: isNull
+                      ? 'repeating-linear-gradient(90deg, var(--bg-warm) 0px, var(--bg-warm) 4px, transparent 4px, transparent 8px)'
+                      : 'var(--bg-warm)'
+                  }}
+                >
+                  {!isNull && (
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${normalizedValue}%`,
+                        background: `linear-gradient(90deg, ${dim.color}88 0%, ${dim.color} 100%)`
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             );
@@ -619,7 +642,7 @@ export default function ERSPage() {
         </div>
 
         {/* Focus Area Tip */}
-        {lowestDimension && lowestDimension.value < 60 && (
+        {lowestDimension && lowestDimension.value !== null && lowestDimension.value < 60 && (
           <div className="rounded-[22px] p-5 mb-5" style={{ background: 'var(--bg-warm)' }}>
             <div className="flex items-start gap-4">
               <div
@@ -630,11 +653,10 @@ export default function ERSPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--text)' }}>
-                  Focus area
+                  Focus area: <span style={{ color: lowestDimension.color }}>{lowestDimension.label}</span>
                 </h3>
                 <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text-sec)' }}>
-                  Your <span style={{ color: lowestDimension.color, fontWeight: 500 }}>{lowestDimension.label}</span> score
-                  could use some attention. {lowestDimension.description.toLowerCase()} can help improve this dimension.
+                  {(lowestDimension as typeof dimensionConfig[0]).tip || `${lowestDimension.description} can help improve this dimension.`}
                 </p>
               </div>
             </div>
