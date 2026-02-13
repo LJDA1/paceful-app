@@ -114,13 +114,13 @@ function getEndpointLabel(endpoint: string): string {
 }
 
 const CLIENT_COLORS = [
-  '#6366f1', // indigo
+  '#5B8A72', // green
   '#22c55e', // green
   '#f59e0b', // amber
   '#3b82f6', // blue
   '#ec4899', // pink
   '#8b5cf6', // violet
-  '#14b8a6', // teal
+  '#5B8A72', // paceful primary
   '#f97316', // orange
 ];
 
@@ -133,18 +133,18 @@ function MetricCard({
   value,
   subtitle,
   icon,
-  color = 'indigo',
+  color = 'paceful',
   loading = false,
 }: {
   title: string;
   value: string | number;
   subtitle?: string;
   icon: React.ReactNode;
-  color?: 'indigo' | 'green' | 'amber' | 'blue' | 'red';
+  color?: 'paceful' | 'green' | 'amber' | 'blue' | 'red';
   loading?: boolean;
 }) {
   const colorClasses = {
-    indigo: 'bg-indigo-50 text-indigo-600',
+    paceful: 'bg-paceful-primary-muted text-paceful-primary',
     green: 'bg-green-50 text-green-600',
     amber: 'bg-amber-50 text-amber-600',
     blue: 'bg-blue-50 text-blue-600',
@@ -199,7 +199,7 @@ function BarChart({ data, title }: { data: EndpointStats[]; title: string }) {
             </div>
             <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-paceful-primary to-paceful-primary-light rounded-full transition-all duration-500"
                 style={{ width: `${(item.count / maxCount) * 100}%` }}
               />
             </div>
@@ -303,7 +303,7 @@ function TimePeriodSelector({
             onClick={() => onChange(p.value)}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               period === p.value
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-paceful-primary text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -318,14 +318,14 @@ function TimePeriodSelector({
             type="date"
             value={customStart}
             onChange={(e) => onCustomStartChange(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-paceful-primary"
           />
           <span className="text-gray-400">to</span>
           <input
             type="date"
             value={customEnd}
             onChange={(e) => onCustomEndChange(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-paceful-primary"
           />
         </div>
       )}
@@ -335,7 +335,7 @@ function TimePeriodSelector({
 
 function LoadingSpinner() {
   return (
-    <svg className="animate-spin h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24">
+    <svg className="animate-spin h-5 w-5 text-paceful-primary" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
@@ -609,7 +609,7 @@ function UsageDashboard() {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-paceful-primary text-white rounded-lg hover:bg-paceful-primary-dark disabled:opacity-50 transition-colors"
             >
               <svg
                 className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
@@ -655,7 +655,7 @@ function UsageDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
               }
-              color="indigo"
+              color="paceful"
               loading={loading}
             />
             <MetricCard

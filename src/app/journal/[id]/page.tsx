@@ -27,7 +27,7 @@ interface JournalEntry {
 // Sentiment helpers
 function getSentimentColor(score: number | null): string {
   if (score === null) return 'bg-stone-100 text-stone-600';
-  if (score >= 0.3) return 'bg-emerald-100 text-emerald-700';
+  if (score >= 0.3) return 'bg-paceful-primary-muted text-paceful-primary';
   if (score >= -0.3) return 'bg-amber-100 text-amber-700';
   return 'bg-rose-100 text-rose-700';
 }
@@ -333,7 +333,7 @@ Exported from Paceful Journal
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Entry title (optional)"
-                className="w-full px-0 py-3 text-2xl font-semibold text-stone-900 placeholder-stone-300 bg-transparent border-0 border-b-2 border-stone-200 focus:border-indigo-500 focus:ring-0"
+                className="w-full px-0 py-3 text-2xl font-semibold text-stone-900 placeholder-stone-300 bg-transparent border-0 border-b-2 border-stone-200 focus:border-paceful-primary focus:ring-0"
               />
 
               {/* Content Textarea */}
@@ -371,7 +371,7 @@ Exported from Paceful Journal
                 <button
                   onClick={handleSave}
                   disabled={isSaving || !editContent.trim()}
-                  className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-paceful-primary text-white rounded-lg hover:bg-paceful-primary-dark transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
                 >
                   {isSaving ? (
                     <>
@@ -446,14 +446,14 @@ Exported from Paceful Journal
 
                     {/* Primary emotion */}
                     {entry.emotion_primary && (
-                      <span className="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                      <span className="px-3 py-1.5 bg-paceful-primary-muted text-paceful-primary rounded-full text-sm font-medium">
                         {entry.emotion_primary}
                       </span>
                     )}
 
                     {/* Secondary emotion */}
                     {entry.emotion_secondary && (
-                      <span className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                      <span className="px-3 py-1.5 bg-stone-100 text-stone-700 rounded-full text-sm font-medium">
                         {entry.emotion_secondary}
                       </span>
                     )}
@@ -465,12 +465,12 @@ Exported from Paceful Journal
                       </span>
                     )}
                     {entry.contains_insight && (
-                      <span className="px-3 py-1.5 bg-sky-100 text-sky-700 rounded-full text-sm font-medium">
+                      <span className="px-3 py-1.5 bg-paceful-primary-muted text-paceful-primary rounded-full text-sm font-medium">
                         Self-reflection
                       </span>
                     )}
                     {entry.contains_future_thinking && (
-                      <span className="px-3 py-1.5 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">
+                      <span className="px-3 py-1.5 bg-paceful-calm/10 text-paceful-calm rounded-full text-sm font-medium">
                         Forward-looking
                       </span>
                     )}

@@ -310,7 +310,6 @@ export default function DesignPartnersPage() {
     e.preventDefault();
     setSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('Application submitted:', form);
     setSubmitted(true);
     setSubmitting(false);
   };

@@ -100,7 +100,7 @@ function MoodSlider({
         <div className="flex justify-between mt-1 text-xs text-stone-400">
           <span className="text-rose-500">Low</span>
           <span className="text-amber-500">Moderate</span>
-          <span className="text-emerald-500">High</span>
+          <span className="text-paceful-primary">High</span>
         </div>
       </div>
     </div>
@@ -146,7 +146,7 @@ function EmotionTags({
               aria-pressed={isSelected}
               className={`px-3 py-1.5 text-sm rounded-full capitalize transition-all ${
                 isSelected
-                  ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-300'
+                  ? 'bg-paceful-primary-muted text-paceful-primary border-2 border-paceful-primary/30'
                   : isDisabled
                   ? 'bg-stone-50 text-stone-300 cursor-not-allowed'
                   : 'bg-stone-100 text-stone-600 border-2 border-transparent hover:bg-stone-200'
@@ -168,9 +168,9 @@ function EmotionTags({
 function SuccessAnimation() {
   return (
     <div className="flex flex-col items-center justify-center py-8">
-      <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-3 animate-[scale_0.3s_ease-out]">
+      <div className="w-16 h-16 rounded-full bg-paceful-primary-muted flex items-center justify-center mb-3 animate-[scale_0.3s_ease-out]">
         <svg
-          className="w-8 h-8 text-emerald-600"
+          className="w-8 h-8 text-paceful-primary"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={2.5}
@@ -300,7 +300,7 @@ export default function QuickMoodLog({ userId, onSave }: QuickMoodLogProps) {
                       onChange={(e) => setNote(e.target.value.slice(0, 50))}
                       placeholder="What's on your mind?"
                       maxLength={50}
-                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-paceful-primary/20 focus:border-paceful-primary"
                     />
                     <div className="text-right text-xs text-stone-400">{note.length}/50</div>
                   </div>
@@ -311,7 +311,7 @@ export default function QuickMoodLog({ userId, onSave }: QuickMoodLogProps) {
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-paceful-primary text-white rounded-xl font-medium hover:bg-paceful-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>

@@ -118,7 +118,7 @@ async function hashApiKey(key: string): Promise<string> {
 function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const sizeClasses = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5';
   return (
-    <svg className={`animate-spin ${sizeClasses} text-indigo-600`} fill="none" viewBox="0 0 24 24">
+    <svg className={`animate-spin ${sizeClasses} text-paceful-primary`} fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
     </svg>
@@ -142,7 +142,7 @@ function TierBadge({ tier }: { tier: number }) {
   const colors = {
     1: 'bg-gray-100 text-gray-700',
     2: 'bg-blue-100 text-blue-700',
-    3: 'bg-purple-100 text-purple-700',
+    3: 'bg-stone-200 text-stone-700',
   };
 
   return (
@@ -289,7 +289,7 @@ function CreateApiKeyModal({
             value={form.client_name}
             onChange={(e) => setForm({ ...form, client_name: e.target.value })}
             placeholder="e.g., Research Partner Inc."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-paceful-primary focus:border-paceful-primary text-gray-900 placeholder-gray-400"
           />
         </div>
 
@@ -302,7 +302,7 @@ function CreateApiKeyModal({
             value={form.contact_email}
             onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
             placeholder="contact@example.com"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-paceful-primary focus:border-paceful-primary text-gray-900 placeholder-gray-400"
           />
         </div>
 
@@ -313,7 +313,7 @@ function CreateApiKeyModal({
           <select
             value={form.tier}
             onChange={(e) => setForm({ ...form, tier: parseInt(e.target.value) })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-paceful-primary focus:border-paceful-primary text-gray-900"
           >
             <option value={1}>Tier 1 - Basic (100 req/hr)</option>
             <option value={2}>Tier 2 - Professional (500 req/hr)</option>
@@ -334,7 +334,7 @@ function CreateApiKeyModal({
                   ...form,
                   permissions: { ...form.permissions, aggregate_data: e.target.checked }
                 })}
-                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                className="w-4 h-4 text-paceful-primary border-gray-300 rounded focus:ring-paceful-primary"
               />
               <span className="text-sm text-gray-700">Access Aggregate Data</span>
             </label>
@@ -346,7 +346,7 @@ function CreateApiKeyModal({
                   ...form,
                   permissions: { ...form.permissions, trends: e.target.checked }
                 })}
-                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                className="w-4 h-4 text-paceful-primary border-gray-300 rounded focus:ring-paceful-primary"
               />
               <span className="text-sm text-gray-700">Access Trends</span>
             </label>
@@ -358,7 +358,7 @@ function CreateApiKeyModal({
                   ...form,
                   permissions: { ...form.permissions, individual_ers: e.target.checked }
                 })}
-                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                className="w-4 h-4 text-paceful-primary border-gray-300 rounded focus:ring-paceful-primary"
               />
               <span className="text-sm text-gray-700">Access Individual ERS Scores</span>
             </label>
@@ -370,7 +370,7 @@ function CreateApiKeyModal({
                   ...form,
                   permissions: { ...form.permissions, individual_predictions: e.target.checked }
                 })}
-                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                className="w-4 h-4 text-paceful-primary border-gray-300 rounded focus:ring-paceful-primary"
               />
               <span className="text-sm text-gray-700">Access Individual Predictions</span>
             </label>
@@ -388,7 +388,7 @@ function CreateApiKeyModal({
           <button
             type="submit"
             disabled={creating || !form.client_name}
-            className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2.5 bg-paceful-primary text-white rounded-lg hover:bg-paceful-primary-dark font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {creating ? (
               <>
@@ -482,7 +482,7 @@ function ApiKeyRevealModal({
 
         <button
           onClick={onClose}
-          className="w-full px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors"
+          className="w-full px-4 py-2.5 bg-paceful-primary text-white rounded-lg hover:bg-paceful-primary-dark font-medium transition-colors"
         >
           I&apos;ve Saved the Key
         </button>
@@ -681,7 +681,7 @@ function ApiKeysDashboard() {
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-paceful-primary text-white rounded-lg hover:bg-paceful-primary-dark transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -698,8 +698,8 @@ function ApiKeysDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <div className="w-12 h-12 rounded-xl bg-paceful-primary-muted flex items-center justify-center">
+                <svg className="w-6 h-6 text-paceful-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                 </svg>
               </div>
@@ -764,7 +764,7 @@ function ApiKeysDashboard() {
                   placeholder="Search by client name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-paceful-primary focus:border-paceful-primary text-gray-900 placeholder-gray-400"
                 />
               </div>
             </div>
@@ -773,7 +773,7 @@ function ApiKeysDashboard() {
                 onClick={() => setStatusFilter('all')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   statusFilter === 'all'
-                    ? 'bg-indigo-100 text-indigo-700'
+                    ? 'bg-paceful-primary-muted text-paceful-primary'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >

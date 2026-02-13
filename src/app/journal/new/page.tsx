@@ -291,7 +291,7 @@ export default function NewJournalEntryPage() {
             </Link>
 
             {autosaveStatus !== 'idle' && (
-              <span className={`text-sm ${autosaveStatus === 'saved' ? 'text-emerald-600' : 'text-stone-400'}`}>
+              <span className={`text-sm ${autosaveStatus === 'saved' ? 'text-paceful-primary' : 'text-stone-400'}`}>
                 {autosaveStatus === 'saving' ? 'Saving...' : 'Draft saved'}
               </span>
             )}
@@ -313,7 +313,7 @@ export default function NewJournalEntryPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Give your entry a title..."
-                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-stone-900 placeholder-stone-400"
+                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-paceful-primary focus:border-transparent text-stone-900 placeholder-stone-400"
               />
             </div>
           </div>
@@ -327,7 +327,7 @@ export default function NewJournalEntryPage() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Start writing..."
-                className="w-full px-4 py-4 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-stone-900 placeholder-stone-400 resize-none leading-relaxed"
+                className="w-full px-4 py-4 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-paceful-primary focus:border-transparent text-stone-900 placeholder-stone-400 resize-none leading-relaxed"
                 style={{ minHeight: '250px' }}
               />
             </div>
@@ -360,7 +360,7 @@ export default function NewJournalEntryPage() {
 
               {wordCount >= 20 && analyzeSentimentEnabled && (
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  sentiment.label === 'Positive' ? 'bg-emerald-100 text-emerald-700' :
+                  sentiment.label === 'Positive' ? 'bg-paceful-primary-muted text-paceful-primary' :
                   sentiment.label === 'Challenging' ? 'bg-rose-100 text-rose-700' :
                   'bg-stone-100 text-stone-600'
                 }`}>
@@ -377,7 +377,7 @@ export default function NewJournalEntryPage() {
                 type="checkbox"
                 checked={analyzeSentimentEnabled}
                 onChange={(e) => setAnalyzeSentimentEnabled(e.target.checked)}
-                className="w-5 h-5 text-indigo-600 border-stone-300 rounded focus:ring-indigo-500"
+                className="w-5 h-5 text-paceful-primary border-stone-300 rounded focus:ring-paceful-primary"
               />
               <span className="text-sm text-stone-700">Analyze sentiment with AI</span>
             </label>
@@ -387,7 +387,7 @@ export default function NewJournalEntryPage() {
                 type="checkbox"
                 checked={isPrivate}
                 onChange={(e) => setIsPrivate(e.target.checked)}
-                className="w-5 h-5 text-indigo-600 border-stone-300 rounded focus:ring-indigo-500"
+                className="w-5 h-5 text-paceful-primary border-stone-300 rounded focus:ring-paceful-primary"
               />
               <span className="text-sm text-stone-700">Keep this entry private</span>
             </label>
@@ -421,7 +421,7 @@ export default function NewJournalEntryPage() {
               <button
                 onClick={handlePublish}
                 disabled={wordCount < 5 || isSubmitting}
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2.5 bg-paceful-primary text-white rounded-lg hover:bg-paceful-primary-dark transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSubmitting ? (
                   <>

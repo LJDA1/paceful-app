@@ -194,7 +194,7 @@ function ProgressBar({
   }, [value, animated]);
 
   const colorClasses = {
-    green: 'bg-emerald-500',
+    green: 'bg-paceful-primary',
     yellow: 'bg-amber-500',
     red: 'bg-rose-500',
     blue: 'bg-blue-500',
@@ -287,7 +287,7 @@ function Badge({
 }) {
   const variants = {
     default: 'bg-gray-100 text-gray-700',
-    success: 'bg-emerald-50 text-emerald-700',
+    success: 'bg-paceful-primary-muted text-paceful-primary',
     warning: 'bg-amber-50 text-amber-700',
     danger: 'bg-rose-50 text-rose-700',
     info: 'bg-blue-50 text-blue-700',
@@ -345,13 +345,13 @@ function TimelineSection({
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const MilestoneCard = ({
     title,
-    icon,
+    iconSvg,
     milestone,
     description,
     type,
   }: {
     title: string;
-    icon: string;
+    iconSvg: React.ReactNode;
     milestone: typeof rebuilding;
     description: string;
     type: 'rebuilding' | 'ready';
@@ -365,7 +365,9 @@ function TimelineSection({
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{icon}</span>
+            <div className="w-10 h-10 rounded-lg bg-paceful-primary-muted flex items-center justify-center text-paceful-primary">
+              {iconSvg}
+            </div>
             <div>
               <h3 className="font-semibold text-gray-900">{title}</h3>
               <p className="text-sm text-gray-500">{description}</p>
@@ -433,7 +435,7 @@ function TimelineSection({
         )}
 
         {isAchieved && (
-          <div className="flex items-center gap-2 text-emerald-600">
+          <div className="flex items-center gap-2 text-paceful-primary">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -459,14 +461,14 @@ function TimelineSection({
       <div className="grid md:grid-cols-2 gap-6">
         <MilestoneCard
           title="Rebuilding Stage"
-          icon="🌱"
+          iconSvg={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
           milestone={rebuilding}
           description="ERS score reaches 50+"
           type="rebuilding"
         />
         <MilestoneCard
           title="Ready Stage"
-          icon="🌟"
+          iconSvg={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>}
           milestone={ready}
           description="ERS score reaches 75+"
           type="ready"
@@ -477,7 +479,7 @@ function TimelineSection({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-emerald-500" />
+              <span className="w-3 h-3 rounded-full bg-paceful-primary" />
               High likelihood (70%+)
             </span>
             <span className="flex items-center gap-2">
@@ -527,14 +529,14 @@ function OutcomesSection({ outcomes }: { outcomes: OutcomePredictionResult | nul
       if (probability >= 0.4) return '○';
       return '?';
     } else {
-      if (probability >= 0.4) return '⚠️';
+      if (probability >= 0.4) return '!';
       return '○';
     }
   };
 
   const getOutcomeColor = (isPositive: boolean, probability: number) => {
     if (isPositive) {
-      if (probability >= 0.7) return 'text-emerald-600';
+      if (probability >= 0.7) return 'text-paceful-primary';
       if (probability >= 0.4) return 'text-amber-600';
       return 'text-gray-500';
     } else {
@@ -683,11 +685,11 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
   const getRiskIcon = (level: string) => {
     switch (level) {
       case 'high':
-        return '🚨';
+        return '!!';
       case 'medium':
-        return '⚠️';
+        return '!';
       default:
-        return '📋';
+        return '•';
     }
   };
 
@@ -772,13 +774,13 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
                 .map((factor, i) => (
                   <div
                     key={i}
-                    className="p-4 bg-emerald-50 rounded-lg border-l-4 border-l-emerald-500"
+                    className="p-4 bg-paceful-primary-muted rounded-lg border-l-4 border-l-paceful-primary"
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-emerald-600">✓</span>
+                      <span className="text-paceful-primary">✓</span>
                       <span className="font-medium text-gray-900">{factor.label}</span>
                     </div>
-                    <p className="text-sm text-emerald-700">{factor.impact}</p>
+                    <p className="text-sm text-paceful-primary">{factor.impact}</p>
                   </div>
                 ))}
 
@@ -865,8 +867,8 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
             <div className="flex items-center gap-1 mt-1">
               {risks.risk_trend === 'decreasing' && (
                 <>
-                  <span className="text-emerald-500">↓</span>
-                  <span className="text-sm text-emerald-600">Improving</span>
+                  <span className="text-paceful-primary">↓</span>
+                  <span className="text-sm text-paceful-primary">Improving</span>
                 </>
               )}
               {risks.risk_trend === 'stable' && (
@@ -1079,7 +1081,9 @@ function MilestoneDetailModal({
   if (!isOpen || !milestone) return null;
 
   const title = type === 'rebuilding' ? 'Rebuilding Stage' : 'Ready Stage';
-  const icon = type === 'rebuilding' ? '🌱' : '🌟';
+  const iconSvg = type === 'rebuilding'
+    ? <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+    : <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>;
   const threshold = type === 'rebuilding' ? 50 : 75;
 
   return (
@@ -1092,7 +1096,9 @@ function MilestoneDetailModal({
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">{icon}</span>
+              <div className="w-10 h-10 rounded-lg bg-paceful-primary-muted flex items-center justify-center text-paceful-primary">
+                {iconSvg}
+              </div>
               <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             </div>
             <button

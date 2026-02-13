@@ -21,15 +21,21 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#ffffff",
+  themeColor: "#5B8A72",
 };
 
 export const metadata: Metadata = {
   title: "Paceful - Emotional Readiness Platform",
   description: "Track your emotional healing journey with science-backed insights. Get your Emotional Readiness Score and see the progress you can't always feel.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Paceful",
+  },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-icon.svg",
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
   openGraph: {
     title: "Paceful - Emotional Readiness Platform",

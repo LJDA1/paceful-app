@@ -37,32 +37,32 @@ const stageConfig = {
   healing: {
     label: 'Healing',
     description: 'Focus on self-care and processing',
-    gradient: 'from-amber-500 via-orange-500 to-rose-500',
-    bgGradient: 'from-amber-50 to-orange-50',
-    textColor: 'text-amber-700',
-    ringColor: 'stroke-amber-500',
-    accentColor: 'bg-amber-500',
-    iconBg: 'bg-gradient-to-br from-amber-400 to-rose-500',
+    gradient: 'from-rose-400 via-rose-500 to-rose-600',
+    bgGradient: 'from-rose-50 to-rose-100',
+    textColor: 'text-rose-700',
+    ringColor: 'stroke-rose-500',
+    accentColor: 'bg-rose-500',
+    iconBg: 'bg-gradient-to-br from-rose-400 to-rose-500',
   },
   rebuilding: {
     label: 'Rebuilding',
     description: 'Building new patterns and strength',
-    gradient: 'from-cyan-500 via-blue-500 to-indigo-500',
-    bgGradient: 'from-cyan-50 to-blue-50',
-    textColor: 'text-blue-700',
-    ringColor: 'stroke-blue-500',
-    accentColor: 'bg-blue-500',
-    iconBg: 'bg-gradient-to-br from-cyan-400 to-indigo-500',
+    gradient: 'from-paceful-calm via-paceful-primary-light to-paceful-primary',
+    bgGradient: 'from-[rgba(94,141,176,0.1)] to-[rgba(94,141,176,0.15)]',
+    textColor: 'text-paceful-calm',
+    ringColor: 'stroke-paceful-calm',
+    accentColor: 'bg-paceful-calm',
+    iconBg: 'bg-gradient-to-br from-paceful-calm to-paceful-primary',
   },
   ready: {
     label: 'Ready',
     description: 'Open to meaningful connections',
-    gradient: 'from-emerald-500 via-green-500 to-lime-500',
-    bgGradient: 'from-emerald-50 to-green-50',
-    textColor: 'text-emerald-700',
-    ringColor: 'stroke-emerald-500',
-    accentColor: 'bg-emerald-500',
-    iconBg: 'bg-gradient-to-br from-emerald-400 to-lime-500',
+    gradient: 'from-paceful-primary via-paceful-primary-light to-paceful-primary-light',
+    bgGradient: 'from-paceful-primary-muted to-paceful-primary-muted',
+    textColor: 'text-paceful-primary',
+    ringColor: 'stroke-paceful-primary',
+    accentColor: 'bg-paceful-primary',
+    iconBg: 'bg-gradient-to-br from-paceful-primary to-paceful-primary-light',
   },
 };
 
@@ -239,12 +239,12 @@ function DeltaIndicator({ delta }: { delta: number | null }) {
   return (
     <div
       className={`flex items-center gap-1.5 ${
-        isPositive ? 'text-emerald-600' : 'text-rose-600'
+        isPositive ? 'text-paceful-primary' : 'text-rose-600'
       }`}
     >
       <div
         className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          isPositive ? 'bg-emerald-100' : 'bg-rose-100'
+          isPositive ? 'bg-paceful-primary-muted' : 'bg-rose-100'
         }`}
       >
         <svg
@@ -638,9 +638,9 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
           <div className="relative">
             {/* Track */}
             <div className="flex gap-1">
-              <div className="flex-1 h-2 rounded-l-full bg-gradient-to-r from-amber-400 to-orange-400" />
-              <div className="flex-1 h-2 bg-gradient-to-r from-cyan-400 to-blue-400" />
-              <div className="flex-1 h-2 rounded-r-full bg-gradient-to-r from-emerald-400 to-lime-400" />
+              <div className="flex-1 h-2 rounded-l-full bg-gradient-to-r from-rose-400 to-rose-500" />
+              <div className="flex-1 h-2 bg-gradient-to-r from-paceful-calm to-paceful-primary-light" />
+              <div className="flex-1 h-2 rounded-r-full bg-gradient-to-r from-paceful-primary to-paceful-primary-light" />
             </div>
 
             {/* Labels */}

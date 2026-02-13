@@ -9,8 +9,8 @@ export function LoadingState({ message = 'Loading...', fullScreen = false }: Loa
   const content = (
     <div className="flex flex-col items-center justify-center gap-4 py-12">
       <div className="relative">
-        <div className="w-10 h-10 border-3 border-indigo-200 rounded-full" />
-        <div className="absolute top-0 left-0 w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-3 border-paceful-primary-muted rounded-full" />
+        <div className="absolute top-0 left-0 w-10 h-10 border-3 border-paceful-primary border-t-transparent rounded-full animate-spin" />
       </div>
       <p className="text-stone-400 text-sm">{message}</p>
     </div>
@@ -35,7 +35,7 @@ export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   };
 
   return (
-    <div className={`${sizeClasses[size]} border-indigo-500 border-t-transparent rounded-full animate-spin`} />
+    <div className={`${sizeClasses[size]} border-paceful-primary border-t-transparent rounded-full animate-spin`} />
   );
 }
 

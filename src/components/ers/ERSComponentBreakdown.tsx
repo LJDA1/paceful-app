@@ -31,10 +31,10 @@ const componentConfig = {
     label: 'Self-Reflection',
     weight: 0.25,
     color: {
-      bar: 'bg-violet-500',
-      light: 'bg-violet-100',
-      text: 'text-violet-600',
-      ring: 'ring-violet-200',
+      bar: 'bg-paceful-lavender',
+      light: 'bg-[rgba(126,113,181,0.15)]',
+      text: 'text-paceful-lavender',
+      ring: 'ring-[rgba(126,113,181,0.3)]',
     },
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -56,10 +56,10 @@ const componentConfig = {
     label: 'Emotional Stability',
     weight: 0.20,
     color: {
-      bar: 'bg-sky-500',
-      light: 'bg-sky-100',
-      text: 'text-sky-600',
-      ring: 'ring-sky-200',
+      bar: 'bg-paceful-calm',
+      light: 'bg-[rgba(94,141,176,0.15)]',
+      text: 'text-paceful-calm',
+      ring: 'ring-[rgba(94,141,176,0.3)]',
     },
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -129,10 +129,10 @@ const componentConfig = {
     label: 'Recovery Behavior',
     weight: 0.10,
     color: {
-      bar: 'bg-emerald-500',
-      light: 'bg-emerald-100',
-      text: 'text-emerald-600',
-      ring: 'ring-emerald-200',
+      bar: 'bg-paceful-primary',
+      light: 'bg-paceful-primary-muted',
+      text: 'text-paceful-primary',
+      ring: 'ring-paceful-primary-muted',
     },
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -153,10 +153,10 @@ const componentConfig = {
     label: 'Social Readiness',
     weight: 0.10,
     color: {
-      bar: 'bg-indigo-500',
-      light: 'bg-indigo-100',
-      text: 'text-indigo-600',
-      ring: 'ring-indigo-200',
+      bar: 'bg-paceful-primary',
+      light: 'bg-paceful-primary-muted',
+      text: 'text-paceful-primary',
+      ring: 'ring-paceful-primary-muted',
     },
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

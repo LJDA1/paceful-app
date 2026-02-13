@@ -30,6 +30,26 @@
   --color-foreground: var(--text);
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Paceful Design System Colors */
+  --color-paceful-primary: #5B8A72;
+  --color-paceful-primary-dark: #3D6B54;
+  --color-paceful-primary-light: #7BA896;
+  --color-paceful-primary-muted: rgba(91, 138, 114, 0.1);
+  --color-paceful-accent: #D4973B;
+  --color-paceful-accent-light: #F5D590;
+  --color-paceful-accent-muted: rgba(212, 151, 59, 0.1);
+  --color-paceful-rose: #B86B64;
+  --color-paceful-rose-muted: rgba(184, 107, 100, 0.1);
+  --color-paceful-calm: #5E8DB0;
+  --color-paceful-lavender: #7E71B5;
+  --color-paceful-bg: #F9F6F2;
+  --color-paceful-warm: #F3EFE9;
+  --color-paceful-text: #1F1D1A;
+  --color-paceful-text-sec: #5C574F;
+  --color-paceful-text-muted: #9A938A;
+  --color-paceful-border: #E8E2DA;
+  --color-paceful-border-light: #F0EBE4;
 }
 
 /* Smooth scrolling */
@@ -50,7 +70,7 @@ body {
 
 /* Consistent focus states for accessibility */
 *:focus-visible {
-  outline: 2px solid #14b8a6;
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 

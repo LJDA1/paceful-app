@@ -18,7 +18,7 @@ const stageConfig = {
     ringColor: 'stroke-rose-500',
     bgLight: 'bg-rose-50',
     description: 'Focus on self-care and processing emotions',
-    icon: '🌱',
+    iconSvg: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
   },
   rebuilding: {
     label: 'Rebuilding',
@@ -27,16 +27,16 @@ const stageConfig = {
     ringColor: 'stroke-amber-500',
     bgLight: 'bg-amber-50',
     description: 'Building new patterns and connections',
-    icon: '🔨',
+    iconSvg: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>,
   },
   ready: {
     label: 'Ready',
-    color: 'text-emerald-500',
-    bgColor: 'bg-emerald-500',
-    ringColor: 'stroke-emerald-500',
-    bgLight: 'bg-emerald-50',
+    color: 'text-paceful-primary',
+    bgColor: 'bg-paceful-primary',
+    ringColor: 'stroke-paceful-primary',
+    bgLight: 'bg-paceful-primary-muted',
     description: 'Emotionally available for new relationships',
-    icon: '✨',
+    iconSvg: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>,
   },
 };
 
@@ -106,7 +106,7 @@ function DeltaIndicator({ delta }: { delta: number | null }) {
       isNeutral
         ? 'text-gray-500'
         : isPositive
-          ? 'text-emerald-600'
+          ? 'text-paceful-primary'
           : 'text-rose-600'
     }`}>
       {!isNeutral && (
@@ -156,7 +156,7 @@ function ComponentScore({
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              hasData ? 'bg-indigo-500' : 'bg-gray-300'
+              hasData ? 'bg-paceful-primary' : 'bg-gray-300'
             }`}
             style={{ width: `${displayScore * 100}%` }}
           />
@@ -279,9 +279,9 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
           />
 
           {/* Stage Badge */}
-          <div className={`mt-6 px-4 py-2 rounded-full ${config.bgLight} flex items-center gap-2`}>
-            <span className="text-xl">{config.icon}</span>
-            <span className={`font-semibold ${config.color}`}>
+          <div className={`mt-6 px-4 py-2 rounded-full ${config.bgLight} flex items-center gap-2 ${config.color}`}>
+            {config.iconSvg}
+            <span className="font-semibold">
               {config.label}
             </span>
           </div>
@@ -366,7 +366,7 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
             {/* Ready */}
             <div className="flex-1">
               <div className={`h-2 rounded-r-full ${
-                ersData.ers_score >= 70 ? 'bg-emerald-500' : 'bg-gray-200'
+                ersData.ers_score >= 70 ? 'bg-paceful-primary' : 'bg-gray-200'
               }`} />
               <p className="text-xs text-center mt-1 text-gray-500">Ready</p>
             </div>
@@ -374,7 +374,7 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
           {/* Current position marker */}
           <div className="relative mt-2">
             <div
-              className="absolute w-3 h-3 rounded-full bg-indigo-600 border-2 border-white shadow-md transform -translate-x-1/2"
+              className="absolute w-3 h-3 rounded-full bg-paceful-primary border-2 border-white shadow-md transform -translate-x-1/2"
               style={{ left: `${ersData.ers_score}%` }}
             />
           </div>

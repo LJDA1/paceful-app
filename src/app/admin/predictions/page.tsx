@@ -145,18 +145,18 @@ function MetricCard({
   value,
   subtitle,
   icon,
-  color = 'indigo',
+  color = 'paceful',
   loading = false
 }: {
   title: string;
   value: string | number;
   subtitle?: string;
   icon: React.ReactNode;
-  color?: 'indigo' | 'green' | 'amber' | 'blue';
+  color?: 'paceful' | 'green' | 'amber' | 'blue';
   loading?: boolean;
 }) {
   const colorClasses = {
-    indigo: 'bg-indigo-50 text-indigo-600',
+    paceful: 'bg-paceful-primary-muted text-paceful-primary',
     green: 'bg-green-50 text-green-600',
     amber: 'bg-amber-50 text-amber-600',
     blue: 'bg-blue-50 text-blue-600',
@@ -196,7 +196,7 @@ function AccuracyBar({ label, accuracy, count }: { label: string; accuracy: numb
       </div>
       <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+          className="h-full bg-gradient-to-r from-paceful-primary to-paceful-primary-light rounded-full transition-all duration-500"
           style={{ width: `${width}%` }}
         />
       </div>
@@ -256,7 +256,7 @@ function PieChart({ data }: { data: StageDistribution }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="w-4 h-4 rounded bg-emerald-500" />
+          <div className="w-4 h-4 rounded bg-paceful-primary" />
           <div>
             <p className="font-medium text-gray-900">Ready (ERS 75-100)</p>
             <p className="text-sm text-gray-500">
@@ -271,7 +271,7 @@ function PieChart({ data }: { data: StageDistribution }) {
 
 function LoadingSpinner() {
   return (
-    <svg className="animate-spin h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24">
+    <svg className="animate-spin h-5 w-5 text-paceful-primary" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
     </svg>
@@ -728,7 +728,7 @@ View full dashboard: ${window.location.href}
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-paceful-primary text-white rounded-lg hover:bg-paceful-primary-dark disabled:opacity-50 transition-colors"
             >
               <svg
                 className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
@@ -758,7 +758,7 @@ View full dashboard: ${window.location.href}
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                 </svg>
               }
-              color="indigo"
+              color="paceful"
               loading={loading}
             />
             <MetricCard
@@ -955,7 +955,7 @@ View full dashboard: ${window.location.href}
             <button
               onClick={addTestApiClient}
               disabled={addingClient}
-              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-100 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-paceful-primary-muted text-paceful-primary text-sm font-medium rounded-lg hover:bg-paceful-primary-muted disabled:opacity-50 transition-colors"
             >
               {addingClient ? (
                 <LoadingSpinner />
@@ -987,7 +987,7 @@ View full dashboard: ${window.location.href}
                       <td className="py-3 font-medium text-gray-900">{client.client_name}</td>
                       <td className="py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                          client.tier === 3 ? 'bg-purple-100 text-purple-700' :
+                          client.tier === 3 ? 'bg-stone-200 text-stone-700' :
                           client.tier === 2 ? 'bg-blue-100 text-blue-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>

@@ -28,15 +28,15 @@ type CategoryFilter = 'all' | string;
 // Category Icons & Colors
 // ============================================================================
 
-const categoryConfig: Record<string, { icon: string; color: string; bgColor: string }> = {
-  'Self-Reflection': { icon: '🪞', color: 'text-indigo-600', bgColor: 'bg-indigo-50' },
-  'Gratitude': { icon: '🙏', color: 'text-amber-600', bgColor: 'bg-amber-50' },
-  'Growth': { icon: '🌱', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
-  'Processing': { icon: '💭', color: 'text-purple-600', bgColor: 'bg-purple-50' },
-  'Future': { icon: '✨', color: 'text-sky-600', bgColor: 'bg-sky-50' },
-  'Healing': { icon: '💜', color: 'text-fuchsia-600', bgColor: 'bg-fuchsia-50' },
-  'Relationships': { icon: '🤝', color: 'text-rose-600', bgColor: 'bg-rose-50' },
-  'General': { icon: '📝', color: 'text-stone-600', bgColor: 'bg-stone-100' },
+const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
+  'Self-Reflection': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>, color: 'text-paceful-primary', bgColor: 'bg-paceful-primary-muted' },
+  'Gratitude': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>, color: 'text-[#D4973B]', bgColor: 'bg-[rgba(212,151,59,0.1)]' },
+  'Growth': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>, color: 'text-paceful-primary', bgColor: 'bg-paceful-primary-muted' },
+  'Processing': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>, color: 'text-stone-600', bgColor: 'bg-stone-50' },
+  'Future': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>, color: 'text-paceful-calm', bgColor: 'bg-[rgba(94,141,176,0.1)]' },
+  'Healing': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>, color: 'text-paceful-lavender', bgColor: 'bg-[rgba(126,113,181,0.1)]' },
+  'Relationships': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>, color: 'text-rose-600', bgColor: 'bg-rose-50' },
+  'General': { icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>, color: 'text-stone-600', bgColor: 'bg-stone-100' },
 };
 
 function getCategoryConfig(category: string | null) {
@@ -105,15 +105,15 @@ function PromptCard({
     >
       <div className="flex items-start gap-3">
         {/* Category Icon */}
-        <div className={`w-8 h-8 rounded-lg ${config.bgColor} flex items-center justify-center flex-shrink-0`}>
-          <span className="text-sm">{config.icon}</span>
+        <div className={`w-8 h-8 rounded-lg ${config.bgColor} ${config.color} flex items-center justify-center flex-shrink-0`}>
+          {config.icon}
         </div>
 
         <div className="flex-1 min-w-0">
           {/* Badges */}
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             {isPromptOfDay && (
-              <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-medium">
+              <span className="px-2 py-0.5 rounded-full bg-[#D4973B] text-white text-xs font-medium">
                 Today&apos;s Prompt
               </span>
             )}
@@ -186,7 +186,7 @@ function CategoryFilters({
                 : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
-            <span>{config.icon}</span>
+            <span className={isSelected ? config.color : ''}>{config.icon}</span>
             {category}
           </button>
         );
@@ -319,13 +319,15 @@ export default function JournalPrompts({
 
       {/* Prompt of the Day - Featured */}
       {promptOfDay && categoryFilter === 'all' && !compact && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 border border-amber-200 p-5">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-200/30 to-transparent rounded-bl-full" />
+        <div className="relative overflow-hidden rounded-2xl bg-[rgba(212,151,59,0.08)] border border-[rgba(212,151,59,0.3)] p-5">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[rgba(212,151,59,0.15)] to-transparent rounded-bl-full" />
 
           <div className="relative">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">✨</span>
-              <h4 className="font-semibold text-amber-800">Prompt of the Day</h4>
+              <svg className="w-6 h-6 text-[#D4973B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+              <h4 className="font-semibold text-[#D4973B]">Prompt of the Day</h4>
             </div>
 
             <p className="text-stone-700 leading-relaxed mb-4">

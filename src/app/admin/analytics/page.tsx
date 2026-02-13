@@ -102,8 +102,8 @@ function ERSDistributionBar({ distribution }: { distribution: ERSDistribution })
         <>
           <div className="h-6 rounded-lg overflow-hidden flex mb-4">
             <div className="bg-amber-500 transition-all" style={{ width: `${healingPct}%` }} />
-            <div className="bg-sky-500 transition-all" style={{ width: `${rebuildingPct}%` }} />
-            <div className="bg-emerald-500 transition-all" style={{ width: `${readyPct}%` }} />
+            <div className="bg-paceful-calm transition-all" style={{ width: `${rebuildingPct}%` }} />
+            <div className="bg-paceful-primary transition-all" style={{ width: `${readyPct}%` }} />
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-sm">
@@ -115,14 +115,14 @@ function ERSDistributionBar({ distribution }: { distribution: ERSDistribution })
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-sky-500" />
+              <div className="w-3 h-3 rounded bg-paceful-calm" />
               <div>
                 <p className="font-medium" style={{ color: 'var(--text)' }}>{rebuildingPct.toFixed(0)}%</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Rebuilding ({distribution.rebuilding})</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-emerald-500" />
+              <div className="w-3 h-3 rounded bg-paceful-primary" />
               <div>
                 <p className="font-medium" style={{ color: 'var(--text)' }}>{readyPct.toFixed(0)}%</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Ready ({distribution.ready})</p>
@@ -605,7 +605,7 @@ function AnalyticsDashboard() {
                         {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="py-2 text-center">
-                        <span className={`inline-flex w-2 h-2 rounded-full ${key.is_active ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+                        <span className={`inline-flex w-2 h-2 rounded-full ${key.is_active ? 'bg-paceful-primary' : 'bg-stone-300'}`} />
                       </td>
                     </tr>
                   ))}

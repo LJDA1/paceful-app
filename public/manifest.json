@@ -1,0 +1,13 @@
+{
+  "name": "Paceful",
+  "short_name": "Paceful",
+  "description": "Emotional recovery and readiness tracking",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#F9F6F2",
+  "theme_color": "#5B8A72",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

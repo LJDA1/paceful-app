@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Navigation from './Navigation';
 import ErrorBoundary from './ErrorBoundary';
+import OfflineBanner from './OfflineBanner';
 
 const noNavRoutes = ['/auth', '/onboarding', '/login', '/signup'];
 const marketingRoutes = ['/design-partners', '/investors', '/api-docs', '/privacy', '/terms', '/demo'];
@@ -17,11 +18,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const showNav = !isNoNav && !isMarketing && pathname !== '/';
 
   if (!showNav) {
-    return <ErrorBoundary>{children}</ErrorBoundary>;
+    return (
+      <ErrorBoundary>
+        <OfflineBanner />
+        {children}
+      </ErrorBoundary>
+    );
   }
 
   return (
     <ErrorBoundary>
+      <OfflineBanner />
       <Navigation />
       <main
         className="pb-24 md:pb-0 md:ml-64"

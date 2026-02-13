@@ -159,12 +159,12 @@ function SentimentPreview({
         </span>
       )}
       {analysis.insights.hasSelfReflection && (
-        <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
+        <span className="px-2.5 py-1 rounded-full bg-paceful-primary-muted text-paceful-primary text-xs font-medium">
           Self-reflection
         </span>
       )}
       {analysis.insights.hasFutureThinking && (
-        <span className="px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 text-xs font-medium">
+        <span className="px-2.5 py-1 rounded-full bg-[rgba(94,141,176,0.15)] text-paceful-calm text-xs font-medium">
           Forward-looking
         </span>
       )}
@@ -180,8 +180,8 @@ function WordCountIndicator({ count }: { count: number }) {
   const getColor = () => {
     if (count < 50) return 'text-stone-400';
     if (count < 100) return 'text-amber-500';
-    if (count < 200) return 'text-emerald-500';
-    return 'text-teal-500';
+    if (count < 200) return 'text-paceful-primary-light';
+    return 'text-paceful-primary';
   };
 
   const getMessage = () => {
@@ -212,7 +212,7 @@ function AutosaveIndicator({ status }: { status: 'idle' | 'saving' | 'saved' | '
 
   const config = {
     saving: { text: 'Saving...', color: 'text-stone-400' },
-    saved: { text: 'Draft saved', color: 'text-emerald-500' },
+    saved: { text: 'Draft saved', color: 'text-paceful-primary-light' },
     error: { text: 'Save failed', color: 'text-rose-500' },
   };
 
@@ -363,8 +363,8 @@ function AnalysisPanel({ analysis }: { analysis: FullAnalysisResult | null }) {
   const { healingIndicators, insights } = analysis;
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 rounded-xl p-4 space-y-3">
-      <div className="flex items-center gap-2 text-xs font-medium text-indigo-700">
+    <div className="bg-gradient-to-br from-paceful-primary-muted to-paceful-calm/10 rounded-xl p-4 space-y-3">
+      <div className="flex items-center gap-2 text-xs font-medium text-paceful-primary">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
         </svg>
@@ -373,36 +373,36 @@ function AnalysisPanel({ analysis }: { analysis: FullAnalysisResult | null }) {
 
       <div className="grid grid-cols-2 gap-2">
         {healingIndicators.healthyProcessing && (
-          <div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-paceful-primary bg-paceful-primary-muted px-2.5 py-1.5 rounded-lg">
             <span>✓</span> Healthy processing
           </div>
         )}
         {healingIndicators.forwardLooking && (
-          <div className="flex items-center gap-2 text-xs text-sky-700 bg-sky-50 px-2.5 py-1.5 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-paceful-calm bg-[rgba(94,141,176,0.1)] px-2.5 py-1.5 rounded-lg">
             <span>→</span> Forward-looking
           </div>
         )}
         {insights.hasGrowthMindset && (
-          <div className="flex items-center gap-2 text-xs text-purple-700 bg-purple-50 px-2.5 py-1.5 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-stone-600 bg-stone-50 px-2.5 py-1.5 rounded-lg">
             <span>↑</span> Growth mindset
           </div>
         )}
         {insights.hasAcceptance && (
-          <div className="flex items-center gap-2 text-xs text-teal-700 bg-teal-50 px-2.5 py-1.5 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-paceful-calm bg-paceful-calm/10 px-2.5 py-1.5 rounded-lg">
             <span>☮</span> Acceptance
           </div>
         )}
       </div>
 
       {healingIndicators.progressScore > 0 && (
-        <div className="pt-2 border-t border-indigo-100">
+        <div className="pt-2 border-t border-paceful-primary-muted">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-indigo-600">Healing Progress</span>
-            <span className="font-medium text-indigo-700">{healingIndicators.progressScore}/10</span>
+            <span className="text-paceful-primary">Healing Progress</span>
+            <span className="font-medium text-paceful-primary">{healingIndicators.progressScore}/10</span>
           </div>
-          <div className="mt-1.5 h-1.5 bg-indigo-100 rounded-full overflow-hidden">
+          <div className="mt-1.5 h-1.5 bg-paceful-primary-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-paceful-primary to-paceful-primary-light rounded-full transition-all duration-500"
               style={{ width: `${healingIndicators.progressScore * 10}%` }}
             />
           </div>
@@ -628,10 +628,10 @@ export default function JournalEntryForm({
   if (isSaved) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-12 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-paceful-primary-muted to-paceful-calm/10 rounded-3xl p-12 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-paceful-primary-muted to-paceful-calm/20 flex items-center justify-center">
             <svg
-              className="w-10 h-10 text-emerald-600"
+              className="w-10 h-10 text-paceful-primary"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}
@@ -645,7 +645,7 @@ export default function JournalEntryForm({
           </h2>
           <p className="text-stone-600 mb-2">{encouragement}</p>
           {analysis && (
-            <p className="text-sm text-emerald-600 mb-8">
+            <p className="text-sm text-paceful-primary mb-8">
               Your ERS score has been updated based on this entry.
             </p>
           )}
@@ -659,7 +659,7 @@ export default function JournalEntryForm({
                 setAnalysis(null);
                 setIsSaved(false);
               }}
-              className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium shadow-sm"
+              className="px-6 py-3 bg-paceful-primary text-white rounded-xl hover:bg-paceful-primary-dark transition-colors font-medium shadow-sm"
             >
               Write Another Entry
             </button>
@@ -713,8 +713,8 @@ export default function JournalEntryForm({
 
         {/* Selected Prompt Display */}
         {selectedPromptText && (
-          <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-            <p className="text-sm text-amber-800 italic leading-relaxed">&quot;{selectedPromptText}&quot;</p>
+          <div className="p-4 bg-[rgba(212,151,59,0.08)] border border-[rgba(212,151,59,0.3)] rounded-xl">
+            <p className="text-sm text-[#D4973B] italic leading-relaxed">&quot;{selectedPromptText}&quot;</p>
           </div>
         )}
 
@@ -756,9 +756,11 @@ export default function JournalEntryForm({
         </div>
 
         {/* Encouragement */}
-        <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-stone-50 via-amber-50/50 to-stone-50 rounded-xl border border-stone-100">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-lg">💛</span>
+        <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-stone-50 via-[rgba(212,151,59,0.05)] to-stone-50 rounded-xl border border-stone-100">
+          <div className="w-10 h-10 rounded-xl bg-[rgba(212,151,59,0.12)] flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-[#D4973B]" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
           </div>
           <p className="text-sm text-stone-600 italic">{encouragement}</p>
         </div>
@@ -791,7 +793,7 @@ export default function JournalEntryForm({
           <button
             type="submit"
             disabled={!content.trim() || wordCount < 10 || isSubmitting}
-            className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow flex items-center gap-2"
+            className="px-6 py-3 bg-[#D4973B] text-white rounded-xl hover:bg-[#C08832] disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow flex items-center gap-2"
           >
             {isSubmitting ? (
               <>

@@ -23,7 +23,7 @@ interface Match {
 const stageConfig: Record<string, { label: string; color: string; bg: string }> = {
   healing: { label: 'Healing', color: 'text-rose-600', bg: 'bg-rose-100' },
   rebuilding: { label: 'Rebuilding', color: 'text-amber-600', bg: 'bg-amber-100' },
-  ready: { label: 'Ready', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  ready: { label: 'Ready', color: 'text-paceful-primary', bg: 'bg-paceful-primary-muted' },
 };
 
 export default function MatchesPage() {
@@ -161,12 +161,16 @@ export default function MatchesPage() {
           </div>
         ) : matches.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <span className="text-6xl mb-4 block">💜</span>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-paceful-primary-muted flex items-center justify-center">
+              <svg className="w-8 h-8 text-paceful-primary" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </div>
             <h2 className="text-xl font-semibold text-gray-800 mb-2">No matches yet</h2>
             <p className="text-gray-600 mb-6">
               Keep working on your healing journey. Matches happen when you&apos;re ready!
             </p>
-            <div className="bg-indigo-50 rounded-xl p-4 text-sm text-indigo-700">
+            <div className="bg-paceful-primary-muted rounded-xl p-4 text-sm text-paceful-primary">
               Tip: Complete journal entries and mood check-ins to improve your ERS score and find compatible matches.
             </div>
           </div>
@@ -179,7 +183,7 @@ export default function MatchesPage() {
               >
                 <div className="flex items-center gap-4">
                   {/* Avatar */}
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xl font-semibold">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-paceful-primary to-paceful-primary-light flex items-center justify-center text-white text-xl font-semibold">
                     {match.other_user ? getInitials(match.other_user.first_name) : '?'}
                   </div>
 
@@ -207,7 +211,7 @@ export default function MatchesPage() {
                     <div className="text-right">
                       <div className="text-sm text-gray-500">Match Health</div>
                       <div className={`text-lg font-semibold ${
-                        match.match_health_score >= 70 ? 'text-emerald-600' :
+                        match.match_health_score >= 70 ? 'text-paceful-primary' :
                         match.match_health_score >= 40 ? 'text-amber-600' : 'text-rose-600'
                       }`}>
                         {match.match_health_score}%
