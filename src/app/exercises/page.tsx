@@ -137,7 +137,8 @@ function CircularTimer({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           if (intervalRef.current) clearInterval(intervalRef.current);
-          onComplete();
+          // Defer onComplete to next tick to avoid updating parent state during render
+          setTimeout(() => onComplete(), 0);
           return 0;
         }
         return prev - 1;
