@@ -61,11 +61,15 @@ export default function ResetPasswordPage() {
     }
   };
 
+  // Loading state
   if (isValidSession === null) {
     return (
-      <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+      <div
+        className="rounded-3xl p-8"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
         <div className="flex items-center justify-center py-8">
-          <svg className="h-8 w-8 animate-spin text-indigo-600" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="h-8 w-8 animate-spin" style={{ color: '#5B8A72' }} viewBox="0 0 24 24" aria-hidden="true">
             <circle
               className="opacity-25"
               cx="12"
@@ -86,33 +90,46 @@ export default function ResetPasswordPage() {
     );
   }
 
+  // Invalid session state
   if (!isValidSession) {
     return (
-      <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+      <div
+        className="rounded-3xl p-8"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+          <div
+            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{ background: 'rgba(184,107,100,0.1)' }}
+          >
             <svg
-              className="h-6 w-6 text-red-600"
+              className="h-7 w-7"
               fill="none"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke="#B86B64"
+              strokeWidth={2}
               aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-stone-900">Invalid or expired link</h1>
-          <p className="mt-2 text-sm text-stone-600">
+          <h1
+            className="text-[24px] font-bold"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            Invalid or expired link
+          </h1>
+          <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
             This password reset link is invalid or has expired. Please request a new one.
           </p>
           <Link
             href="/auth/forgot-password"
-            className="mt-6 inline-block rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-700"
+            className="mt-6 inline-block rounded-full px-6 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: '#5B8A72' }}
           >
             Request new link
           </Link>
@@ -121,59 +138,88 @@ export default function ResetPasswordPage() {
     );
   }
 
+  // Success state
   if (isSuccess) {
     return (
-      <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+      <div
+        className="rounded-3xl p-8"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <div
+            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{ background: 'rgba(91,138,114,0.1)' }}
+          >
             <svg
-              className="h-6 w-6 text-green-600"
+              className="h-7 w-7"
               fill="none"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke="#5B8A72"
+              strokeWidth={2}
               aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
                 d="M5 13l4 4L19 7"
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-stone-900">Password updated</h1>
-          <p className="mt-2 text-sm text-stone-600">
-            Your password has been successfully reset. Redirecting you to sign in...
+          <h1
+            className="text-[24px] font-bold"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            Password updated
+          </h1>
+          <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
+            Your password has been successfully reset. Redirecting you to log in...
           </p>
           <Link
             href="/auth/login"
-            className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500"
+            className="mt-6 inline-block text-[14px] font-medium"
+            style={{ color: '#5B8A72' }}
           >
-            Go to sign in now
+            Go to log in now
           </Link>
         </div>
       </div>
     );
   }
 
+  // Main form
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+    <div
+      className="rounded-3xl p-8"
+      style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+    >
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-stone-900">Set new password</h1>
-        <p className="mt-2 text-sm text-stone-600">
+        <h1
+          className="text-[24px] font-bold"
+          style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+        >
+          Set new password
+        </h1>
+        <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
           Enter your new password below
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div
+            className="rounded-2xl p-3 text-[14px]"
+            style={{ background: 'rgba(184,107,100,0.1)', color: '#B86B64' }}
+          >
             {error}
           </div>
         )}
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-stone-700">
+          <label
+            htmlFor="password"
+            className="block text-[14px] font-medium mb-1.5"
+            style={{ color: '#5C574F' }}
+          >
             New Password
           </label>
           <input
@@ -184,13 +230,30 @@ export default function ResetPasswordPage() {
             required
             autoComplete="new-password"
             minLength={8}
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
             placeholder="At least 8 characters"
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-stone-700">
+          <label
+            htmlFor="confirmPassword"
+            className="block text-[14px] font-medium mb-1.5"
+            style={{ color: '#5C574F' }}
+          >
             Confirm New Password
           </label>
           <input
@@ -200,7 +263,20 @@ export default function ResetPasswordPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
             placeholder="Confirm your new password"
           />
         </div>
@@ -208,7 +284,8 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-full py-[14px] text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ background: '#5B8A72' }}
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">

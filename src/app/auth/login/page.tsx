@@ -52,23 +52,38 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+    <div
+      className="rounded-3xl p-8"
+      style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+    >
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-stone-900">Welcome back</h1>
-        <p className="mt-2 text-sm text-stone-600">
-          Sign in to continue your journey
+        <h1
+          className="text-[24px] font-bold"
+          style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+        >
+          Welcome back
+        </h1>
+        <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
+          Log in to continue your journey
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div
+            className="rounded-2xl p-3 text-[14px]"
+            style={{ background: 'rgba(184,107,100,0.1)', color: '#B86B64' }}
+          >
             {error}
           </div>
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-stone-700">
+          <label
+            htmlFor="email"
+            className="block text-[14px] font-medium mb-1.5"
+            style={{ color: '#5C574F' }}
+          >
             Email
           </label>
           <input
@@ -78,19 +93,37 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <div className="flex items-center justify-between">
-            <label htmlFor="password" className="block text-sm font-medium text-stone-700">
+          <div className="flex items-center justify-between mb-1.5">
+            <label
+              htmlFor="password"
+              className="text-[14px] font-medium"
+              style={{ color: '#5C574F' }}
+            >
               Password
             </label>
             <Link
               href="/auth/forgot-password"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              className="text-[13px] font-medium"
+              style={{ color: '#5B8A72' }}
             >
               Forgot password?
             </Link>
@@ -102,7 +135,20 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
             placeholder="Your password"
           />
         </div>
@@ -110,7 +156,8 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-full py-[14px] text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ background: '#5B8A72' }}
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
@@ -133,15 +180,15 @@ export default function LoginPage() {
               Signing in...
             </span>
           ) : (
-            'Sign in'
+            'Log in'
           )}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm">
-        <span className="text-stone-600">Don&apos;t have an account?</span>{' '}
-        <Link href="/auth/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-          Create one
+      <div className="mt-6 text-center text-[14px]">
+        <span style={{ color: '#5C574F' }}>Don&apos;t have an account?</span>{' '}
+        <Link href="/auth/signup" className="font-medium" style={{ color: '#5B8A72' }}>
+          Sign up
         </Link>
       </div>
     </div>

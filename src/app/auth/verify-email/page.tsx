@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
@@ -47,46 +47,68 @@ function VerifyEmailContent() {
   };
 
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+    <div
+      className="rounded-3xl p-8"
+      style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+    >
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
+        <div
+          className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+          style={{ background: 'rgba(91,138,114,0.1)' }}
+        >
           <svg
-            className="h-8 w-8 text-indigo-600"
+            className="h-8 w-8"
             fill="none"
             viewBox="0 0 24 24"
-            stroke="currentColor"
+            stroke="#5B8A72"
+            strokeWidth={1.5}
             aria-hidden="true"
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-stone-900">Verify your email</h1>
-        <p className="mt-2 text-sm text-stone-600">
-          We&apos;ve sent a verification email to
+        <h1
+          className="text-[24px] font-bold"
+          style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+        >
+          Check your email
+        </h1>
+        <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
+          We sent a verification link to
         </p>
         {email && (
-          <p className="mt-1 font-medium text-stone-900">{email}</p>
+          <p className="mt-1 font-medium text-[14px]" style={{ color: '#1F1D1A' }}>
+            {email}
+          </p>
         )}
 
-        <div className="mt-6 rounded-lg bg-stone-50 p-4">
-          <p className="text-sm text-stone-600">
-            Click the link in the email to verify your account and complete your registration.
+        <div
+          className="mt-6 rounded-2xl p-4"
+          style={{ background: '#F3EFE9' }}
+        >
+          <p className="text-[14px]" style={{ color: '#5C574F' }}>
+            Click the link in the email to activate your account and start your journey.
           </p>
         </div>
 
         {error && (
-          <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div
+            className="mt-4 rounded-2xl p-3 text-[14px]"
+            style={{ background: 'rgba(184,107,100,0.1)', color: '#B86B64' }}
+          >
             {error}
           </div>
         )}
 
         {resendSuccess && (
-          <div className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-600">
+          <div
+            className="mt-4 rounded-2xl p-3 text-[14px]"
+            style={{ background: 'rgba(91,138,114,0.1)', color: '#5B8A72' }}
+          >
             Verification email sent! Check your inbox.
           </div>
         )}
@@ -95,7 +117,12 @@ function VerifyEmailContent() {
           <button
             onClick={handleResend}
             disabled={isResending || !email}
-            className="w-full rounded-lg border border-stone-300 bg-white px-4 py-3 font-medium text-stone-700 transition-colors hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-full py-[14px] text-[15px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            style={{
+              background: 'transparent',
+              border: '2px solid #5B8A72',
+              color: '#5B8A72',
+            }}
           >
             {isResending ? (
               <span className="flex items-center justify-center gap-2">
@@ -118,19 +145,20 @@ function VerifyEmailContent() {
                 Resending...
               </span>
             ) : (
-              'Resend verification email'
+              'Resend email'
             )}
           </button>
 
           <Link
             href="/auth/login"
-            className="block w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="block w-full rounded-full py-[14px] text-[15px] font-semibold text-white text-center transition-opacity hover:opacity-90"
+            style={{ background: '#5B8A72' }}
           >
-            Go to sign in
+            Back to log in
           </Link>
         </div>
 
-        <p className="mt-6 text-xs text-stone-500">
+        <p className="mt-6 text-[12px]" style={{ color: '#9A938A' }}>
           Didn&apos;t receive the email? Check your spam folder or try signing up with a different email address.
         </p>
       </div>
@@ -141,9 +169,12 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
-        <div className="flex items-center justify-center">
-          <svg className="h-8 w-8 animate-spin text-indigo-600" viewBox="0 0 24 24" aria-hidden="true">
+      <div
+        className="rounded-3xl p-8"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
+        <div className="flex items-center justify-center py-8">
+          <svg className="h-8 w-8 animate-spin" style={{ color: '#5B8A72' }} viewBox="0 0 24 24" aria-hidden="true">
             <circle
               className="opacity-25"
               cx="12"

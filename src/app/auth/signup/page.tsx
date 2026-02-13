@@ -69,51 +69,147 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+    <div
+      className="rounded-3xl p-8"
+      style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+    >
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-stone-900">Create your account</h1>
-        <p className="mt-2 text-sm text-stone-600">
-          Start your emotional recovery journey today
+        <h1
+          className="text-[24px] font-bold"
+          style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+        >
+          Create your account
+        </h1>
+        <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
+          Start your healing journey
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div
+            className="rounded-2xl p-3 text-[14px]"
+            style={{ background: 'rgba(184,107,100,0.1)', color: '#B86B64' }}
+          >
             {error}
           </div>
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-stone-700">Email</label>
-          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            placeholder="you@example.com" />
+          <label
+            htmlFor="email"
+            className="block text-[14px] font-medium mb-1.5"
+            style={{ color: '#5C574F' }}
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
+            placeholder="you@example.com"
+          />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-stone-700">Password</label>
-          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" minLength={8}
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            placeholder="At least 8 characters" />
+          <label
+            htmlFor="password"
+            className="block text-[14px] font-medium mb-1.5"
+            style={{ color: '#5C574F' }}
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+            minLength={8}
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
+            placeholder="At least 8 characters"
+          />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-stone-700">Confirm Password</label>
-          <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password"
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            placeholder="Confirm your password" />
+          <label
+            htmlFor="confirmPassword"
+            className="block text-[14px] font-medium mb-1.5"
+            style={{ color: '#5C574F' }}
+          >
+            Confirm Password
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
+            placeholder="Confirm your password"
+          />
         </div>
 
-        <button type="submit" disabled={isLoading}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full rounded-full py-[14px] text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ background: '#5B8A72' }}
+        >
           {isLoading ? 'Creating account...' : 'Create account'}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm">
-        <span className="text-stone-600">Already have an account?</span>{' '}
-        <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">Sign in</Link>
+      <div className="mt-6 text-center text-[14px]">
+        <span style={{ color: '#5C574F' }}>Already have an account?</span>{' '}
+        <Link href="/auth/login" className="font-medium" style={{ color: '#5B8A72' }}>
+          Log in
+        </Link>
       </div>
     </div>
   );

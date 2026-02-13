@@ -36,42 +36,58 @@ export default function ForgotPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+      <div
+        className="rounded-3xl p-8"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <div
+            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{ background: 'rgba(91,138,114,0.1)' }}
+          >
             <svg
-              className="h-6 w-6 text-green-600"
+              className="h-7 w-7"
               fill="none"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke="#5B8A72"
+              strokeWidth={2}
               aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
                 d="M5 13l4 4L19 7"
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-stone-900">Check your email</h1>
-          <p className="mt-2 text-sm text-stone-600">
-            We&apos;ve sent a password reset link to <strong>{email}</strong>
+          <h1
+            className="text-[24px] font-bold"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            Check your email
+          </h1>
+          <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
+            We&apos;ve sent a password reset link to
           </p>
-          <p className="mt-4 text-sm text-stone-500">
+          <p className="mt-1 font-medium text-[14px]" style={{ color: '#1F1D1A' }}>
+            {email}
+          </p>
+          <p className="mt-4 text-[13px]" style={{ color: '#9A938A' }}>
             Didn&apos;t receive the email? Check your spam folder or{' '}
             <button
               onClick={() => setIsSuccess(false)}
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="font-medium"
+              style={{ color: '#5B8A72' }}
             >
               try again
             </button>
           </p>
           <Link
             href="/auth/login"
-            className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500"
+            className="mt-6 inline-block text-[14px] font-medium"
+            style={{ color: '#5B8A72' }}
           >
-            Back to sign in
+            Back to log in
           </Link>
         </div>
       </div>
@@ -79,23 +95,38 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-stone-100">
+    <div
+      className="rounded-3xl p-8"
+      style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+    >
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-stone-900">Reset your password</h1>
-        <p className="mt-2 text-sm text-stone-600">
-          Enter your email and we&apos;ll send you a reset link
+        <h1
+          className="text-[24px] font-bold"
+          style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+        >
+          Reset password
+        </h1>
+        <p className="mt-2 text-[14px]" style={{ color: '#5C574F' }}>
+          We&apos;ll send you a reset link
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div
+            className="rounded-2xl p-3 text-[14px]"
+            style={{ background: 'rgba(184,107,100,0.1)', color: '#B86B64' }}
+          >
             {error}
           </div>
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-stone-700">
+          <label
+            htmlFor="email"
+            className="block text-[14px] font-medium mb-1.5"
+            style={{ color: '#5C574F' }}
+          >
             Email
           </label>
           <input
@@ -105,7 +136,20 @@ export default function ForgotPasswordPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-4 py-3 text-stone-900 placeholder-stone-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="block w-full rounded-2xl px-[18px] py-[14px] text-[15px] outline-none transition-colors"
+            style={{
+              background: '#F9F6F2',
+              border: '1px solid #E8E2DA',
+              color: '#1F1D1A',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#5B8A72';
+              e.target.style.background = '#F3EFE9';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E8E2DA';
+              e.target.style.background = '#F9F6F2';
+            }}
             placeholder="you@example.com"
           />
         </div>
@@ -113,7 +157,8 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-full py-[14px] text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ background: '#5B8A72' }}
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
@@ -141,9 +186,13 @@ export default function ForgotPasswordPage() {
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm">
-        <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-          Back to sign in
+      <div className="mt-6 text-center">
+        <Link
+          href="/auth/login"
+          className="text-[14px] font-medium"
+          style={{ color: '#5B8A72' }}
+        >
+          Back to log in
         </Link>
       </div>
     </div>

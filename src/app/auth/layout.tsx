@@ -12,23 +12,27 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-stone-50">
+    <div className="min-h-screen" style={{ background: '#F9F6F2' }}>
       <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
         <div className="mb-8">
-          <Link href="/" className="text-2xl font-bold text-indigo-600">
-            paceful
+          <Link
+            href="/"
+            className="text-[24px] font-semibold"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            Paceful
           </Link>
         </div>
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-[420px]">
           {children}
         </div>
-        <p className="mt-8 text-center text-sm text-stone-500">
+        <p className="mt-8 text-center text-[13px]" style={{ color: '#9A938A' }}>
           By continuing, you agree to our{' '}
-          <Link href="/terms" className="text-indigo-600 hover:underline">
+          <Link href="/terms" style={{ color: '#5B8A72' }}>
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="/privacy" className="text-indigo-600 hover:underline">
+          <Link href="/privacy" style={{ color: '#5B8A72' }}>
             Privacy Policy
           </Link>
         </p>
