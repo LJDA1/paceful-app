@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 
 // Admin email check
-const ADMIN_EMAILS = ['lewisjohnson004@gmail.com'];
+const ADMIN_EMAILS = ['lewisjohnson004@gmail.com', 'lewisjo307@gmail.com'];
 
 // ============================================================================
 // TYPES

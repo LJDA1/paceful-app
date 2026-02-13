@@ -13,13 +13,13 @@ const supabase = supabaseUrl && supabaseKey
 
 interface Metrics {
   totalUsers: number;
-  totalPredictions: number;
-  avgAccuracy: number;
+  totalTrajectories: number;
   avgERS: number;
   stageDistribution: { healing: number; rebuilding: number; ready: number };
   moodEntries: number;
   journalEntries: number;
   apiClients: number;
+  ersScoresCalculated: number;
 }
 
 // ============================================================================
@@ -221,31 +221,36 @@ function StageBar({ label, count, total, color }: {
   );
 }
 
-function AccuracyCard({ type, accuracy, description, sample }: {
-  type: string;
-  accuracy: number;
+function DataCollectionCard({ value, label, description, icon }: {
+  value: string | number;
+  label: string;
   description: string;
-  sample: string;
+  icon: React.ReactNode;
 }) {
   return (
     <div
       className="p-6 bg-white rounded-2xl text-center"
       style={{ border: '1px solid #F0EBE4' }}
     >
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+        style={{ background: 'rgba(91,138,114,0.1)', color: '#5B8A72' }}
+      >
+        {icon}
+      </div>
       <p
-        className="text-[48px] font-bold mb-2"
+        className="text-[36px] font-bold mb-2"
         style={{ fontFamily: "'Fraunces', serif", color: '#5B8A72' }}
       >
-        {accuracy}%
+        {value}
       </p>
       <h3
         className="text-[17px] font-semibold mb-2"
         style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
       >
-        {type} Predictions
+        {label}
       </h3>
-      <p className="text-[14px] mb-3" style={{ color: '#5C574F' }}>{description}</p>
-      <p className="text-[12px]" style={{ color: '#9A938A' }}>{sample}</p>
+      <p className="text-[14px]" style={{ color: '#5C574F' }}>{description}</p>
     </div>
   );
 }
@@ -324,16 +329,6 @@ export default function InvestorPitchPage() {
   useEffect(() => {
     async function fetchMetrics() {
       if (!supabase) {
-        setMetrics({
-          totalUsers: 50,
-          totalPredictions: 1200,
-          avgAccuracy: 84,
-          avgERS: 58,
-          stageDistribution: { healing: 16, rebuilding: 20, ready: 14 },
-          moodEntries: 2100,
-          journalEntries: 850,
-          apiClients: 3,
-        });
         setLoading(false);
         return;
       }
@@ -341,17 +336,19 @@ export default function InvestorPitchPage() {
       try {
         const [
           { count: totalUsers },
-          { count: totalPredictions },
+          { count: totalTrajectories },
           { count: moodEntries },
           { count: journalEntries },
           { count: apiClients },
+          { count: ersScoresCalculated },
           { data: ersData },
         ] = await Promise.all([
           supabase.from('users').select('*', { count: 'exact', head: true }),
-          supabase.from('user_predictions').select('*', { count: 'exact', head: true }),
+          supabase.from('recovery_trajectory_snapshots').select('*', { count: 'exact', head: true }),
           supabase.from('mood_entries').select('*', { count: 'exact', head: true }),
           supabase.from('journal_entries').select('*', { count: 'exact', head: true }),
           supabase.from('api_clients').select('*', { count: 'exact', head: true }),
+          supabase.from('ers_scores').select('*', { count: 'exact', head: true }),
           supabase.from('ers_scores').select('ers_score, ers_stage'),
         ]);
 
@@ -364,26 +361,16 @@ export default function InvestorPitchPage() {
 
         setMetrics({
           totalUsers: totalUsers || 0,
-          totalPredictions: totalPredictions || 0,
-          avgAccuracy: 84,
+          totalTrajectories: totalTrajectories || 0,
           avgERS: ersData && ersData.length > 0 ? Math.round(totalERS / ersData.length) : 0,
           stageDistribution: stages,
           moodEntries: moodEntries || 0,
           journalEntries: journalEntries || 0,
           apiClients: apiClients || 0,
+          ersScoresCalculated: ersScoresCalculated || 0,
         });
       } catch (error) {
         console.error('Error fetching metrics:', error);
-        setMetrics({
-          totalUsers: 50,
-          totalPredictions: 1200,
-          avgAccuracy: 84,
-          avgERS: 58,
-          stageDistribution: { healing: 16, rebuilding: 20, ready: 14 },
-          moodEntries: 2100,
-          journalEntries: 850,
-          apiClients: 3,
-        });
       } finally {
         setLoading(false);
       }
@@ -505,17 +492,17 @@ export default function InvestorPitchPage() {
               loading={loading}
             />
             <MetricCard
-              value={loading ? '...' : `${metrics?.totalPredictions || 0}+`}
-              label="Predictions Generated"
-              icon={<TargetIcon className="w-5 h-5" />}
+              value={loading ? '...' : metrics?.moodEntries?.toLocaleString() || 0}
+              label="Mood Entries"
+              icon={<ChartIcon className="w-5 h-5" />}
               iconBg="rgba(212,151,59,0.1)"
               iconColor="#D4973B"
               loading={loading}
             />
             <MetricCard
-              value={loading ? '...' : `${metrics?.avgAccuracy}%`}
-              label="Prediction Accuracy"
-              icon={<CheckCircleIcon className="w-5 h-5" />}
+              value={loading ? '...' : metrics?.ersScoresCalculated || 0}
+              label="ERS Scores Calculated"
+              icon={<TargetIcon className="w-5 h-5" />}
               iconBg="rgba(91,138,114,0.1)"
               iconColor="#5B8A72"
               highlight
@@ -613,6 +600,9 @@ export default function InvestorPitchPage() {
                   </span>
                 </div>
               </div>
+              <p className="text-[11px] mt-4 text-center" style={{ color: '#9A938A' }}>
+                Based on dating app + mental health platform market analysis (Grand View Research, 2024)
+              </p>
             </div>
           </div>
         </div>
@@ -640,7 +630,7 @@ export default function InvestorPitchPage() {
               iconBg="rgba(212,151,59,0.1)"
               iconColor="#D4973B"
               title="Cohort-Based Predictions"
-              description="Machine learning matches users to similar cohorts to predict timelines, outcomes, and risks with 84% accuracy."
+              description="Machine learning matches users to similar cohorts to predict timelines, outcomes, and risks. Accuracy improves as our dataset grows."
             />
             <FeatureCard
               icon={<ApiIcon className="w-6 h-6" />}
@@ -760,33 +750,36 @@ export default function InvestorPitchPage() {
         </div>
       </section>
 
-      {/* Prediction Accuracy */}
+      {/* Data Collection */}
       <section className="py-20" style={{ background: '#F3EFE9' }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h2
-            className="text-[28px] sm:text-[32px] font-bold mb-12 text-center"
+            className="text-[28px] sm:text-[32px] font-bold mb-4 text-center"
             style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
           >
-            Prediction Accuracy
+            Building the Dataset
           </h2>
+          <p className="text-center text-[16px] mb-12 max-w-2xl mx-auto" style={{ color: '#5C574F' }}>
+            Prediction accuracy improves as our dataset grows. We&apos;re collecting structured recovery trajectory data for model validation.
+          </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AccuracyCard
-              type="Timeline"
-              accuracy={87}
-              description="When users will reach each recovery stage"
-              sample="8,234 resolved"
+            <DataCollectionCard
+              value={loading ? '...' : metrics?.totalTrajectories || 0}
+              label="Recovery Trajectories"
+              description="Daily snapshots of user behavior and emotional state"
+              icon={<ChartIcon className="w-6 h-6" />}
             />
-            <AccuracyCard
-              type="Outcome"
-              accuracy={84}
-              description="Likelihood of specific milestones"
-              sample="4,521 resolved"
+            <DataCollectionCard
+              value="5"
+              label="ERS Dimensions"
+              description="Stability, reflection, engagement, coping, social readiness"
+              icon={<TargetIcon className="w-6 h-6" />}
             />
-            <AccuracyCard
-              type="Risk"
-              accuracy={79}
-              description="Probability of setbacks"
-              sample="2,479 resolved"
+            <DataCollectionCard
+              value={loading ? '...' : `${Math.round((metrics?.moodEntries || 0) / Math.max(metrics?.totalUsers || 1, 1))}/user`}
+              label="Avg Data Points"
+              description="Rich behavioral data per user for pattern discovery"
+              icon={<BrainIcon className="w-6 h-6" />}
             />
           </div>
         </div>
@@ -1154,10 +1147,10 @@ export default function InvestorPitchPage() {
             Traction
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <TractionCard value="50+" label="Demo Users" />
-            <TractionCard value="4,400+" label="Data Points" />
-            <TractionCard value="3" label="B2B Pilots" />
-            <TractionCard value="84%" label="Accuracy" highlight />
+            <TractionCard value={loading ? '...' : `${metrics?.totalUsers || 0}+`} label="Beta Users" />
+            <TractionCard value={loading ? '...' : `${((metrics?.moodEntries || 0) + (metrics?.journalEntries || 0)).toLocaleString()}+`} label="Data Points" />
+            <TractionCard value={loading ? '...' : `${metrics?.apiClients || 0}`} label="B2B Pilots" />
+            <TractionCard value="5" label="ERS Dimensions" highlight />
           </div>
         </div>
       </section>
@@ -1270,7 +1263,7 @@ export default function InvestorPitchPage() {
       <footer style={{ borderTop: '1px solid #F0EBE4', background: '#F9F6F2' }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-center">
           <p className="text-[13px]" style={{ color: '#9A938A' }}>
-            Paceful, Inc. &copy; {currentYear}. All metrics are live from production.
+            Paceful, Inc. &copy; {currentYear}. Platform metrics pulled from live database.
           </p>
         </div>
       </footer>

@@ -1325,12 +1325,12 @@ export default function DesignPartnersPage() {
                   <span className="text-[24px] font-bold">50+</span>
                 </div>
                 <div className="flex items-center justify-between py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>Validated predictions</span>
-                  <span className="text-[24px] font-bold">1,200+</span>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>ERS dimensions tracked</span>
+                  <span className="text-[24px] font-bold">5</span>
                 </div>
                 <div className="flex items-center justify-between py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>Average accuracy</span>
-                  <span className="text-[24px] font-bold">84%</span>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>AI-powered patterns</span>
+                  <span className="text-[24px] font-bold">Yes</span>
                 </div>
                 <div className="flex items-center justify-between py-3">
                   <span style={{ color: 'rgba(255,255,255,0.8)' }}>Longitudinal data</span>

@@ -626,7 +626,7 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
             />
           </div>
           <p className="text-xs text-gray-400 mt-4">
-            Based on your mood logs from the last 14 days. Log moods daily for more accurate scores.
+            Based on your mood logs from the last 7 days. Log moods daily for more accurate scores.
           </p>
         </div>
 

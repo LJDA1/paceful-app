@@ -92,7 +92,7 @@ Be rigorous — only report patterns with statistical support. Max 8 patterns.`;
 // Admin Check
 // ============================================================================
 
-const ADMIN_EMAILS = ['lewisjohnson004@gmail.com'];
+const ADMIN_EMAILS = ['lewisjohnson004@gmail.com', 'lewisjo307@gmail.com'];
 
 // ============================================================================
 // Main Handler
@@ -183,8 +183,8 @@ async function analyzeIndividual(
     .eq('user_id', userId)
     .order('snapshot_date', { ascending: true });
 
-  if (!trajectories || trajectories.length < 7) {
-    return { success: false, patternsFound: 0, error: 'Insufficient data (need 7+ snapshots)' };
+  if (!trajectories || trajectories.length < 5) {
+    return { success: false, patternsFound: 0, error: 'Insufficient data (need 5+ snapshots)' };
   }
 
   // Fetch extracted insights

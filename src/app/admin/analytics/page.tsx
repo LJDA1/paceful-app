@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase-browser';
 // Admin Email Check
 // ============================================================================
 
-const ADMIN_EMAILS = ['lewisjohnson004@gmail.com'];
+const ADMIN_EMAILS = ['lewisjohnson004@gmail.com', 'lewisjo307@gmail.com'];
 
 // ============================================================================
 // Types

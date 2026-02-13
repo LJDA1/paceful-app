@@ -65,17 +65,17 @@ async function getEligibleUsers(): Promise<string[]> {
 
 /**
  * Check if user has enough data for ERS calculation
- * Requires at least 3 mood entries in last 14 days
+ * Requires at least 3 mood entries in last 7 days
  */
 async function hasEnoughData(userId: string): Promise<boolean> {
-  const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const { count, error } = await supabase
     .from('mood_entries')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .gte('logged_at', fourteenDaysAgo.toISOString());
+    .gte('logged_at', sevenDaysAgo.toISOString());
 
   if (error) return false;
   return (count || 0) >= 3;
@@ -177,7 +177,7 @@ export async function calculateERSForUser(userId: string): Promise<{
     if (!hasData) {
       return {
         success: false,
-        error: 'Not enough mood data. Log at least 3 moods in the last 14 days.',
+        error: 'Not enough mood data. Log at least 3 moods in the last 7 days.',
       };
     }
 

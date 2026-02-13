@@ -31,27 +31,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get date 7 days ago
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString();
+    // Get date 3 days ago
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const threeDaysAgoStr = threeDaysAgo.toISOString();
 
-    // Fetch mood entries from last 7 days
+    // Fetch mood entries from last 3 days
     const { data: moodEntries } = await supabase
       .from('mood_entries')
       .select('mood_score, note, logged_at')
       .eq('user_id', user.id)
-      .gte('logged_at', sevenDaysAgoStr)
+      .gte('logged_at', threeDaysAgoStr)
       .order('logged_at', { ascending: false })
       .limit(20);
 
-    // Fetch journal entries from last 7 days
+    // Fetch journal entries from last 3 days
     const { data: journalEntries } = await supabase
       .from('journal_entries')
       .select('entry_content, created_at')
       .eq('user_id', user.id)
       .is('deleted_at', null)
-      .gte('created_at', sevenDaysAgoStr)
+      .gte('created_at', threeDaysAgoStr)
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       ? `\nDISCOVERED PATTERNS (from their historical data):\n${discoveredPatterns.map(p => `- ${p.pattern_description} (${Math.round(p.confidence * 100)}% confidence)`).join('\n')}`
       : '';
 
-    const userMessage = `Here is the user's data from the last 7 days:
+    const userMessage = `Here is the user's data from the last 3 days:
 
 MOOD ENTRIES (score 1-10, higher is better):
 ${moodData.length > 0 ? moodData.map(m => `- ${m.date}: Score ${m.score}${m.note ? ` - "${m.note}"` : ''}`).join('\n') : 'No mood entries'}

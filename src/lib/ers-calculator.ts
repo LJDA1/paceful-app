@@ -125,7 +125,7 @@ async function calculateSelfReflectionScore(
     return { score: null, dataPoints: journals?.length || 0 };
   }
 
-  const totalDays = 14; // We're looking at 14-day window
+  const totalDays = 7; // We're looking at 7-day window
 
   // Frequency score: (entries_count / 14) * 40, capped at 40
   const frequencyScore = Math.min(40, (journals.length / totalDays) * 40);
@@ -350,14 +350,14 @@ async function calculateSocialReadinessScore(
 
   // Fallback: check mood entries with social-related emotions
   try {
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const { data: moods } = await supabase
       .from('mood_entries')
       .select('mood_value, emotions')
       .eq('user_id', userId)
-      .gte('logged_at', fourteenDaysAgo.toISOString())
+      .gte('logged_at', sevenDaysAgo.toISOString())
       .order('logged_at', { ascending: true });
 
     if (moods && moods.length >= 3) {
@@ -455,10 +455,10 @@ export async function calculateERSScore(userId: string): Promise<ERSResult> {
   const weekStart = getWeekStart(now);
   const weekOf = formatDate(weekStart);
 
-  // Date range: last 14 days for analysis
+  // Date range: last 7 days for analysis
   const endDate = now;
   const startDate = new Date(now);
-  startDate.setDate(startDate.getDate() - 14);
+  startDate.setDate(startDate.getDate() - 7);
 
   // Calculate all component scores in parallel
   const [
