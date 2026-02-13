@@ -71,9 +71,9 @@ function HeartIcon({ className }: { className?: string }) {
   );
 }
 
-function SparkleIcon({ className }: { className?: string }) {
+function SparkleIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className || "w-6 h-6"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <svg className={className || "w-6 h-6"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={style}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
     </svg>
   );
@@ -279,6 +279,598 @@ function ApiCodePreview() {
           })}
         </code>
       </pre>
+    </div>
+  );
+}
+
+// ============================================================================
+// Interactive API Demo
+// ============================================================================
+
+type DemoScenario = 'dating' | 'hr' | 'therapy';
+
+interface ScenarioData {
+  label: string;
+  request: string;
+  response: string;
+}
+
+const DEMO_SCENARIOS: Record<DemoScenario, ScenarioData> = {
+  dating: {
+    label: 'Dating App',
+    request: `GET /api/v1/ers/usr_sarah_m
+Authorization: Bearer pk_your_api_key`,
+    response: `{
+  "ers_score": 42,
+  "ers_stage": "healing",
+  "recommendation": "gate_matches",
+  "dimensions": {
+    "mood_stability": 38,
+    "engagement": 52,
+    "self_awareness": 45
+  },
+  "risk_factors": ["recent_breakup", "low_mood_stability"],
+  "confidence": 0.87
+}`,
+  },
+  hr: {
+    label: 'HR Platform',
+    request: `GET /api/v1/analytics/summary
+Authorization: Bearer pk_your_api_key
+X-Organization-Id: org_acme_corp`,
+    response: `{
+  "team_wellness_score": 68,
+  "total_employees": 10,
+  "stage_distribution": {
+    "healing": 3,
+    "rebuilding": 5,
+    "ready": 2
+  },
+  "average_ers_score": 58,
+  "employees_needing_support": 1,
+  "trend": "improving",
+  "week_over_week_change": +4.2
+}`,
+  },
+  therapy: {
+    label: 'Therapy Tool',
+    request: `GET /api/v1/ers/usr_client_123/trajectory
+Authorization: Bearer pk_your_api_key`,
+    response: `{
+  "client_id": "usr_client_123",
+  "current_stage": "rebuilding",
+  "previous_stage": "healing",
+  "days_in_current_stage": 23,
+  "trajectory": [
+    { "week": 1, "ers_score": 28 },
+    { "week": 2, "ers_score": 35 },
+    { "week": 3, "ers_score": 42 },
+    { "week": 4, "ers_score": 54 }
+  ],
+  "patterns": [
+    {
+      "type": "habit_impact",
+      "description": "Journaling 3x/week correlates with faster progress",
+      "confidence": 0.82
+    }
+  ],
+  "predicted_ready_date": "2026-03-15"
+}`,
+  },
+};
+
+function InteractiveApiDemo() {
+  const [activeScenario, setActiveScenario] = useState<DemoScenario>('dating');
+  const [displayedResponse, setDisplayedResponse] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState<Record<DemoScenario, boolean>>({
+    dating: false,
+    hr: false,
+    therapy: false,
+  });
+
+  useEffect(() => {
+    const scenario = DEMO_SCENARIOS[activeScenario];
+
+    // If already animated this scenario, show full response immediately
+    if (hasAnimated[activeScenario]) {
+      setDisplayedResponse(scenario.response);
+      return;
+    }
+
+    // Start typewriter effect
+    setDisplayedResponse('');
+    setIsTyping(true);
+
+    let index = 0;
+    const chars = scenario.response.split('');
+
+    const interval = setInterval(() => {
+      if (index < chars.length) {
+        setDisplayedResponse(prev => prev + chars[index]);
+        index++;
+      } else {
+        clearInterval(interval);
+        setIsTyping(false);
+        setHasAnimated(prev => ({ ...prev, [activeScenario]: true }));
+      }
+    }, 12);
+
+    return () => clearInterval(interval);
+  }, [activeScenario, hasAnimated]);
+
+  const handleScenarioChange = (scenario: DemoScenario) => {
+    if (scenario !== activeScenario) {
+      setActiveScenario(scenario);
+    }
+  };
+
+  // Syntax highlighting for JSON
+  const highlightJson = (code: string) => {
+    return code.split('\n').map((line, i) => {
+      let highlighted = line;
+      // Keys
+      highlighted = highlighted.replace(/"([^"]+)":/g, '<span style="color:#5B8A72">"$1"</span>:');
+      // String values
+      highlighted = highlighted.replace(/: "([^"]+)"/g, ': <span style="color:#D4973B">"$1"</span>');
+      // Numbers (including negative)
+      highlighted = highlighted.replace(/: (-?\d+\.?\d*)/g, ': <span style="color:#A5C4B8">$1</span>');
+      // Standalone numbers in arrays
+      highlighted = highlighted.replace(/\{ "week": <span style="color:#5B8A72">"week"<\/span>: (\d+)/g, '{ "week": $1');
+      // Booleans
+      highlighted = highlighted.replace(/(true|false)/g, '<span style="color:#B86B64">$1</span>');
+      return (
+        <div key={i} dangerouslySetInnerHTML={{ __html: highlighted }} />
+      );
+    });
+  };
+
+  return (
+    <section className="py-20" style={{ background: '#F9F6F2' }}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h2
+            className="text-[28px] sm:text-[32px] font-bold mb-4"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            See it in action
+          </h2>
+          <p className="text-[16px] max-w-2xl mx-auto" style={{ color: '#5C574F' }}>
+            Here&apos;s how Paceful integrates with your platform
+          </p>
+        </div>
+
+        {/* Scenario Tabs */}
+        <div className="flex justify-center mb-10">
+          <div
+            className="inline-flex rounded-full p-1"
+            style={{ background: '#F0EBE4' }}
+          >
+            {(['dating', 'hr', 'therapy'] as DemoScenario[]).map((scenario) => (
+              <button
+                key={scenario}
+                onClick={() => handleScenarioChange(scenario)}
+                className="px-5 py-2.5 rounded-full text-[14px] font-medium transition-all"
+                style={{
+                  background: activeScenario === scenario ? '#5B8A72' : 'transparent',
+                  color: activeScenario === scenario ? '#FFFFFF' : '#5C574F',
+                }}
+              >
+                {DEMO_SCENARIOS[scenario].label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Demo Content */}
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* Left Side - Mock Screen */}
+          <div
+            className="transition-all duration-300"
+            style={{
+              opacity: 1,
+              transform: 'translateX(0)',
+            }}
+          >
+            {activeScenario === 'dating' && <DatingAppMock />}
+            {activeScenario === 'hr' && <HRPlatformMock />}
+            {activeScenario === 'therapy' && <TherapyToolMock />}
+          </div>
+
+          {/* Right Side - API Terminal */}
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ background: '#1F1D1A' }}
+          >
+            {/* Terminal Header */}
+            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #2A2826' }}>
+              <div className="w-3 h-3 rounded-full" style={{ background: '#B86B64' }} />
+              <div className="w-3 h-3 rounded-full" style={{ background: '#D4973B' }} />
+              <div className="w-3 h-3 rounded-full" style={{ background: '#5B8A72' }} />
+              <span className="ml-2 text-[12px]" style={{ color: '#9A938A' }}>API Request</span>
+            </div>
+
+            {/* Request */}
+            <div className="p-4" style={{ borderBottom: '1px solid #2A2826' }}>
+              <pre className="text-[13px] font-mono" style={{ color: '#E8E2DA' }}>
+                {DEMO_SCENARIOS[activeScenario].request.split('\n').map((line, i) => {
+                  if (line.startsWith('GET') || line.startsWith('POST')) {
+                    const [method, path] = line.split(' ');
+                    return (
+                      <div key={i}>
+                        <span style={{ color: '#5B8A72' }}>{method}</span>{' '}
+                        <span style={{ color: '#D4973B' }}>{path}</span>
+                      </div>
+                    );
+                  }
+                  if (line.includes(':')) {
+                    const [key, ...valueParts] = line.split(':');
+                    const value = valueParts.join(':');
+                    return (
+                      <div key={i}>
+                        <span style={{ color: '#9A938A' }}>{key}:</span>
+                        <span style={{ color: '#A5C4B8' }}>{value}</span>
+                      </div>
+                    );
+                  }
+                  return <div key={i}>{line}</div>;
+                })}
+              </pre>
+            </div>
+
+            {/* Response Header */}
+            <div className="px-4 py-2" style={{ background: '#252320' }}>
+              <span className="text-[12px] font-mono" style={{ color: '#5B8A72' }}>
+                200 OK
+              </span>
+              <span className="text-[12px] ml-3" style={{ color: '#9A938A' }}>
+                Response
+              </span>
+            </div>
+
+            {/* Response Body */}
+            <div className="p-4 max-h-[320px] overflow-y-auto">
+              <pre className="text-[13px] font-mono leading-relaxed" style={{ color: '#E8E2DA' }}>
+                {highlightJson(displayedResponse)}
+                {isTyping && (
+                  <span
+                    className="inline-block w-2 h-4 ml-0.5 animate-pulse"
+                    style={{ background: '#5B8A72' }}
+                  />
+                )}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// Mock Screen Components
+// ============================================================================
+
+function DatingAppMock() {
+  return (
+    <div
+      className="rounded-3xl p-1 mx-auto max-w-[320px]"
+      style={{
+        background: 'linear-gradient(135deg, #E8E2DA 0%, #F0EBE4 100%)',
+        boxShadow: '0 20px 40px rgba(31,29,26,0.1)',
+      }}
+    >
+      <div
+        className="rounded-[20px] overflow-hidden"
+        style={{ background: '#FFFFFF' }}
+      >
+        {/* Phone Status Bar */}
+        <div className="flex items-center justify-between px-4 py-2" style={{ background: '#F9F6F2' }}>
+          <span className="text-[12px] font-medium" style={{ color: '#5C574F' }}>9:41</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-2 rounded-sm" style={{ background: '#5C574F' }} />
+          </div>
+        </div>
+
+        {/* App Header */}
+        <div className="px-4 py-3" style={{ borderBottom: '1px solid #F0EBE4' }}>
+          <span className="text-[14px] font-semibold" style={{ color: '#1F1D1A' }}>Discover</span>
+        </div>
+
+        {/* Profile Card */}
+        <div className="p-4">
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ background: '#F9F6F2', border: '1px solid #F0EBE4' }}
+          >
+            {/* Profile Image Placeholder */}
+            <div
+              className="h-40 flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #E8E2DA 0%, #D4D0C8 100%)' }}
+            >
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{ background: '#FFFFFF' }}
+              >
+                <span className="text-[32px]" style={{ color: '#9A938A' }}>S</span>
+              </div>
+            </div>
+
+            {/* Profile Info */}
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[18px] font-semibold" style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}>
+                  Sarah M.
+                </span>
+                <span className="text-[14px]" style={{ color: '#9A938A' }}>28</span>
+              </div>
+
+              {/* ERS Badge */}
+              <div
+                className="rounded-xl p-3 mb-3"
+                style={{ background: 'rgba(212,151,59,0.1)', border: '1px solid rgba(212,151,59,0.2)' }}
+              >
+                <div className="flex items-center gap-3">
+                  {/* ERS Ring */}
+                  <div className="relative w-12 h-12">
+                    <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        fill="none"
+                        stroke="#F0EBE4"
+                        strokeWidth="4"
+                      />
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        fill="none"
+                        stroke="#D4973B"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeDasharray={`${42 * 1.256} ${100 * 1.256}`}
+                      />
+                    </svg>
+                    <span
+                      className="absolute inset-0 flex items-center justify-center text-[13px] font-bold"
+                      style={{ color: '#D4973B' }}
+                    >
+                      42
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-medium" style={{ color: '#D4973B' }}>
+                      Emotional Readiness
+                    </p>
+                    <p className="text-[11px]" style={{ color: '#5C574F' }}>
+                      Stage: Healing
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommendation */}
+              <p className="text-[12px] mb-2" style={{ color: '#5C574F' }}>
+                Sarah is still healing. Recommend gentle matches.
+              </p>
+
+              {/* Gated Badge */}
+              <div
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full"
+                style={{ background: '#F0EBE4' }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#9A938A' }} />
+                <span className="text-[10px]" style={{ color: '#9A938A' }}>
+                  ERS gated — not shown to high-readiness users
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HRPlatformMock() {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden mx-auto max-w-[400px]"
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid #F0EBE4',
+        boxShadow: '0 20px 40px rgba(31,29,26,0.1)',
+      }}
+    >
+      {/* Dashboard Header */}
+      <div className="px-5 py-4" style={{ borderBottom: '1px solid #F0EBE4' }}>
+        <div className="flex items-center justify-between">
+          <span className="text-[15px] font-semibold" style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}>
+            Team Wellness Dashboard
+          </span>
+          <span className="text-[12px]" style={{ color: '#9A938A' }}>Acme Corp</span>
+        </div>
+      </div>
+
+      <div className="p-5">
+        {/* Overall Score */}
+        <div
+          className="rounded-xl p-4 mb-4"
+          style={{ background: 'rgba(91,138,114,0.08)' }}
+        >
+          <p className="text-[12px] mb-1" style={{ color: '#5C574F' }}>Team Wellness Score</p>
+          <div className="flex items-end gap-2">
+            <span className="text-[36px] font-bold" style={{ fontFamily: "'Fraunces', serif", color: '#5B8A72' }}>
+              68
+            </span>
+            <span className="text-[14px] mb-2" style={{ color: '#5B8A72' }}>/ 100</span>
+            <span
+              className="text-[12px] ml-auto mb-2 px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(91,138,114,0.15)', color: '#5B8A72' }}
+            >
+              +4.2 this week
+            </span>
+          </div>
+        </div>
+
+        {/* Stage Distribution */}
+        <p className="text-[12px] font-medium mb-2" style={{ color: '#5C574F' }}>Stage Distribution</p>
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] w-20" style={{ color: '#9A938A' }}>Healing</span>
+            <div className="flex-1 h-6 rounded-lg overflow-hidden" style={{ background: '#F0EBE4' }}>
+              <div className="h-full rounded-lg" style={{ width: '30%', background: '#D4973B' }} />
+            </div>
+            <span className="text-[12px] font-medium w-4" style={{ color: '#1F1D1A' }}>3</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] w-20" style={{ color: '#9A938A' }}>Rebuilding</span>
+            <div className="flex-1 h-6 rounded-lg overflow-hidden" style={{ background: '#F0EBE4' }}>
+              <div className="h-full rounded-lg" style={{ width: '50%', background: '#7BA896' }} />
+            </div>
+            <span className="text-[12px] font-medium w-4" style={{ color: '#1F1D1A' }}>5</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] w-20" style={{ color: '#9A938A' }}>Ready</span>
+            <div className="flex-1 h-6 rounded-lg overflow-hidden" style={{ background: '#F0EBE4' }}>
+              <div className="h-full rounded-lg" style={{ width: '20%', background: '#5B8A72' }} />
+            </div>
+            <span className="text-[12px] font-medium w-4" style={{ color: '#1F1D1A' }}>2</span>
+          </div>
+        </div>
+
+        {/* Alert */}
+        <div
+          className="rounded-xl p-3 flex items-center gap-3"
+          style={{ background: 'rgba(184,107,100,0.08)', border: '1px solid rgba(184,107,100,0.2)' }}
+        >
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(184,107,100,0.15)' }}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#B86B64">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[12px] font-medium" style={{ color: '#B86B64' }}>
+              1 team member may need support
+            </p>
+            <p className="text-[11px]" style={{ color: '#9A938A' }}>
+              Low ERS score detected
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TherapyToolMock() {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden mx-auto max-w-[400px]"
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid #F0EBE4',
+        boxShadow: '0 20px 40px rgba(31,29,26,0.1)',
+      }}
+    >
+      {/* Header */}
+      <div className="px-5 py-4" style={{ borderBottom: '1px solid #F0EBE4' }}>
+        <div className="flex items-center justify-between">
+          <span className="text-[15px] font-semibold" style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}>
+            Client Progress
+          </span>
+          <span
+            className="text-[11px] px-2 py-1 rounded-full"
+            style={{ background: 'rgba(91,138,114,0.1)', color: '#5B8A72' }}
+          >
+            Active
+          </span>
+        </div>
+      </div>
+
+      <div className="p-5">
+        {/* Progress Milestone */}
+        <div
+          className="rounded-xl p-4 mb-4"
+          style={{ background: 'rgba(91,138,114,0.08)' }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <CheckIcon className="w-5 h-5" style={{ color: '#5B8A72' }} />
+            <span className="text-[13px] font-medium" style={{ color: '#5B8A72' }}>
+              Stage Progression
+            </span>
+          </div>
+          <p className="text-[14px]" style={{ color: '#1F1D1A' }}>
+            Client progressed from <strong>Healing</strong> to <strong>Rebuilding</strong> in 23 days
+          </p>
+        </div>
+
+        {/* ERS Timeline Chart */}
+        <p className="text-[12px] font-medium mb-3" style={{ color: '#5C574F' }}>ERS Score Trajectory</p>
+        <div className="relative h-24 mb-4" style={{ background: '#F9F6F2', borderRadius: '12px' }}>
+          {/* Y-axis labels */}
+          <div className="absolute left-2 top-1 text-[9px]" style={{ color: '#9A938A' }}>60</div>
+          <div className="absolute left-2 bottom-1 text-[9px]" style={{ color: '#9A938A' }}>20</div>
+
+          {/* Chart Line */}
+          <svg className="w-full h-full" viewBox="0 0 300 80" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#D4973B" />
+                <stop offset="100%" stopColor="#5B8A72" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M 30 65 L 100 52 L 170 40 L 240 22"
+              fill="none"
+              stroke="url(#lineGradient)"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            {/* Data points */}
+            <circle cx="30" cy="65" r="4" fill="#D4973B" />
+            <circle cx="100" cy="52" r="4" fill="#D4973B" />
+            <circle cx="170" cy="40" r="4" fill="#7BA896" />
+            <circle cx="240" cy="22" r="4" fill="#5B8A72" />
+          </svg>
+
+          {/* X-axis labels */}
+          <div className="absolute bottom-[-18px] left-[10%] text-[9px]" style={{ color: '#9A938A' }}>W1</div>
+          <div className="absolute bottom-[-18px] left-[33%] text-[9px]" style={{ color: '#9A938A' }}>W2</div>
+          <div className="absolute bottom-[-18px] left-[56%] text-[9px]" style={{ color: '#9A938A' }}>W3</div>
+          <div className="absolute bottom-[-18px] left-[80%] text-[9px]" style={{ color: '#9A938A' }}>W4</div>
+        </div>
+
+        {/* Pattern Insight */}
+        <div
+          className="rounded-xl p-3 mt-6"
+          style={{ background: '#F9F6F2', border: '1px solid #F0EBE4' }}
+        >
+          <div className="flex items-start gap-2">
+            <SparkleIcon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#D4973B' }} />
+            <div>
+              <p className="text-[11px] font-medium mb-1" style={{ color: '#D4973B' }}>
+                Discovered Pattern
+              </p>
+              <p className="text-[12px]" style={{ color: '#5C574F' }}>
+                Journaling 3x/week correlates with faster progress
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                <div className="w-16 h-1 rounded-full overflow-hidden" style={{ background: '#E8E2DA' }}>
+                  <div className="h-full rounded-full" style={{ width: '82%', background: '#5B8A72' }} />
+                </div>
+                <span className="text-[10px]" style={{ color: '#9A938A' }}>82% confidence</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -598,6 +1190,9 @@ export default function DesignPartnersPage() {
           </div>
         </div>
       </section>
+
+      {/* Interactive Demo */}
+      <InteractiveApiDemo />
 
       {/* How It Works */}
       <section className="py-20" style={{ background: '#F9F6F2' }}>

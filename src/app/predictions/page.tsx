@@ -33,6 +33,14 @@ interface ForecastData {
   totalEntries: number;
 }
 
+interface DiscoveredPattern {
+  id: string;
+  pattern_description: string;
+  pattern_type: string;
+  confidence: number;
+  actionable_insight: string;
+}
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -299,6 +307,7 @@ export default function PredictionsPage() {
   const router = useRouter();
   const { userId, loading: userLoading, isAuthenticated } = useUser();
   const [forecastData, setForecastData] = useState<ForecastData | null>(null);
+  const [discoveredPatterns, setDiscoveredPatterns] = useState<DiscoveredPattern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const supabase = createClient();
@@ -320,7 +329,7 @@ export default function PredictionsPage() {
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-      const [moodRes, journalRes, ersRes, profileRes] = await Promise.all([
+      const [moodRes, journalRes, ersRes, profileRes, patternsRes] = await Promise.all([
         // Get actual mood entries (not just count)
         supabase
           .from('mood_entries')
@@ -351,11 +360,23 @@ export default function PredictionsPage() {
           .select('relationship_ended_at, created_at')
           .eq('user_id', userId)
           .single(),
+
+        // Get discovered patterns for this user
+        supabase
+          .from('discovered_patterns')
+          .select('id, pattern_description, pattern_type, confidence, actionable_insight')
+          .eq('user_id', userId)
+          .eq('scope', 'individual')
+          .gt('confidence', 0.5)
+          .order('confidence', { ascending: false })
+          .limit(5),
       ]);
 
       const moodEntries = (moodRes.data || []) as MoodEntry[];
       const journalCount = journalRes.count || 0;
       const ersHistory = (ersRes.data || []) as ERSScore[];
+      const patterns = (patternsRes.data || []) as DiscoveredPattern[];
+      setDiscoveredPatterns(patterns);
 
       // Calculate days since start
       let daysSinceStart = 30;
@@ -782,6 +803,76 @@ export default function PredictionsPage() {
             <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Trajectory</p>
           </div>
         </div>
+
+        {/* Discovered Patterns Section */}
+        {discoveredPatterns.length > 0 && (
+          <>
+            <h3
+              className="text-[20px] font-semibold mb-4"
+              style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+            >
+              What your data tells us
+            </h3>
+
+            <div className="space-y-3 mb-8">
+              {discoveredPatterns.map((pattern) => {
+                const typeColors: Record<string, { bg: string; text: string }> = {
+                  trigger_effect: { bg: 'rgba(184,107,100,0.1)', text: '#B86B64' },
+                  habit_impact: { bg: 'rgba(91,138,114,0.1)', text: '#5B8A72' },
+                  temporal_cycle: { bg: 'rgba(94,141,176,0.1)', text: '#5E8DB0' },
+                  progress_marker: { bg: 'rgba(212,151,59,0.1)', text: '#D4973B' },
+                  risk_signal: { bg: 'rgba(184,107,100,0.15)', text: '#B86B64' },
+                };
+                const typeLabels: Record<string, string> = {
+                  trigger_effect: 'Trigger',
+                  habit_impact: 'Habit',
+                  temporal_cycle: 'Cycle',
+                  progress_marker: 'Progress',
+                  risk_signal: 'Risk',
+                };
+                const colors = typeColors[pattern.pattern_type] || { bg: 'var(--bg-warm)', text: 'var(--text-muted)' };
+                const confidenceColor = pattern.confidence >= 0.7 ? '#5B8A72' : pattern.confidence >= 0.5 ? '#D4973B' : 'var(--text-muted)';
+
+                return (
+                  <div
+                    key={pattern.id}
+                    className="rounded-[22px] p-4"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <span
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: colors.bg, color: colors.text }}
+                      >
+                        {typeLabels[pattern.pattern_type] || pattern.pattern_type}
+                      </span>
+                      {/* Confidence bar */}
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-12 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-light)' }}>
+                          <div
+                            className="h-full rounded-full"
+                            style={{ width: `${pattern.confidence * 100}%`, background: confidenceColor }}
+                          />
+                        </div>
+                        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                          {Math.round(pattern.confidence * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[14px] font-medium mb-2" style={{ color: 'var(--text)' }}>
+                      {pattern.pattern_description}
+                    </p>
+                    {pattern.actionable_insight && (
+                      <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
+                        {pattern.actionable_insight}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         {/* How It Works Section */}
         <div className="rounded-[22px] p-5" style={{ background: 'var(--bg-warm)' }}>

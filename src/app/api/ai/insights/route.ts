@@ -62,6 +62,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Fetch discovered patterns for this user (with confidence > 0.5)
+    const { data: discoveredPatterns } = await supabase
+      .from('discovered_patterns')
+      .select('pattern_description, pattern_type, confidence, actionable_insight')
+      .eq('user_id', user.id)
+      .eq('scope', 'individual')
+      .gt('confidence', 0.5)
+      .order('confidence', { ascending: false })
+      .limit(3);
+
     // Format data for Claude
     const moodData = (moodEntries || []).map(m => ({
       date: new Date(m.logged_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
@@ -74,6 +84,11 @@ export async function POST(request: NextRequest) {
       preview: j.entry_content.substring(0, 200)
     }));
 
+    // Build patterns context if available
+    const patternsContext = discoveredPatterns && discoveredPatterns.length > 0
+      ? `\nDISCOVERED PATTERNS (from their historical data):\n${discoveredPatterns.map(p => `- ${p.pattern_description} (${Math.round(p.confidence * 100)}% confidence)`).join('\n')}`
+      : '';
+
     const userMessage = `Here is the user's data from the last 7 days:
 
 MOOD ENTRIES (score 1-10, higher is better):
@@ -81,8 +96,9 @@ ${moodData.length > 0 ? moodData.map(m => `- ${m.date}: Score ${m.score}${m.note
 
 JOURNAL ENTRIES:
 ${journalData.length > 0 ? journalData.map(j => `- ${j.date}: "${j.preview}..."`).join('\n') : 'No journal entries'}
+${patternsContext}
 
-Provide ONE specific, actionable insight about their emotional patterns.`;
+Provide ONE specific, actionable insight about their emotional patterns.${patternsContext ? ' Reference the discovered patterns if they are relevant to recent data.' : ''}`;
 
     // Call Claude API
     const anthropic = new Anthropic({

@@ -176,6 +176,20 @@ export async function GET() {
     // This is simplified - in production you'd track stage transitions
     const avgDaysInStage = RESEARCH_DATA[userStage].averageDaysInStage;
 
+    // Fetch aggregate discovered patterns
+    const { data: aggregatePatterns } = await supabase
+      .from('discovered_patterns')
+      .select('pattern_description, confidence')
+      .eq('scope', 'aggregate')
+      .gt('confidence', 0.5)
+      .order('confidence', { ascending: false })
+      .limit(3);
+
+    const discoveredPatterns = aggregatePatterns?.map(p => ({
+      pattern: p.pattern_description,
+      confidence: p.confidence,
+    })) || [];
+
     return NextResponse.json({
       stage: userStage,
       usersInStage: totalUsersInStage,
@@ -187,6 +201,7 @@ export async function GET() {
       percentImproving,
       averageDaysInStage: avgDaysInStage,
       stageRange: RESEARCH_DATA[userStage].stageRange,
+      discoveredPatterns,
     });
   } catch (error) {
     console.error('Community stats error:', error);
