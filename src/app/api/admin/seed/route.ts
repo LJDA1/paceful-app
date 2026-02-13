@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 // Configuration
 // ============================================================================
 
-const ADMIN_KEY = process.env.ADMIN_API_KEY || 'paceful_admin_2025';
+// Admin key - required in production, fallback only in development
+const ADMIN_KEY = process.env.ADMIN_API_KEY || (process.env.NODE_ENV === 'development' ? 'paceful_admin_dev' : '');
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -7,7 +7,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const ADMIN_KEY = process.env.ADMIN_API_KEY || 'paceful_admin_2025';
+// Admin key - required in production, fallback only in development
+const ADMIN_KEY = process.env.ADMIN_API_KEY || (process.env.NODE_ENV === 'development' ? 'paceful_admin_dev' : '');
 
 export async function POST(request: NextRequest) {
   // Require admin key for test routes
