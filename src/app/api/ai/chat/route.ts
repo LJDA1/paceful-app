@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Anthropic from '@anthropic-ai/sdk';
+import { getMemories, addMemories, formatMemoriesForPrompt } from '@/lib/ai-memory';
+import { extractMemories } from '@/lib/ai-memory-extract';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -72,6 +74,10 @@ export async function POST(request: Request) {
     const ersStage = ersRes.data?.ers_stage ?? 'unknown';
     const moodScore = moodRes.data?.mood_value ?? 'unknown';
 
+    // Fetch user memories
+    const memories = await getMemories(user.id, supabase, 20);
+    const memoriesContext = formatMemoriesForPrompt(memories);
+
     // Build system prompt
     const systemPrompt = `You are Pace, a compassionate companion in the Paceful app. You support people healing from breakups and emotional challenges. You are NOT a therapist and must never diagnose, prescribe, or claim to provide therapy.
 
@@ -92,7 +98,9 @@ Important rules:
 - Never give medical or legal advice
 - Don't be overly cheerful when someone is hurting
 - Don't overuse their name
-- Keep your responses natural and conversational`;
+- Keep your responses natural and conversational
+
+${memoriesContext}`;
 
     // Prepare messages for Claude (last 20 messages max)
     const recentHistory = conversationHistory.slice(-20);
@@ -116,6 +124,18 @@ Important rules:
     // Extract text response
     const textContent = response.content.find(c => c.type === 'text');
     const responseText = textContent?.type === 'text' ? textContent.text : "I'm here for you. How can I help?";
+
+    // Fire-and-forget: Extract and save new memories from this exchange
+    (async () => {
+      try {
+        const newMemories = await extractMemories(message, responseText, memories);
+        if (newMemories.length > 0) {
+          await addMemories(user.id, supabase, newMemories);
+        }
+      } catch (error) {
+        console.error('Memory extraction error:', error);
+      }
+    })();
 
     return NextResponse.json({ response: responseText });
   } catch (error) {

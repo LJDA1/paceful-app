@@ -16,6 +16,14 @@ interface ProfileData {
   gender: string | null;
 }
 
+interface Memory {
+  id: string;
+  memory_type: 'fact' | 'pattern' | 'preference' | 'milestone' | 'concern';
+  content: string;
+  importance: number;
+  created_at: string;
+}
+
 // ============================================================================
 // Icons
 // ============================================================================
@@ -60,6 +68,39 @@ function LogOutIcon({ className, style }: { className?: string; style?: React.CS
   );
 }
 
+function SparklesIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+    </svg>
+  );
+}
+
+function XMarkIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+// Memory type labels and colors
+const MEMORY_TYPE_LABELS: Record<Memory['memory_type'], string> = {
+  fact: 'Personal fact',
+  pattern: 'Pattern',
+  preference: 'Preference',
+  milestone: 'Milestone',
+  concern: 'Sensitive',
+};
+
+const MEMORY_TYPE_COLORS: Record<Memory['memory_type'], { bg: string; text: string }> = {
+  fact: { bg: 'rgba(94,141,176,0.15)', text: '#5E8DB0' },
+  pattern: { bg: 'rgba(126,113,181,0.15)', text: '#7E71B5' },
+  preference: { bg: 'rgba(212,151,59,0.15)', text: '#D4973B' },
+  milestone: { bg: 'rgba(91,138,114,0.15)', text: '#5B8A72' },
+  concern: { bg: 'rgba(184,107,100,0.15)', text: '#B86B64' },
+};
+
 // ============================================================================
 // Main Page
 // ============================================================================
@@ -94,6 +135,14 @@ export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  // Memory state
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [isLoadingMemories, setIsLoadingMemories] = useState(false);
+  const [showMemories, setShowMemories] = useState(false);
+  const [deletingMemoryId, setDeletingMemoryId] = useState<string | null>(null);
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -140,6 +189,33 @@ export default function SettingsPage() {
       fetchProfile();
     }
   }, [userId, fetchProfile]);
+
+  // Fetch memories
+  const fetchMemories = useCallback(async () => {
+    if (!userId) return;
+    setIsLoadingMemories(true);
+
+    try {
+      const { data } = await supabase
+        .from('ai_memory')
+        .select('*')
+        .eq('user_id', userId)
+        .order('memory_type')
+        .order('importance', { ascending: false });
+
+      setMemories(data || []);
+    } catch (err) {
+      console.error('Error fetching memories:', err);
+    } finally {
+      setIsLoadingMemories(false);
+    }
+  }, [userId, supabase]);
+
+  useEffect(() => {
+    if (userId && showMemories) {
+      fetchMemories();
+    }
+  }, [userId, showMemories, fetchMemories]);
 
   // Save profile
   const handleSaveProfile = async () => {
@@ -256,6 +332,50 @@ export default function SettingsPage() {
       console.error('Error deleting account:', err);
       alert('Failed to delete account. Please try again.');
       setIsDeleting(false);
+    }
+  };
+
+  // Delete single memory
+  const handleDeleteMemory = async (memoryId: string) => {
+    setDeletingMemoryId(memoryId);
+
+    try {
+      const { error } = await supabase
+        .from('ai_memory')
+        .delete()
+        .eq('id', memoryId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setMemories(prev => prev.filter(m => m.id !== memoryId));
+    } catch (err) {
+      console.error('Error deleting memory:', err);
+      alert('Failed to delete memory. Please try again.');
+    } finally {
+      setDeletingMemoryId(null);
+    }
+  };
+
+  // Clear all memories
+  const handleClearAllMemories = async () => {
+    setIsClearingAll(true);
+
+    try {
+      const { error } = await supabase
+        .from('ai_memory')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setMemories([]);
+      setShowClearAllConfirm(false);
+    } catch (err) {
+      console.error('Error clearing memories:', err);
+      alert('Failed to clear memories. Please try again.');
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
@@ -559,6 +679,145 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* AI Memory Section */}
+        <div
+          className="rounded-3xl p-5 mb-4"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <SparklesIcon className="w-5 h-5" style={{ color: '#7E71B5' }} />
+              <h2 className="text-[16px] font-semibold" style={{ color: 'var(--text)' }}>
+                Pace&apos;s Memory
+              </h2>
+            </div>
+            {!showMemories && (
+              <button
+                onClick={() => setShowMemories(true)}
+                className="text-[13px] font-medium"
+                style={{ color: 'var(--primary)' }}
+              >
+                View
+              </button>
+            )}
+          </div>
+
+          <p className="text-[13px] mb-4" style={{ color: 'var(--text-muted)' }}>
+            Pace remembers things you share to provide more personalized support. You can view and delete these memories anytime.
+          </p>
+
+          {showMemories && (
+            <div className="space-y-3">
+              {isLoadingMemories ? (
+                <div className="py-8 flex justify-center">
+                  <div className="animate-spin w-6 h-6 border-2 border-stone-300 border-t-stone-600 rounded-full" />
+                </div>
+              ) : memories.length === 0 ? (
+                <div
+                  className="text-center py-6 rounded-2xl"
+                  style={{ background: 'var(--bg-warm)' }}
+                >
+                  <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>
+                    No memories yet. Chat with Pace to build a connection.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {memories.map((memory) => (
+                    <div
+                      key={memory.id}
+                      className="flex items-start justify-between gap-3 px-4 py-3 rounded-2xl"
+                      style={{ background: 'var(--bg-warm)' }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                            style={{
+                              background: MEMORY_TYPE_COLORS[memory.memory_type].bg,
+                              color: MEMORY_TYPE_COLORS[memory.memory_type].text,
+                            }}
+                          >
+                            {MEMORY_TYPE_LABELS[memory.memory_type]}
+                          </span>
+                        </div>
+                        <p className="text-[14px]" style={{ color: 'var(--text)' }}>
+                          {memory.content}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteMemory(memory.id)}
+                        disabled={deletingMemoryId === memory.id}
+                        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                        style={{ background: 'rgba(184,107,100,0.1)' }}
+                        aria-label="Delete memory"
+                      >
+                        {deletingMemoryId === memory.id ? (
+                          <div className="animate-spin w-3 h-3 border-2 border-stone-300 border-t-stone-600 rounded-full" />
+                        ) : (
+                          <XMarkIcon className="w-3.5 h-3.5" style={{ color: 'var(--rose)' }} />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Clear all button */}
+                  {memories.length > 0 && !showClearAllConfirm && (
+                    <button
+                      onClick={() => setShowClearAllConfirm(true)}
+                      className="w-full px-4 py-3 rounded-2xl text-[14px] font-medium transition-colors"
+                      style={{ background: 'rgba(184,107,100,0.08)', color: 'var(--rose)' }}
+                    >
+                      Clear all memories
+                    </button>
+                  )}
+
+                  {/* Clear all confirmation */}
+                  {showClearAllConfirm && (
+                    <div
+                      className="p-4 rounded-2xl"
+                      style={{ background: 'rgba(184,107,100,0.08)', border: '1px solid rgba(184,107,100,0.2)' }}
+                    >
+                      <p className="text-[14px] font-medium mb-2" style={{ color: 'var(--rose)' }}>
+                        Clear all memories?
+                      </p>
+                      <p className="text-[13px] mb-3" style={{ color: 'var(--text-sec)' }}>
+                        Pace will forget everything about you. This cannot be undone.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleClearAllMemories}
+                          disabled={isClearingAll}
+                          className="px-4 py-2 rounded-full text-[13px] font-medium text-white disabled:opacity-50"
+                          style={{ background: 'var(--rose)' }}
+                        >
+                          {isClearingAll ? 'Clearing...' : 'Yes, clear all'}
+                        </button>
+                        <button
+                          onClick={() => setShowClearAllConfirm(false)}
+                          className="px-4 py-2 rounded-full text-[13px] font-medium"
+                          style={{ color: 'var(--text-sec)' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Hide memories button */}
+              <button
+                onClick={() => setShowMemories(false)}
+                className="text-[13px] font-medium"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Hide memories
+              </button>
+            </div>
+          )}
         </div>
 
         {/* About Section */}

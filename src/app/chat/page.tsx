@@ -18,6 +18,11 @@ interface Message {
   timestamp: Date;
 }
 
+interface MemoryInfo {
+  hasMemories: boolean;
+  greetingContext: string | null;
+}
+
 // ============================================================================
 // Icons
 // ============================================================================
@@ -34,6 +39,14 @@ function ArrowUpIcon({ className, style }: { className?: string; style?: React.C
   return (
     <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+    </svg>
+  );
+}
+
+function SparklesIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
     </svg>
   );
 }
@@ -134,6 +147,7 @@ export default function ChatPage() {
   const [firstName, setFirstName] = useState('');
   const [latestMood, setLatestMood] = useState<number | null>(null);
   const [hasGreeted, setHasGreeted] = useState(false);
+  const [memoryInfo, setMemoryInfo] = useState<MemoryInfo>({ hasMemories: false, greetingContext: null });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -158,7 +172,7 @@ export default function ChatPage() {
     if (!userId) return;
 
     const fetchUserData = async () => {
-      const [profileRes, moodRes] = await Promise.all([
+      const [profileRes, moodRes, memoriesRes] = await Promise.all([
         supabase
           .from('profiles')
           .select('first_name')
@@ -171,10 +185,29 @@ export default function ChatPage() {
           .order('logged_at', { ascending: false })
           .limit(1)
           .single(),
+        supabase
+          .from('ai_memory')
+          .select('content, memory_type, importance')
+          .eq('user_id', userId)
+          .order('importance', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(5),
       ]);
 
       setFirstName(profileRes.data?.first_name || '');
       setLatestMood(moodRes.data?.mood_value ?? null);
+
+      // Process memories for greeting context
+      const memories = memoriesRes.data || [];
+      if (memories.length > 0) {
+        // Find a milestone or high-importance memory for greeting
+        const milestone = memories.find(m => m.memory_type === 'milestone');
+        const highImportance = memories.find(m => m.importance >= 7);
+        setMemoryInfo({
+          hasMemories: true,
+          greetingContext: milestone?.content || highImportance?.content || null,
+        });
+      }
     };
 
     fetchUserData();
@@ -187,10 +220,22 @@ export default function ChatPage() {
     const hour = new Date().getHours();
     let greeting = '';
 
-    if (latestMood !== null && latestMood <= 4) {
+    // Memory-aware greetings for returning users
+    if (memoryInfo.hasMemories && memoryInfo.greetingContext) {
+      // Reference something we remember about them
+      const context = memoryInfo.greetingContext.toLowerCase();
+      if (context.includes('started dating') || context.includes('moved out') || context.includes('first good day')) {
+        greeting = `Hey ${firstName}. It's good to see you back. Last time we talked about some big steps — how have things been going?`;
+      } else {
+        greeting = `Hey ${firstName}. Good to see you again. I've been thinking about what we talked about before. How are you doing?`;
+      }
+    } else if (latestMood !== null && latestMood <= 4) {
       greeting = `Hey ${firstName}. I noticed things have been tough lately. I'm here if you want to talk about it, or anything else.`;
     } else if (latestMood !== null && latestMood >= 7) {
       greeting = `Hi ${firstName}. Looks like things are going well. What's on your mind?`;
+    } else if (memoryInfo.hasMemories) {
+      // Has memories but no specific context
+      greeting = `Hey ${firstName}. Good to see you. What's on your mind today?`;
     } else if (hour < 12) {
       greeting = `Good morning, ${firstName}. How are you doing today? I'm here to listen.`;
     } else if (hour < 17) {
@@ -208,7 +253,7 @@ export default function ChatPage() {
 
     setMessages([greetingMessage]);
     setHasGreeted(true);
-  }, [userId, firstName, latestMood, hasGreeted]);
+  }, [userId, firstName, latestMood, hasGreeted, memoryInfo]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -351,6 +396,16 @@ export default function ChatPage() {
             Pace
           </h1>
           <div className="w-2 h-2 rounded-full" style={{ background: 'var(--primary)' }} />
+          {memoryInfo.hasMemories && (
+            <div
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"
+              style={{ background: 'rgba(126,113,181,0.15)', color: '#7E71B5' }}
+              title="Pace remembers you"
+            >
+              <SparklesIcon className="w-3 h-3" />
+              <span>Remembers you</span>
+            </div>
+          )}
         </div>
       </header>
 
