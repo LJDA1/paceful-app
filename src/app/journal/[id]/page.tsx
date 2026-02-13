@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useUser } from '@/hooks/useUser';
+import { JournalReflectionInline } from '@/components/JournalReflection';
 
 interface JournalEntry {
   id: string;
@@ -20,6 +21,7 @@ interface JournalEntry {
   contains_insight: boolean;
   contains_gratitude: boolean;
   contains_future_thinking: boolean;
+  ai_reflection: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -426,6 +428,11 @@ Exported from Paceful Journal
                     </p>
                   ))}
                 </div>
+
+                {/* AI Reflection */}
+                {entry.ai_reflection && (
+                  <JournalReflectionInline reflection={entry.ai_reflection} />
+                )}
               </div>
 
               {/* Analysis Section */}

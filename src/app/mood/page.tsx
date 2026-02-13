@@ -18,6 +18,7 @@ import {
   type Milestone,
 } from '@/lib/streaks';
 import MilestoneToast from '@/components/MilestoneToast';
+import ExerciseNudge, { shouldShowNudge } from '@/components/ExerciseNudge';
 
 // ============================================================================
 // Mood Configuration
@@ -105,6 +106,10 @@ export default function MoodPage() {
   const [showMilestoneToast, setShowMilestoneToast] = useState(false);
   const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
 
+  // Exercise nudge state
+  const [showNudge, setShowNudge] = useState(false);
+  const [savedMoodScore, setSavedMoodScore] = useState<number | null>(null);
+
   const supabase = createClient();
 
   // Redirect if not authenticated
@@ -181,6 +186,7 @@ export default function MoodPage() {
       });
 
       setSaved(true);
+      setSavedMoodScore(selectedMood);
 
       // Check for new milestones after saving
       try {
@@ -218,13 +224,21 @@ export default function MoodPage() {
         // Ignore milestone check errors
       }
 
+      // After save animation, show nudge or reset
       setTimeout(() => {
-        setSelectedMood(null);
-        setNote('');
-        setTriggers([]);
-        setSaved(false);
-        fetchData();
-      }, 2500);
+        // Check if we should show exercise nudge
+        if (shouldShowNudge(selectedMood)) {
+          setShowNudge(true);
+        } else {
+          // Reset form immediately if no nudge
+          setSelectedMood(null);
+          setNote('');
+          setTriggers([]);
+          setSaved(false);
+          setSavedMoodScore(null);
+          fetchData();
+        }
+      }, 1500);
     } catch (err) {
       console.error('Error saving mood:', err);
       alert('Failed to save mood. Please try again.');
@@ -240,6 +254,28 @@ export default function MoodPage() {
         ? prev.filter(t => t !== trigger)
         : [...prev, trigger]
     );
+  };
+
+  // Handle exercise nudge dismiss
+  const handleNudgeDismiss = () => {
+    setShowNudge(false);
+    setSelectedMood(null);
+    setNote('');
+    setTriggers([]);
+    setSaved(false);
+    setSavedMoodScore(null);
+    fetchData();
+  };
+
+  // Handle exercise nudge start
+  const handleNudgeStart = (exerciseId: string) => {
+    setShowNudge(false);
+    setSelectedMood(null);
+    setNote('');
+    setTriggers([]);
+    setSaved(false);
+    setSavedMoodScore(null);
+    router.push(`/exercises?start=${exerciseId}`);
   };
 
   // Format date - client-side only to prevent hydration mismatch
@@ -775,6 +811,15 @@ export default function MoodPage() {
             setShowMilestoneToast(false);
             setCurrentMilestone(null);
           }}
+        />
+      )}
+
+      {/* Exercise Nudge */}
+      {showNudge && savedMoodScore !== null && (
+        <ExerciseNudge
+          moodScore={savedMoodScore}
+          onDismiss={handleNudgeDismiss}
+          onStart={handleNudgeStart}
         />
       )}
     </div>

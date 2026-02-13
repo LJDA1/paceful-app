@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
@@ -380,14 +380,16 @@ function ExerciseView({ exercise, onClose, onComplete }: ExerciseViewProps) {
 // Main Page
 // ============================================================================
 
-export default function ExercisesPage() {
+function ExercisesPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { userId, loading: userLoading, isAuthenticated } = useUser();
   const [exercises] = useState<Exercise[]>(getAllExercises());
   const [recommendedExercise, setRecommendedExercise] = useState<Exercise | null>(null);
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
   const [completionCount, setCompletionCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasCheckedStartParam, setHasCheckedStartParam] = useState(false);
 
   // Exercise view state
   const [activeExercise, setActiveExercise] = useState<Exercise | GeneratedExercise | null>(null);
@@ -401,6 +403,28 @@ export default function ExercisesPage() {
       router.push('/auth/login');
     }
   }, [userLoading, isAuthenticated, router]);
+
+  // Check for ?start= query parameter to auto-open exercise
+  useEffect(() => {
+    if (hasCheckedStartParam || isLoading) return;
+
+    const startExerciseId = searchParams.get('start');
+    if (startExerciseId) {
+      // Find the exercise by type/id
+      const exerciseToStart = exercises.find(
+        (e) => e.type === startExerciseId || e.id === startExerciseId
+      );
+      if (exerciseToStart) {
+        setActiveExercise(exerciseToStart);
+        trackEvent('exercise_started_from_nudge', { exerciseType: startExerciseId });
+        // Clear the URL parameter
+        router.replace('/exercises', { scroll: false });
+      }
+      setHasCheckedStartParam(true);
+    } else {
+      setHasCheckedStartParam(true);
+    }
+  }, [searchParams, exercises, isLoading, hasCheckedStartParam, router]);
 
   // Fetch user data
   const fetchData = useCallback(async () => {
@@ -747,5 +771,27 @@ export default function ExercisesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Wrap in Suspense for useSearchParams
+export default function ExercisesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen pb-28 md:pb-8" style={{ background: 'var(--bg)' }}>
+        <div className="max-w-lg mx-auto px-5 py-6 animate-pulse">
+          <div className="h-8 w-32 rounded mb-2" style={{ background: 'var(--border)' }} />
+          <div className="h-4 w-48 rounded mb-8" style={{ background: 'var(--border)' }} />
+          <div className="h-40 rounded-3xl mb-6" style={{ background: 'var(--border)' }} />
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 rounded-[22px]" style={{ background: 'var(--border)' }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <ExercisesPageContent />
+    </Suspense>
   );
 }

@@ -10,6 +10,8 @@ import {
   type SentimentLevel,
   type FullAnalysisResult,
 } from '@/lib/sentiment-analyzer';
+import JournalReflection from '@/components/JournalReflection';
+import { trackEvent } from '@/lib/track';
 
 // ============================================================================
 // Types
@@ -440,6 +442,11 @@ export default function JournalEntryForm({
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Reflection state
+  const [reflection, setReflection] = useState('');
+  const [reflectionLoading, setReflectionLoading] = useState(false);
+  const [savedEntryId, setSavedEntryId] = useState<string | null>(null);
+
   const supabase = createClient();
 
   // Refs
@@ -603,6 +610,35 @@ export default function JournalEntryForm({
       // Clear draft from localStorage
       localStorage.removeItem(`journal_draft_${userId}`);
       setIsSaved(true);
+      setSavedEntryId(savedEntry.id);
+
+      // Fetch AI reflection if entry is long enough
+      if (wordCount >= 20) {
+        setReflectionLoading(true);
+        try {
+          const sentimentLabel = analysis?.sentiment.level || 'neutral';
+          const reflectResponse = await fetch('/api/ai/reflect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              entryText: content.trim(),
+              sentiment: sentimentLabel,
+              entryId: savedEntry.id,
+            }),
+          });
+
+          if (reflectResponse.ok) {
+            const reflectData = await reflectResponse.json();
+            setReflection(reflectData.reflection);
+            trackEvent('journal_reflection_received', { isGeneric: reflectData.isGeneric });
+          }
+        } catch (reflectErr) {
+          console.error('Failed to fetch reflection:', reflectErr);
+          // Don't show error to user, just skip reflection
+        } finally {
+          setReflectionLoading(false);
+        }
+      }
 
       if (onSave) {
         onSave({
@@ -645,10 +681,22 @@ export default function JournalEntryForm({
           </h2>
           <p className="text-stone-600 mb-2">{encouragement}</p>
           {analysis && (
-            <p className="text-sm text-paceful-primary mb-8">
+            <p className="text-sm text-paceful-primary mb-4">
               Your ERS score has been updated based on this entry.
             </p>
           )}
+
+          {/* AI Reflection */}
+          {(reflectionLoading || reflection) && (
+            <div className="mt-6 mb-8 text-left">
+              <JournalReflection
+                reflection={reflection}
+                loading={reflectionLoading}
+                onDismiss={() => setReflection('')}
+              />
+            </div>
+          )}
+
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => {
@@ -658,6 +706,9 @@ export default function JournalEntryForm({
                 setSelectedPromptText(null);
                 setAnalysis(null);
                 setIsSaved(false);
+                setReflection('');
+                setReflectionLoading(false);
+                setSavedEntryId(null);
               }}
               className="px-6 py-3 bg-paceful-primary text-white rounded-xl hover:bg-paceful-primary-dark transition-colors font-medium shadow-sm"
             >
