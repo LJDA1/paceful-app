@@ -92,6 +92,46 @@ function CheckIcon({ className, style }: { className?: string; style?: React.CSS
   );
 }
 
+function XIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className || "w-5 h-5"} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={style}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+function ShieldIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className || "w-6 h-6"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={style}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+    </svg>
+  );
+}
+
+function LayersIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className || "w-6 h-6"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={style}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
+    </svg>
+  );
+}
+
+function NodesIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className || "w-6 h-6"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={style}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+    </svg>
+  );
+}
+
+function SparklesIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className || "w-6 h-6"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={style}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
+    </svg>
+  );
+}
+
 // ============================================================================
 // Components
 // ============================================================================
@@ -230,6 +270,40 @@ function TractionCard({ value, label, highlight }: {
         {value}
       </p>
       <p className="text-[14px] mt-1" style={{ color: '#5C574F' }}>{label}</p>
+    </div>
+  );
+}
+
+function MoatCard({ icon, iconColor, accentColor, title, description }: {
+  icon: React.ReactNode;
+  iconColor: string;
+  accentColor: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div
+      className="bg-white rounded-2xl overflow-hidden"
+      style={{ border: '1px solid #F0EBE4' }}
+    >
+      <div className="h-1" style={{ background: accentColor }} />
+      <div className="p-6">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+          style={{ background: `${accentColor}15`, color: iconColor }}
+        >
+          {icon}
+        </div>
+        <h3
+          className="text-[17px] font-semibold mb-3"
+          style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+        >
+          {title}
+        </h3>
+        <p className="text-[14px] leading-relaxed" style={{ color: '#5C574F' }}>
+          {description}
+        </p>
+      </div>
     </div>
   );
 }
@@ -715,6 +789,273 @@ export default function InvestorPitchPage() {
               sample="2,479 resolved"
             />
           </div>
+        </div>
+      </section>
+
+      {/* Our Defensibility */}
+      <section className="py-20" style={{ background: '#F9F6F2' }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h2
+              className="text-[28px] sm:text-[32px] font-bold mb-4"
+              style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+            >
+              Our defensibility
+            </h2>
+            <p className="text-[16px] max-w-2xl mx-auto" style={{ color: '#5C574F' }}>
+              Why incumbents can&apos;t just add this feature
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6 mb-16">
+            <MoatCard
+              icon={<ShieldIcon className="w-6 h-6" />}
+              iconColor="#5B8A72"
+              accentColor="#5B8A72"
+              title="Emotional Readiness Score"
+              description="A multi-dimensional scoring system validated against clinical recovery models. Not a simple mood tracker — a predictive framework that quantifies emotional readiness across stability, engagement, and behavioral patterns."
+            />
+            <MoatCard
+              icon={<LayersIcon className="w-6 h-6" />}
+              iconColor="#D4973B"
+              accentColor="#D4973B"
+              title="Data that gets smarter"
+              description="Every mood log, journal entry, and exercise completion feeds our pattern discovery engine. We've built structured data extraction that identifies recovery correlations no other platform captures. This dataset grows more valuable with every user."
+            />
+            <MoatCard
+              icon={<NodesIcon className="w-6 h-6" />}
+              iconColor="#6B8CAE"
+              accentColor="#6B8CAE"
+              title="Network effects across verticals"
+              description="Recovery patterns discovered in therapy integrations improve dating app predictions. HR wellness data validates clinical models. Each B2B partner makes the platform smarter for all others — a flywheel competitors can't replicate without the same cross-vertical data."
+            />
+            <MoatCard
+              icon={<SparklesIcon className="w-6 h-6" />}
+              iconColor="#9B8BB8"
+              accentColor="#9B8BB8"
+              title="AI that knows each user"
+              description="Our companion AI builds persistent memory per user — understanding their triggers, patterns, and what helps them heal. This creates deep personalization and switching costs that generic wellness chatbots can't match."
+            />
+          </div>
+
+          {/* Why not build in-house? */}
+          <div className="max-w-4xl mx-auto">
+            <h3
+              className="text-[22px] font-bold mb-8 text-center"
+              style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+            >
+              Why Hinge can&apos;t just build this
+            </h3>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Build in-house */}
+              <div
+                className="bg-white rounded-2xl p-6"
+                style={{ border: '1px solid #F0EBE4' }}
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'rgba(184,107,100,0.1)' }}
+                  >
+                    <XIcon className="w-5 h-5" style={{ color: '#B86B64' }} />
+                  </div>
+                  <h4
+                    className="text-[16px] font-semibold"
+                    style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+                  >
+                    Build in-house
+                  </h4>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    '12-18 months development',
+                    'No recovery-specific training data',
+                    'Cold start — no pattern library',
+                    'Liability of providing mental health features',
+                    'Distraction from core product',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-[14px]" style={{ color: '#5C574F' }}>
+                      <XIcon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#B86B64' }} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Integrate Paceful */}
+              <div
+                className="bg-white rounded-2xl p-6"
+                style={{ border: '2px solid #5B8A72' }}
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'rgba(91,138,114,0.1)' }}
+                  >
+                    <CheckIcon className="w-5 h-5" style={{ color: '#5B8A72' }} />
+                  </div>
+                  <h4
+                    className="text-[16px] font-semibold"
+                    style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+                  >
+                    Integrate Paceful
+                  </h4>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    'API integration in days',
+                    'Pre-trained on recovery trajectories',
+                    'Growing pattern library from day one',
+                    'Liability sits with Paceful',
+                    'Focus stays on core product',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-[14px]" style={{ color: '#5C574F' }}>
+                      <CheckIcon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#5B8A72' }} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Data Moat Trajectory */}
+      <section className="py-20" style={{ background: '#F3EFE9' }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <h2
+            className="text-[28px] sm:text-[32px] font-bold mb-12 text-center"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            Data moat trajectory
+          </h2>
+
+          {/* Timeline */}
+          <div className="relative">
+            {/* SVG Line */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 hidden md:block">
+              <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 2 400">
+                <defs>
+                  <linearGradient id="moatGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#D4973B" />
+                    <stop offset="50%" stopColor="#7BA896" />
+                    <stop offset="100%" stopColor="#5B8A72" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M1 0 Q1 100, 1 400"
+                  stroke="url(#moatGradient)"
+                  strokeWidth="3"
+                  fill="none"
+                />
+              </svg>
+            </div>
+
+            {/* Mobile line */}
+            <div
+              className="absolute left-6 top-0 bottom-0 w-0.5 md:hidden"
+              style={{ background: 'linear-gradient(to bottom, #D4973B, #7BA896, #5B8A72)' }}
+            />
+
+            {/* Timeline Items */}
+            <div className="space-y-8 relative">
+              {[
+                {
+                  year: 'Year 1',
+                  title: '1,000+ recovery trajectories',
+                  description: 'Basic pattern library established',
+                  color: '#D4973B',
+                  side: 'left',
+                },
+                {
+                  year: 'Year 2',
+                  title: '10,000+ trajectories',
+                  description: 'Cross-platform patterns emerging',
+                  color: '#7BA896',
+                  side: 'right',
+                },
+                {
+                  year: 'Year 3',
+                  title: '100,000+ trajectories',
+                  description: 'Fine-tuned recovery prediction model',
+                  color: '#5B8A72',
+                  side: 'left',
+                },
+                {
+                  year: 'Year 4',
+                  title: 'Industry standard',
+                  description: 'Emotional readiness assessment benchmark',
+                  color: '#5B8A72',
+                  side: 'right',
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-4 md:gap-8 ${
+                    item.side === 'right' ? 'md:flex-row-reverse' : ''
+                  }`}
+                >
+                  {/* Mobile: Always left-aligned */}
+                  <div className="md:hidden flex items-center gap-4">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10"
+                      style={{ background: item.color }}
+                    >
+                      <span className="text-white text-[12px] font-bold">{item.year}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[15px]" style={{ color: '#1F1D1A' }}>
+                        {item.title}
+                      </p>
+                      <p className="text-[13px]" style={{ color: '#5C574F' }}>
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Desktop: Alternating sides */}
+                  <div
+                    className={`hidden md:block flex-1 ${
+                      item.side === 'right' ? 'text-left' : 'text-right'
+                    }`}
+                  >
+                    <div
+                      className={`inline-block bg-white rounded-xl p-4 ${
+                        item.side === 'right' ? '' : 'text-right'
+                      }`}
+                      style={{ border: '1px solid #F0EBE4' }}
+                    >
+                      <p className="font-semibold text-[15px]" style={{ color: '#1F1D1A' }}>
+                        {item.title}
+                      </p>
+                      <p className="text-[13px]" style={{ color: '#5C574F' }}>
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="hidden md:flex w-14 h-14 rounded-full items-center justify-center flex-shrink-0 z-10"
+                    style={{ background: item.color }}
+                  >
+                    <span className="text-white text-[13px] font-bold">{item.year}</span>
+                  </div>
+
+                  <div className="hidden md:block flex-1" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom note */}
+          <p
+            className="text-center text-[14px] mt-12"
+            style={{ color: '#9A938A' }}
+          >
+            Every trajectory makes the next prediction more accurate. This compounds.
+          </p>
         </div>
       </section>
 
