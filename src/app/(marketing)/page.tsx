@@ -201,6 +201,13 @@ export default function LandingPage() {
           </Link>
           <div className="flex items-center gap-6">
             <Link
+              href="/pricing"
+              className="text-[15px] font-medium hidden sm:block"
+              style={{ color: '#5C574F' }}
+            >
+              Pricing
+            </Link>
+            <Link
               href="/auth/login"
               className="text-[15px] font-medium hidden sm:block"
               style={{ color: '#5C574F' }}
@@ -691,6 +698,9 @@ export default function LandingPage() {
 
             {/* Links */}
             <div className="flex flex-wrap gap-x-10 gap-y-4">
+              <Link href="/pricing" className="text-[14px]" style={{ color: '#9A938A' }}>
+                Pricing
+              </Link>
               <Link href="/privacy" className="text-[14px]" style={{ color: '#9A938A' }}>
                 Privacy
               </Link>
