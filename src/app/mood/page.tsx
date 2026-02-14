@@ -123,10 +123,10 @@ export default function MoodPage() {
   const fetchData = useCallback(async () => {
     if (!userId) return;
     setIsLoading(true);
-    const fetchedEntries = await fetchMoodEntries(userId, 30);
+    const fetchedEntries = await fetchMoodEntries(userId, 30, supabase);
     setEntries(fetchedEntries);
     setIsLoading(false);
-  }, [userId]);
+  }, [userId, supabase]);
 
   useEffect(() => {
     if (userId) {

@@ -1,4 +1,8 @@
-import { supabase } from './supabase';
+import { supabase as defaultSupabase } from './supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+// Backwards compatibility alias
+const supabase = defaultSupabase;
 
 /**
  * Sign out the current user
@@ -40,8 +44,12 @@ export async function getSession() {
 /**
  * Check if user has completed onboarding
  */
-export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
-  const { data, error } = await supabase
+export async function hasCompletedOnboarding(
+  userId: string,
+  supabaseClient?: SupabaseClient
+): Promise<boolean> {
+  const sb = supabaseClient || defaultSupabase;
+  const { data, error } = await sb
     .from('profiles')
     .select('onboarding_completed')
     .eq('id', userId)
@@ -57,8 +65,12 @@ export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
 /**
  * Get user profile
  */
-export async function getUserProfile(userId: string) {
-  const { data, error } = await supabase
+export async function getUserProfile(
+  userId: string,
+  supabaseClient?: SupabaseClient
+) {
+  const sb = supabaseClient || defaultSupabase;
+  const { data, error } = await sb
     .from('profiles')
     .select('*')
     .eq('id', userId)

@@ -7,7 +7,7 @@
 import { supabase as defaultSupabase } from './supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-// Backwards compatibility - functions can be updated to accept supabaseClient parameter
+// Backwards compatibility alias
 const supabase = defaultSupabase;
 
 // ============================================================================
@@ -287,12 +287,14 @@ export function getMoodHexColor(score: number): string {
  */
 export async function fetchMoodEntries(
   userId: string,
-  days: number = 30
+  days: number = 30,
+  supabaseClient?: SupabaseClient
 ): Promise<MoodEntry[]> {
+  const sb = supabaseClient || defaultSupabase;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('mood_entries')
     .select('id, user_id, mood_value, mood_label, emotions, trigger_description, time_of_day, logged_at')
     .eq('user_id', userId)
@@ -314,9 +316,11 @@ export async function saveMoodEntry(
   userId: string,
   moodScore: number,
   emotions: string[],
-  note?: string
+  note?: string,
+  supabaseClient?: SupabaseClient
 ): Promise<MoodEntry | null> {
-  const { data, error } = await supabase
+  const sb = supabaseClient || defaultSupabase;
+  const { data, error } = await sb
     .from('mood_entries')
     .insert({
       user_id: userId,
@@ -340,8 +344,11 @@ export async function saveMoodEntry(
 /**
  * Calculate and store mood variance stats for ERS
  */
-export async function calculateAndStoreMoodVariance(userId: string): Promise<number> {
-  const entries = await fetchMoodEntries(userId, 14); // 2 weeks
+export async function calculateAndStoreMoodVariance(
+  userId: string,
+  supabaseClient?: SupabaseClient
+): Promise<number> {
+  const entries = await fetchMoodEntries(userId, 14, supabaseClient); // 2 weeks
   const stats = calculateMoodStats(entries);
 
   // Normalize variance to 0-1 scale for ERS
@@ -357,11 +364,16 @@ export async function calculateAndStoreMoodVariance(userId: string): Promise<num
 /**
  * Get entries for a specific date
  */
-export async function getEntriesForDate(userId: string, date: string): Promise<MoodEntry[]> {
+export async function getEntriesForDate(
+  userId: string,
+  date: string,
+  supabaseClient?: SupabaseClient
+): Promise<MoodEntry[]> {
+  const sb = supabaseClient || defaultSupabase;
   const startOfDay = `${date}T00:00:00.000Z`;
   const endOfDay = `${date}T23:59:59.999Z`;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('mood_entries')
     .select('id, user_id, mood_value, mood_label, emotions, trigger_description, time_of_day, logged_at')
     .eq('user_id', userId)
