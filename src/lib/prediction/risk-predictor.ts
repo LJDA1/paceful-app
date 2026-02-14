@@ -16,7 +16,11 @@
  * - Healthy coping mechanisms, support circle engagement
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase as defaultSupabase } from '@/lib/supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+// Backwards compatibility - functions can be updated to accept supabaseClient parameter
+const supabase = defaultSupabase;
 
 // ============================================================================
 // TYPE DEFINITIONS

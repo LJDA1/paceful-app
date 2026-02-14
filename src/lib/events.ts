@@ -4,7 +4,11 @@
  * Tracks key user milestones and actions for analytics and investor reporting.
  */
 
-import { supabase } from './supabase';
+import { supabase as defaultSupabase } from './supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+// Backwards compatibility - functions can be updated to accept supabaseClient parameter
+const supabase = defaultSupabase;
 
 // Event types
 export type EventType =

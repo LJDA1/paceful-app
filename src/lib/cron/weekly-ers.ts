@@ -10,7 +10,11 @@
  * - External scheduler
  */
 
-import { supabase } from '../supabase';
+import { supabase as defaultSupabase } from '../supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
+
+// Backwards compatibility - functions can be updated to accept supabaseClient parameter
+const supabase = defaultSupabase;
 import { calculateAndStoreERSScore } from '../ers-calculator';
 import { logger } from '../api-errors';
 

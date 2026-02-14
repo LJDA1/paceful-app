@@ -11,14 +11,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
-    const result = await calculateAndStoreERSScore(userId);
+    // Create service role client for elevated permissions
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const result = await calculateAndStoreERSScore(userId, supabase);
 
     // Fire-and-forget: Capture trajectory snapshot for training data
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
       captureTrajectorySnapshotAsync(userId, supabase);
     } catch {
       // Silent failure

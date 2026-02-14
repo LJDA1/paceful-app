@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+import { supabase as defaultSupabase } from './supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // ============================================================================
 // Types
@@ -98,7 +99,8 @@ function safeNormalizedScore(value: number | null | undefined): number | null {
 async function calculateEmotionalStabilityScore(
   userId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  supabase: SupabaseClient = defaultSupabase
 ): Promise<{ score: number | null; dataPoints: number }> {
   const { data: moods, error } = await supabase
     .from('mood_entries')
@@ -150,6 +152,7 @@ async function calculateEmotionalStabilityScore(
  */
 async function calculateSelfReflectionScore(
   userId: string,
+  supabase: SupabaseClient = defaultSupabase
 ): Promise<{ score: number | null; dataPoints: number }> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -189,7 +192,8 @@ async function calculateSelfReflectionScore(
 async function calculateBehavioralEngagementScore(
   userId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  supabase: SupabaseClient = defaultSupabase
 ): Promise<{ score: number | null; dataPoints: number }> {
   const { data: moods, error } = await supabase
     .from('mood_entries')
@@ -246,6 +250,7 @@ async function calculateBehavioralEngagementScore(
  */
 async function calculateCopingCapacityScore(
   userId: string,
+  supabase: SupabaseClient = defaultSupabase
 ): Promise<{ score: number | null; dataPoints: number }> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -295,6 +300,7 @@ async function calculateCopingCapacityScore(
  */
 async function calculateSocialReadinessScore(
   userId: string,
+  supabase: SupabaseClient = defaultSupabase
 ): Promise<{ score: number | null; dataPoints: number }> {
   // Check recovery_trajectories for latest self_reported_readiness
   try {
@@ -376,7 +382,7 @@ function calculateConfidence(components: ERSComponentScores): number {
 /**
  * Get previous ERS score for delta calculation
  */
-async function getPreviousScore(userId: string, currentWeekOf: string): Promise<number | null> {
+async function getPreviousScore(userId: string, currentWeekOf: string, supabase: SupabaseClient = defaultSupabase): Promise<number | null> {
   const { data } = await supabase
     .from('ers_scores')
     .select('ers_score')
@@ -392,7 +398,8 @@ async function getPreviousScore(userId: string, currentWeekOf: string): Promise<
 /**
  * Main ERS calculation function - ALL 5 DIMENSIONS
  */
-export async function calculateERSScore(userId: string): Promise<ERSResult> {
+export async function calculateERSScore(userId: string, supabaseClient?: SupabaseClient): Promise<ERSResult> {
+  const supabase = supabaseClient || defaultSupabase;
   const now = new Date();
   const weekStart = getWeekStart(now);
   const weekOf = formatDate(weekStart);
@@ -410,11 +417,11 @@ export async function calculateERSScore(userId: string): Promise<ERSResult> {
     copingCapacity,
     socialReadiness,
   ] = await Promise.all([
-    calculateEmotionalStabilityScore(userId, startDate, endDate),
-    calculateSelfReflectionScore(userId),
-    calculateBehavioralEngagementScore(userId, startDate, endDate),
-    calculateCopingCapacityScore(userId),
-    calculateSocialReadinessScore(userId),
+    calculateEmotionalStabilityScore(userId, startDate, endDate, supabase),
+    calculateSelfReflectionScore(userId, supabase),
+    calculateBehavioralEngagementScore(userId, startDate, endDate, supabase),
+    calculateCopingCapacityScore(userId, supabase),
+    calculateSocialReadinessScore(userId, supabase),
   ]);
 
   // Apply safety clamping to all component scores (0-1 range)
@@ -479,7 +486,7 @@ export async function calculateERSScore(userId: string): Promise<ERSResult> {
   const ersConfidence = calculateConfidence(components);
 
   // Get previous score for delta
-  const previousScore = await getPreviousScore(userId, weekOf);
+  const previousScore = await getPreviousScore(userId, weekOf, supabase);
   const ersDelta = previousScore !== null ? ersScore - previousScore : null;
 
   // Build result with all values safely clamped and rounded
@@ -508,8 +515,9 @@ export async function calculateERSScore(userId: string): Promise<ERSResult> {
 /**
  * Calculate and store ERS score in database
  */
-export async function calculateAndStoreERSScore(userId: string): Promise<ERSResult> {
-  const result = await calculateERSScore(userId);
+export async function calculateAndStoreERSScore(userId: string, supabaseClient?: SupabaseClient): Promise<ERSResult> {
+  const supabase = supabaseClient || defaultSupabase;
+  const result = await calculateERSScore(userId, supabase);
 
   // Apply safety checks to all values before storage
   const safeErsScore = safeScore(result.ersScore);
@@ -558,11 +566,12 @@ export async function calculateAndStoreERSScore(userId: string): Promise<ERSResu
 /**
  * Batch calculate ERS for multiple users
  */
-export async function calculateERSForAllUsers(): Promise<{
+export async function calculateERSForAllUsers(supabaseClient?: SupabaseClient): Promise<{
   success: number;
   failed: number;
   errors: Array<{ userId: string; error: string }>;
 }> {
+  const supabase = supabaseClient || defaultSupabase;
   // Get users who have ERS tracking consent
   const { data: profiles, error } = await supabase
     .from('profiles')
@@ -580,13 +589,13 @@ export async function calculateERSForAllUsers(): Promise<{
     }
 
     // Process all users
-    return processUserBatch(users.map(u => u.user_id));
+    return processUserBatch(users.map(u => u.user_id), supabase);
   }
 
-  return processUserBatch(profiles.map(p => p.user_id));
+  return processUserBatch(profiles.map(p => p.user_id), supabase);
 }
 
-async function processUserBatch(userIds: string[]): Promise<{
+async function processUserBatch(userIds: string[], supabase: SupabaseClient = defaultSupabase): Promise<{
   success: number;
   failed: number;
   errors: Array<{ userId: string; error: string }>;
@@ -599,7 +608,7 @@ async function processUserBatch(userIds: string[]): Promise<{
 
   for (const userId of userIds) {
     try {
-      await calculateAndStoreERSScore(userId);
+      await calculateAndStoreERSScore(userId, supabase);
       results.success++;
     } catch (err) {
       results.failed++;
