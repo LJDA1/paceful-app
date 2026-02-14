@@ -6,6 +6,13 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useUser } from '@/hooks/useUser';
 import { trackEvent } from '@/lib/track';
+import {
+  createChatSession,
+  updateChatSession,
+  getRecentSessions,
+  getLastSessionContext,
+  ChatSession,
+} from '@/lib/chat-persistence';
 
 // ============================================================================
 // Types
@@ -148,10 +155,24 @@ export default function ChatPage() {
   const [latestMood, setLatestMood] = useState<number | null>(null);
   const [hasGreeted, setHasGreeted] = useState(false);
   const [memoryInfo, setMemoryInfo] = useState<MemoryInfo>({ hasMemories: false, greetingContext: null });
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [recentSessions, setRecentSessions] = useState<ChatSession[]>([]);
+  const [messagesSinceLastUpdate, setMessagesSinceLastUpdate] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesRef = useRef<Message[]>([]);
+  const sessionIdRef = useRef<string | null>(null);
   const supabase = createClient();
+
+  // Keep refs in sync for cleanup
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -160,12 +181,56 @@ export default function ChatPage() {
     }
   }, [userLoading, isAuthenticated, router]);
 
-  // Track page view
+  // Track page view and create session
   useEffect(() => {
     if (userId) {
       trackEvent('chat_opened');
+
+      // Create a new chat session
+      const initSession = async () => {
+        const newSessionId = await createChatSession(userId, supabase);
+        if (newSessionId) {
+          setSessionId(newSessionId);
+        }
+
+        // Fetch recent sessions for context
+        const sessions = await getRecentSessions(userId, supabase, 5);
+        setRecentSessions(sessions);
+      };
+      initSession();
     }
   }, [userId]);
+
+  // Summarize and close session on page leave
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Fire-and-forget summary generation
+      if (sessionIdRef.current && messagesRef.current.length > 1) {
+        const chatMessages = messagesRef.current
+          .filter(m => m.id !== 'greeting')
+          .map(m => ({ role: m.role, content: m.content }));
+
+        if (chatMessages.length > 0) {
+          // Use sendBeacon for reliable delivery on page unload
+          navigator.sendBeacon(
+            '/api/ai/chat-summary',
+            JSON.stringify({
+              sessionId: sessionIdRef.current,
+              messages: chatMessages,
+            })
+          );
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Also trigger on component unmount (navigation)
+      handleBeforeUnload();
+    };
+  }, []);
 
   // Fetch user data for greeting
   useEffect(() => {
@@ -220,8 +285,26 @@ export default function ChatPage() {
     const hour = new Date().getHours();
     let greeting = '';
 
-    // Memory-aware greetings for returning users
-    if (memoryInfo.hasMemories && memoryInfo.greetingContext) {
+    // Check for recent session context first
+    const lastSession = getLastSessionContext(recentSessions);
+
+    if (lastSession && lastSession.daysAgo <= 7) {
+      // Reference the last conversation
+      if (lastSession.daysAgo === 0) {
+        greeting = `Hey ${firstName}. Welcome back. How's everything going since earlier?`;
+      } else if (lastSession.daysAgo === 1) {
+        greeting = `Hey ${firstName}. Good to see you again. How have you been since yesterday?`;
+      } else {
+        // Extract a topic hint from the summary if possible
+        const topics = lastSession.topics;
+        if (topics && topics.length > 0) {
+          const topicHint = topics[0].replace(/_/g, ' ');
+          greeting = `Hey ${firstName}. Last time we talked about ${topicHint}. How's that going?`;
+        } else {
+          greeting = `Hey ${firstName}. It's been a few days. How have things been?`;
+        }
+      }
+    } else if (memoryInfo.hasMemories && memoryInfo.greetingContext) {
       // Reference something we remember about them
       const context = memoryInfo.greetingContext.toLowerCase();
       if (context.includes('started dating') || context.includes('moved out') || context.includes('first good day')) {
@@ -253,7 +336,7 @@ export default function ChatPage() {
 
     setMessages([greetingMessage]);
     setHasGreeted(true);
-  }, [userId, firstName, latestMood, hasGreeted, memoryInfo]);
+  }, [userId, firstName, latestMood, hasGreeted, memoryInfo, recentSessions]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -337,6 +420,14 @@ export default function ChatPage() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Update session message count (every 5 messages to reduce API calls)
+      const newCount = messagesSinceLastUpdate + 2; // user + assistant
+      setMessagesSinceLastUpdate(newCount);
+      if (sessionId && newCount >= 5) {
+        updateChatSession(sessionId, messages.length + 2, supabase);
+        setMessagesSinceLastUpdate(0);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage: Message = {

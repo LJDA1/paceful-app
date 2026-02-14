@@ -3,6 +3,19 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
+// Service role client for aggregate queries (bypasses RLS)
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+// NOTE: Community stats INCLUDE synthetic users in aggregates.
+// This seeds the community data for cold-start before real user base grows.
+// Synthetic users have is_synthetic = true but are intentionally included here.
+// Individual synthetic data is NEVER shown to real users directly.
+
 // Research-based fallback data for small communities
 const RESEARCH_DATA = {
   healing: {
@@ -57,7 +70,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's current ERS stage
+    // Get user's current ERS stage (user's own data - uses auth client)
     const { data: ersData, error: ersError } = await supabase
       .from('ers_scores')
       .select('ers_stage, calculated_at')
@@ -72,8 +85,11 @@ export async function GET() {
 
     const userStage = ersData.ers_stage as 'healing' | 'rebuilding' | 'ready';
 
-    // Count users in the same stage
-    const { count: usersInStage } = await supabase
+    // Use service client for all aggregate queries (bypasses RLS)
+    const serviceClient = getServiceClient();
+
+    // Count users in the same stage (aggregate - uses service client)
+    const { count: usersInStage } = await serviceClient
       .from('ers_scores')
       .select('user_id', { count: 'exact', head: true })
       .eq('ers_stage', userStage);
@@ -102,16 +118,16 @@ export async function GET() {
     weekStart.setDate(weekStart.getDate() - 7);
     const weekStartStr = weekStart.toISOString();
 
-    // Get user IDs in this stage (for aggregate queries)
-    const { data: stageUsers } = await supabase
+    // Get user IDs in this stage (aggregate - uses service client)
+    const { data: stageUsers } = await serviceClient
       .from('ers_scores')
       .select('user_id')
       .eq('ers_stage', userStage);
 
     const userIds = stageUsers?.map(u => u.user_id) || [];
 
-    // Aggregate: Average mood this week for users in stage
-    const { data: moodData } = await supabase
+    // Aggregate: Average mood this week for users in stage (uses service client)
+    const { data: moodData } = await serviceClient
       .from('mood_entries')
       .select('mood_value')
       .in('user_id', userIds)
@@ -121,8 +137,8 @@ export async function GET() {
       ? moodData.reduce((sum, m) => sum + (m.mood_value || 5), 0) / moodData.length
       : RESEARCH_DATA[userStage].averageMoodInStage;
 
-    // Aggregate: Top triggers (from emotions array in mood_entries)
-    const { data: triggerData } = await supabase
+    // Aggregate: Top triggers (uses service client)
+    const { data: triggerData } = await serviceClient
       .from('mood_entries')
       .select('emotions')
       .in('user_id', userIds)
@@ -147,8 +163,8 @@ export async function GET() {
       ? sortedTriggers
       : RESEARCH_DATA[userStage].topTriggers;
 
-    // Aggregate: Average journal frequency (entries per user per week)
-    const { data: journalData } = await supabase
+    // Aggregate: Average journal frequency (uses service client)
+    const { data: journalData } = await serviceClient
       .from('journal_entries')
       .select('user_id', { count: 'exact' })
       .in('user_id', userIds)
@@ -160,8 +176,8 @@ export async function GET() {
       ? journalCount / userIds.length
       : RESEARCH_DATA[userStage].averageJournalFrequency;
 
-    // Aggregate: Percent improving (users with positive ers_delta)
-    const { data: deltaData } = await supabase
+    // Aggregate: Percent improving (uses service client)
+    const { data: deltaData } = await serviceClient
       .from('ers_scores')
       .select('ers_delta')
       .in('user_id', userIds)
@@ -176,8 +192,8 @@ export async function GET() {
     // This is simplified - in production you'd track stage transitions
     const avgDaysInStage = RESEARCH_DATA[userStage].averageDaysInStage;
 
-    // Fetch aggregate discovered patterns
-    const { data: aggregatePatterns } = await supabase
+    // Fetch aggregate discovered patterns (uses service client)
+    const { data: aggregatePatterns } = await serviceClient
       .from('discovered_patterns')
       .select('pattern_description, confidence')
       .eq('scope', 'aggregate')

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { trackConversion } from '@/lib/conversion-track';
 import MarketingNav from '@/components/MarketingNav';
@@ -141,6 +141,528 @@ function ERSRingVisual() {
 }
 
 // ============================================================================
+// Phone Mockup Component
+// ============================================================================
+
+function PhoneMockup() {
+  const score = 67;
+  const circumference = 2 * Math.PI * 38;
+  const progress = (score / 100) * circumference;
+
+  return (
+    <div
+      className="relative mt-12 lg:mt-16 flex justify-center lg:justify-start"
+      style={{
+        animation: 'float 4s ease-in-out infinite',
+      }}
+    >
+      {/* Glow effect behind phone */}
+      <div
+        className="absolute inset-0 flex justify-center lg:justify-start"
+        style={{
+          background: 'radial-gradient(ellipse 300px 400px at center, rgba(91,138,114,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Phone frame */}
+      <svg
+        viewBox="0 0 280 560"
+        className="w-[220px] h-[440px] sm:w-[260px] sm:h-[520px] lg:w-[280px] lg:h-[560px]"
+        style={{
+          filter: 'drop-shadow(0 20px 60px rgba(91,138,114,0.15))',
+        }}
+      >
+        {/* Phone body */}
+        <rect
+          x="0"
+          y="0"
+          width="280"
+          height="560"
+          rx="40"
+          fill="#FFFFFF"
+          stroke="#E8E2DA"
+          strokeWidth="2"
+        />
+
+        {/* Screen area */}
+        <rect
+          x="12"
+          y="12"
+          width="256"
+          height="536"
+          rx="32"
+          fill="#F9F6F2"
+        />
+
+        {/* Status bar */}
+        <g>
+          {/* Time */}
+          <text x="28" y="38" fontSize="12" fontWeight="600" fill="#1F1D1A">9:41</text>
+          {/* Signal dots */}
+          <circle cx="220" cy="34" r="2" fill="#5B8A72" />
+          <circle cx="228" cy="34" r="2" fill="#5B8A72" />
+          <circle cx="236" cy="34" r="2" fill="#5B8A72" />
+          <circle cx="244" cy="34" r="2" fill="#9A938A" />
+          {/* Battery */}
+          <rect x="252" y="30" width="16" height="8" rx="2" fill="none" stroke="#1F1D1A" strokeWidth="1" />
+          <rect x="254" y="32" width="10" height="4" rx="1" fill="#5B8A72" />
+        </g>
+
+        {/* Greeting */}
+        <text x="28" y="80" fontSize="14" fill="#9A938A">Good morning,</text>
+        <text x="28" y="100" fontSize="18" fontWeight="600" fill="#1F1D1A">Sarah</text>
+
+        {/* ERS Card */}
+        <rect x="20" y="120" width="240" height="200" rx="20" fill="#FFFFFF" />
+
+        {/* ERS Ring - centered in card */}
+        <g transform="translate(140, 200)">
+          {/* Track */}
+          <circle
+            cx="0"
+            cy="0"
+            r="38"
+            fill="none"
+            stroke="#F0EBE4"
+            strokeWidth="8"
+          />
+          {/* Progress - animated via CSS */}
+          <circle
+            cx="0"
+            cy="0"
+            r="38"
+            fill="none"
+            stroke="#5B8A72"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference - progress}
+            transform="rotate(-90)"
+            style={{
+              animation: 'ersRingFill 1.5s ease-out forwards',
+            }}
+          />
+          {/* Score text */}
+          <text
+            x="0"
+            y="6"
+            textAnchor="middle"
+            fontSize="28"
+            fontWeight="700"
+            fill="#1F1D1A"
+            style={{ fontFamily: "'Fraunces', serif" }}
+          >
+            {score}
+          </text>
+        </g>
+
+        {/* Stage label */}
+        <rect x="100" y="258" width="80" height="24" rx="12" fill="rgba(91,138,114,0.1)" />
+        <text x="140" y="274" textAnchor="middle" fontSize="11" fontWeight="500" fill="#5B8A72">Rebuilding</text>
+
+        {/* Stat cards row */}
+        <g transform="translate(20, 340)">
+          {/* Streak card */}
+          <rect x="0" y="0" width="115" height="60" rx="12" fill="#FFFFFF" />
+          {/* Flame icon */}
+          <circle cx="20" cy="30" r="12" fill="rgba(212,151,59,0.1)" />
+          <text x="20" y="34" textAnchor="middle" fontSize="12">🔥</text>
+          <text x="42" y="26" fontSize="10" fill="#9A938A">Streak</text>
+          <text x="42" y="42" fontSize="14" fontWeight="600" fill="#1F1D1A">7 days</text>
+
+          {/* Mood card */}
+          <rect x="125" y="0" width="115" height="60" rx="12" fill="#FFFFFF" />
+          {/* Up arrow icon */}
+          <circle cx="145" cy="30" r="12" fill="rgba(91,138,114,0.1)" />
+          <path d="M145 35 L145 25 M141 29 L145 25 L149 29" stroke="#5B8A72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <text x="167" y="26" fontSize="10" fill="#9A938A">Mood</text>
+          <text x="167" y="42" fontSize="14" fontWeight="600" fill="#5B8A72">Good</text>
+        </g>
+
+        {/* Quick mood log hint */}
+        <rect x="20" y="420" width="240" height="50" rx="14" fill="#FFFFFF" />
+        <text x="40" y="450" fontSize="13" fontWeight="500" fill="#1F1D1A">How are you feeling?</text>
+        <circle cx="230" cy="445" r="14" fill="rgba(91,138,114,0.1)" />
+        <text x="230" y="450" textAnchor="middle" fontSize="14">+</text>
+
+        {/* Bottom nav hint */}
+        <g transform="translate(0, 490)">
+          <rect x="20" y="0" width="240" height="50" rx="0" fill="#F9F6F2" />
+          <circle cx="60" cy="25" r="4" fill="#5B8A72" />
+          <circle cx="110" cy="25" r="4" fill="#D4D0C8" />
+          <circle cx="170" cy="25" r="4" fill="#D4D0C8" />
+          <circle cx="220" cy="25" r="4" fill="#D4D0C8" />
+        </g>
+
+        {/* Home indicator */}
+        <rect x="105" y="530" width="70" height="5" rx="2.5" fill="#1F1D1A" opacity="0.2" />
+      </svg>
+
+      {/* CSS Keyframes - injected via style tag */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes ersRingFill {
+          from { stroke-dashoffset: ${circumference}; }
+          to { stroke-dashoffset: ${circumference - progress}; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ============================================================================
+// Product Preview Tabs
+// ============================================================================
+
+type PreviewTab = 'dashboard' | 'chat' | 'progress';
+
+function ProductPreview() {
+  const [activeTab, setActiveTab] = useState<PreviewTab>('dashboard');
+
+  const tabs: { id: PreviewTab; label: string }[] = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'chat', label: 'Talk to Pace' },
+    { id: 'progress', label: 'Your progress' },
+  ];
+
+  return (
+    <div>
+      {/* Tabs */}
+      <div className="flex justify-center gap-2 mb-8 flex-wrap">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className="px-6 py-2.5 rounded-full text-[14px] font-medium transition-all"
+            style={{
+              background: activeTab === tab.id ? '#5B8A72' : 'transparent',
+              color: activeTab === tab.id ? '#FFFFFF' : '#5C574F',
+            }}
+            onMouseEnter={(e) => {
+              if (activeTab !== tab.id) {
+                e.currentTarget.style.background = 'rgba(91,138,114,0.06)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== tab.id) {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Preview Container */}
+      <div className="max-w-[480px] mx-auto">
+        <div
+          className="rounded-3xl overflow-hidden"
+          style={{
+            background: '#FFFFFF',
+            border: '1px solid #F0EBE4',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            height: '520px',
+          }}
+        >
+          {/* Dashboard Preview */}
+          <div
+            style={{
+              opacity: activeTab === 'dashboard' ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+              display: activeTab === 'dashboard' ? 'block' : 'none',
+            }}
+          >
+            <DashboardPreview />
+          </div>
+
+          {/* Chat Preview */}
+          <div
+            style={{
+              opacity: activeTab === 'chat' ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+              display: activeTab === 'chat' ? 'block' : 'none',
+            }}
+          >
+            <ChatPreview />
+          </div>
+
+          {/* Progress Preview */}
+          <div
+            style={{
+              opacity: activeTab === 'progress' ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+              display: activeTab === 'progress' ? 'block' : 'none',
+            }}
+          >
+            <ProgressPreview />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardPreview() {
+  const score = 67;
+  const circumference = 2 * Math.PI * 50;
+  const progress = (score / 100) * circumference;
+
+  return (
+    <div className="p-6" style={{ background: '#F9F6F2', height: '520px' }}>
+      {/* Header */}
+      <div className="mb-6">
+        <p className="text-[13px] mb-1" style={{ color: '#9A938A' }}>Good morning,</p>
+        <p className="text-[20px] font-semibold" style={{ color: '#1F1D1A' }}>Sarah</p>
+      </div>
+
+      {/* ERS Card */}
+      <div
+        className="rounded-2xl p-5 mb-4"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
+        <div className="flex items-center gap-6">
+          {/* Ring */}
+          <div className="relative w-[100px] h-[100px] flex-shrink-0">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#F0EBE4" strokeWidth="10" />
+              <circle
+                cx="60" cy="60" r="50" fill="none" stroke="#5B8A72" strokeWidth="10"
+                strokeLinecap="round" strokeDasharray={circumference}
+                strokeDashoffset={circumference - progress}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[28px] font-bold" style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}>{score}</span>
+            </div>
+          </div>
+          {/* Stats */}
+          <div className="flex-1">
+            <div
+              className="inline-block px-3 py-1 rounded-full text-[11px] font-medium mb-2"
+              style={{ background: 'rgba(91,138,114,0.1)', color: '#5B8A72' }}
+            >
+              Rebuilding
+            </div>
+            <p className="text-[13px]" style={{ color: '#9A938A' }}>7 day streak</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Mood Selector */}
+      <div
+        className="rounded-2xl p-4 mb-4"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
+        <p className="text-[14px] font-medium mb-3" style={{ color: '#1F1D1A' }}>How are you feeling?</p>
+        <div className="flex justify-between">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-[13px]"
+              style={{
+                background: i === 4 ? '#5B8A72' : '#F3EFE9',
+                color: i === 4 ? '#FFFFFF' : '#5C574F',
+              }}
+            >
+              {i}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Insight Card */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(212,151,59,0.1)' }}
+          >
+            <SparkleIcon className="w-4 h-4" style={{ color: '#D4973B' }} />
+          </div>
+          <div>
+            <p className="text-[13px] font-medium mb-1" style={{ color: '#1F1D1A' }}>Weekly insight</p>
+            <p className="text-[12px] leading-relaxed" style={{ color: '#9A938A' }}>
+              Your mood tends to be highest on days you journal in the morning.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChatPreview() {
+  return (
+    <div className="p-6 flex flex-col" style={{ background: '#F9F6F2', height: '520px' }}>
+      {/* Header */}
+      <div className="mb-4 pb-4" style={{ borderBottom: '1px solid #F0EBE4' }}>
+        <p className="text-[16px] font-semibold" style={{ color: '#1F1D1A' }}>Pace</p>
+        <p className="text-[12px]" style={{ color: '#9A938A' }}>Your recovery companion</p>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 space-y-4 overflow-hidden">
+        {/* Pace message 1 */}
+        <div className="flex gap-3">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: '#5B8A72' }}
+          >
+            <span className="text-white text-[12px] font-semibold">P</span>
+          </div>
+          <div
+            className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]"
+            style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+          >
+            <p className="text-[13px] leading-relaxed" style={{ color: '#1F1D1A' }}>
+              Hey Sarah. I noticed your mood has been improving this week. What do you think is helping?
+            </p>
+          </div>
+        </div>
+
+        {/* User message */}
+        <div className="flex justify-end">
+          <div
+            className="rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]"
+            style={{ background: '#5B8A72' }}
+          >
+            <p className="text-[13px] leading-relaxed" style={{ color: '#FFFFFF' }}>
+              I think journaling before bed is making a difference
+            </p>
+          </div>
+        </div>
+
+        {/* Pace message 2 */}
+        <div className="flex gap-3">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: '#5B8A72' }}
+          >
+            <span className="text-white text-[12px] font-semibold">P</span>
+          </div>
+          <div
+            className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]"
+            style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+          >
+            <p className="text-[13px] leading-relaxed" style={{ color: '#1F1D1A' }}>
+              That&apos;s a real pattern I&apos;m seeing in your data too. Three of your best days followed evening journal entries.
+            </p>
+          </div>
+        </div>
+
+        {/* Typing indicator */}
+        <div className="flex gap-3">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: '#5B8A72' }}
+          >
+            <span className="text-white text-[12px] font-semibold">P</span>
+          </div>
+          <div
+            className="rounded-2xl rounded-tl-sm px-4 py-3"
+            style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+          >
+            <div className="flex gap-1">
+              <div className="w-2 h-2 rounded-full bg-stone-300 animate-pulse" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 rounded-full bg-stone-300 animate-pulse" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 rounded-full bg-stone-300 animate-pulse" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Input hint */}
+      <div
+        className="mt-4 rounded-xl px-4 py-3 flex items-center gap-3"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
+        <span className="text-[13px]" style={{ color: '#9A938A' }}>Ask Pace anything...</span>
+      </div>
+    </div>
+  );
+}
+
+function ProgressPreview() {
+  const dimensions = [
+    { label: 'Emotional Stability', score: 72, color: '#5B8A72' },
+    { label: 'Self-Reflection', score: 68, color: '#5B8A72' },
+    { label: 'Coping Capacity', score: 84, color: '#5B8A72' },
+    { label: 'Behavioral Engagement', score: 45, color: '#D4973B' },
+    { label: 'Social Readiness', score: 38, color: '#B86B64' },
+  ];
+
+  const weeklyData = [42, 48, 55, 67];
+
+  return (
+    <div className="p-6" style={{ background: '#F9F6F2', height: '520px' }}>
+      {/* Header */}
+      <div className="mb-5">
+        <p className="text-[18px] font-semibold" style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}>Your ERS Breakdown</p>
+      </div>
+
+      {/* Dimension Bars */}
+      <div className="space-y-3 mb-5">
+        {dimensions.map((dim) => (
+          <div key={dim.label}>
+            <div className="flex justify-between text-[12px] mb-1">
+              <span style={{ color: '#5C574F' }}>{dim.label}</span>
+              <span style={{ color: dim.color, fontWeight: 600 }}>{dim.score}</span>
+            </div>
+            <div className="h-2 rounded-full" style={{ background: '#F0EBE4' }}>
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${dim.score}%`, background: dim.color }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Trend Chart */}
+      <div
+        className="rounded-2xl p-4 mb-4"
+        style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+      >
+        <p className="text-[13px] font-medium mb-3" style={{ color: '#1F1D1A' }}>4-Week Trend</p>
+        <div className="flex items-end justify-between h-16 gap-2">
+          {weeklyData.map((value, i) => (
+            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+              <div
+                className="w-full rounded-t"
+                style={{
+                  height: `${(value / 100) * 64}px`,
+                  background: i === weeklyData.length - 1 ? '#5B8A72' : '#D4E8DC',
+                }}
+              />
+              <span className="text-[10px]" style={{ color: '#9A938A' }}>W{i + 1}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Focus Area */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ background: 'rgba(91,138,114,0.08)', border: '1px solid rgba(91,138,114,0.15)' }}
+      >
+        <p className="text-[12px] font-medium mb-1" style={{ color: '#5B8A72' }}>Focus area</p>
+        <p className="text-[13px]" style={{ color: '#1F1D1A' }}>
+          Your coping capacity improved 12 points this week. Keep it up!
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // Main Page
 // ============================================================================
 
@@ -226,7 +748,7 @@ export default function LandingPage() {
                   className="px-7 py-3.5 text-[16px] font-semibold text-white rounded-full transition-opacity hover:opacity-90"
                   style={{ background: '#5B8A72' }}
                 >
-                  Start free
+                  Begin healing
                 </Link>
                 <button
                   onClick={scrollToHowItWorks}
@@ -240,23 +762,70 @@ export default function LandingPage() {
                   See how it works
                 </button>
               </div>
+
             </div>
 
-            {/* Right - ERS visualization */}
+            {/* Right - Phone Mockup */}
             <div className="flex-shrink-0">
+              <PhoneMockup />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Signals */}
+      <section className="py-12 px-6" style={{ background: '#FFFFFF' }}>
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0">
+            {/* 5 Dimensions */}
+            <div className="text-center lg:border-r lg:border-stone-200 lg:pr-8">
               <div
-                className="relative p-8 rounded-[32px]"
-                style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
+                className="text-[28px] font-bold mb-1"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
               >
-                <ERSRingVisual />
-                <div className="mt-4 text-center">
-                  <span
-                    className="inline-block px-3 py-1 rounded-full text-[12px] font-medium"
-                    style={{ background: 'rgba(91,138,114,0.1)', color: '#5B8A72' }}
-                  >
-                    Rebuilding
-                  </span>
-                </div>
+                5 Dimensions
+              </div>
+              <div className="text-[13px]" style={{ color: '#9A938A' }}>
+                Clinical recovery scoring
+              </div>
+            </div>
+
+            {/* AI-Powered */}
+            <div className="text-center lg:border-r lg:border-stone-200 lg:px-8">
+              <div
+                className="text-[28px] font-bold mb-1"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                AI-Powered
+              </div>
+              <div className="text-[13px]" style={{ color: '#9A938A' }}>
+                Pattern recognition
+              </div>
+            </div>
+
+            {/* Private by design */}
+            <div className="text-center lg:border-r lg:border-stone-200 lg:px-8">
+              <div
+                className="text-[28px] font-bold mb-1"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                Private
+              </div>
+              <div className="text-[13px]" style={{ color: '#9A938A' }}>
+                Your data stays yours
+              </div>
+            </div>
+
+            {/* Adaptive */}
+            <div className="text-center lg:pl-8">
+              <div
+                className="text-[28px] font-bold mb-1"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                Adaptive
+              </div>
+              <div className="text-[13px]" style={{ color: '#9A938A' }}>
+                Gets smarter with you
               </div>
             </div>
           </div>
@@ -370,8 +939,146 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ERS Explainer */}
+      {/* Differentiators */}
+      <section className="py-20 px-6" style={{ background: '#F9F6F2' }}>
+        <div className="max-w-5xl mx-auto">
+          <h2
+            className="text-[32px] font-bold text-center mb-3"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            This isn&apos;t another mood tracker
+          </h2>
+          <p
+            className="text-[16px] text-center mb-12"
+            style={{ color: '#9A938A' }}
+          >
+            Here&apos;s what makes Paceful different
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 max-w-[1080px] mx-auto">
+            {/* Card 1: It remembers you */}
+            <div
+              className="rounded-2xl p-7"
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid #F0EBE4',
+                borderTop: '3px solid #5B8A72',
+                maxWidth: '340px',
+                margin: '0 auto',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
+                style={{ background: 'rgba(91,138,114,0.1)' }}
+              >
+                <svg className="w-5 h-5" style={{ color: '#5B8A72' }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+                </svg>
+              </div>
+              <h3
+                className="text-[17px] font-semibold mb-2"
+                style={{ color: '#1F1D1A' }}
+              >
+                It remembers you
+              </h3>
+              <p
+                className="text-[14px] leading-relaxed"
+                style={{ color: '#5C574F' }}
+              >
+                Pace, your AI companion, builds a persistent understanding of your triggers, patterns, and what helps you heal. Every conversation makes it more attuned to you.
+              </p>
+            </div>
+
+            {/* Card 2: It measures what matters */}
+            <div
+              className="rounded-2xl p-7"
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid #F0EBE4',
+                borderTop: '3px solid #D4973B',
+                maxWidth: '340px',
+                margin: '0 auto',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
+                style={{ background: 'rgba(212,151,59,0.1)' }}
+              >
+                <svg className="w-5 h-5" style={{ color: '#D4973B' }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21l3.75-3.75" />
+                </svg>
+              </div>
+              <h3
+                className="text-[17px] font-semibold mb-2"
+                style={{ color: '#1F1D1A' }}
+              >
+                It measures what matters
+              </h3>
+              <p
+                className="text-[14px] leading-relaxed"
+                style={{ color: '#5C574F' }}
+              >
+                Most apps track mood. Paceful scores your recovery across 5 clinical dimensions — from emotional stability to coping capacity — so you can see the full picture.
+              </p>
+            </div>
+
+            {/* Card 3: It gets smarter over time */}
+            <div
+              className="rounded-2xl p-7"
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid #F0EBE4',
+                borderTop: '3px solid #7E9BB8',
+                maxWidth: '340px',
+                margin: '0 auto',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
+                style={{ background: 'rgba(126,155,184,0.1)' }}
+              >
+                <svg className="w-5 h-5" style={{ color: '#7E9BB8' }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+                </svg>
+              </div>
+              <h3
+                className="text-[17px] font-semibold mb-2"
+                style={{ color: '#1F1D1A' }}
+              >
+                It gets smarter over time
+              </h3>
+              <p
+                className="text-[14px] leading-relaxed"
+                style={{ color: '#5C574F' }}
+              >
+                Every entry feeds our pattern discovery engine. The longer you use Paceful, the more accurate your insights, predictions, and recommendations become.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* See It In Action */}
       <section className="py-20 px-6" style={{ background: '#F3EFE9' }}>
+        <div className="max-w-5xl mx-auto">
+          <h2
+            className="text-[32px] font-bold text-center mb-4"
+            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+          >
+            See it in action
+          </h2>
+          <p
+            className="text-[16px] text-center mb-10 max-w-xl mx-auto"
+            style={{ color: '#5C574F' }}
+          >
+            A daily companion that understands your journey.
+          </p>
+          <ProductPreview />
+        </div>
+      </section>
+
+      {/* ERS Explainer */}
+      <section className="py-20 px-6" style={{ background: '#FFFFFF' }}>
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Left - Ring */}
@@ -522,48 +1229,98 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* For Partners Section */}
-      <section className="py-20 px-6" style={{ background: '#F9F6F2' }}>
+      {/* For Platforms Section */}
+      <section className="py-20 px-6" style={{ background: '#FFFFFF' }}>
         <div className="max-w-5xl mx-auto">
-          <h2
-            className="text-[32px] font-bold text-center mb-4"
-            style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
-          >
-            Built for integration
-          </h2>
-          <p
-            className="text-[16px] text-center mb-12 max-w-xl mx-auto"
-            style={{ color: '#5C574F' }}
-          >
-            Our B2B API brings emotional readiness insights to your platform.
-          </p>
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
+            {/* Left content */}
+            <div className="flex-1 lg:max-w-[60%]">
+              <p
+                className="text-[12px] uppercase tracking-wider mb-3"
+                style={{ color: '#9A938A' }}
+              >
+                For platforms
+              </p>
+              <h2
+                className="text-[28px] font-bold mb-4"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                Bring emotional readiness to your users
+              </h2>
+              <p
+                className="text-[15px] leading-relaxed mb-6"
+                style={{ color: '#5C574F' }}
+              >
+                Paceful&apos;s API lets dating apps, therapy platforms, and HR tools integrate
+                emotional readiness scoring directly into their products. One API call returns
+                a user&apos;s ERS across 5 dimensions.
+              </p>
+              <div className="flex gap-6">
+                <Link
+                  href="/api-docs"
+                  className="text-[14px] font-medium flex items-center gap-1.5 transition-opacity hover:opacity-80"
+                  style={{ color: '#5B8A72' }}
+                >
+                  Explore the API
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </Link>
+                <Link
+                  href="/design-partners"
+                  className="text-[14px] font-medium flex items-center gap-1.5 transition-opacity hover:opacity-80"
+                  style={{ color: '#5B8A72' }}
+                >
+                  Become a partner
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            <PartnerCard
-              icon={<HeartHandIcon className="w-6 h-6" style={{ color: '#D4973B' }} />}
-              title="Dating apps"
-              description="Help users understand their emotional readiness before seeking new relationships."
-            />
-            <PartnerCard
-              icon={<BuildingIcon className="w-6 h-6" style={{ color: '#D4973B' }} />}
-              title="HR platforms"
-              description="Support employee wellness with emotional health scoring and resources."
-            />
-            <PartnerCard
-              icon={<UsersIcon className="w-6 h-6" style={{ color: '#D4973B' }} />}
-              title="Clinical integration"
-              description="Give therapists data-driven insights into their clients' progress."
-            />
-          </div>
-
-          <div className="text-center">
-            <Link
-              href="/design-partners"
-              className="inline-block px-7 py-3.5 text-[16px] font-semibold rounded-full transition-opacity hover:opacity-90"
-              style={{ background: '#D4973B', color: '#FFFFFF' }}
-            >
-              Become a design partner
-            </Link>
+            {/* Right - Code block */}
+            <div className="flex-shrink-0 w-full lg:w-auto lg:max-w-[40%]">
+              <div
+                className="rounded-2xl p-5 font-mono text-[13px] leading-relaxed overflow-x-auto"
+                style={{ background: '#1F1D1A' }}
+              >
+                <p style={{ color: '#9A938A' }}>GET /api/v1/ers/&#123;userId&#125;</p>
+                <br />
+                <p style={{ color: '#9A938A' }}>&#123;</p>
+                <p className="pl-4">
+                  <span style={{ color: '#9A938A' }}>&quot;ers_score&quot;</span>
+                  <span style={{ color: '#9A938A' }}>: </span>
+                  <span style={{ color: '#D4973B' }}>67</span>
+                  <span style={{ color: '#9A938A' }}>,</span>
+                </p>
+                <p className="pl-4">
+                  <span style={{ color: '#9A938A' }}>&quot;stage&quot;</span>
+                  <span style={{ color: '#9A938A' }}>: </span>
+                  <span style={{ color: '#7BA896' }}>&quot;rebuilding&quot;</span>
+                  <span style={{ color: '#9A938A' }}>,</span>
+                </p>
+                <p className="pl-4">
+                  <span style={{ color: '#9A938A' }}>&quot;dimensions&quot;</span>
+                  <span style={{ color: '#9A938A' }}>: &#123;</span>
+                </p>
+                <p className="pl-8">
+                  <span style={{ color: '#9A938A' }}>&quot;emotional_stability&quot;</span>
+                  <span style={{ color: '#9A938A' }}>: </span>
+                  <span style={{ color: '#D4973B' }}>72</span>
+                  <span style={{ color: '#9A938A' }}>,</span>
+                </p>
+                <p className="pl-8">
+                  <span style={{ color: '#9A938A' }}>&quot;self_reflection&quot;</span>
+                  <span style={{ color: '#9A938A' }}>: </span>
+                  <span style={{ color: '#D4973B' }}>58</span>
+                  <span style={{ color: '#9A938A' }}>,</span>
+                </p>
+                <p className="pl-8" style={{ color: '#5C574F' }}>...</p>
+                <p className="pl-4" style={{ color: '#9A938A' }}>&#125;</p>
+                <p style={{ color: '#9A938A' }}>&#125;</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -577,7 +1334,7 @@ export default function LandingPage() {
                 className="text-[36px] font-bold mb-1"
                 style={{ fontFamily: "'Fraunces', serif", color: '#5B8A72' }}
               >
-                6
+                5
               </p>
               <p className="text-[14px]" style={{ color: '#5C574F' }}>
                 ERS dimensions
@@ -616,13 +1373,13 @@ export default function LandingPage() {
             className="text-[36px] font-bold mb-4"
             style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
           >
-            Ready to start healing?
+            You don&apos;t have to do this alone
           </h2>
           <p
             className="text-[16px] mb-8"
             style={{ color: '#5C574F' }}
           >
-            Join others who are tracking their emotional recovery journey.
+            Paceful gives you the tools, the insights, and a companion that understands your journey.
           </p>
           <Link
             href="/auth/signup"
@@ -630,10 +1387,10 @@ export default function LandingPage() {
             className="inline-block px-8 py-4 text-[17px] font-semibold text-white rounded-full transition-opacity hover:opacity-90"
             style={{ background: '#5B8A72' }}
           >
-            Get started
+            Begin healing — it&apos;s free
           </Link>
           <p className="mt-4 text-[13px]" style={{ color: '#9A938A' }}>
-            Free to use. No credit card required.
+            No credit card required. Cancel anytime.
           </p>
         </div>
       </section>
@@ -680,39 +1437,3 @@ function FeatureCard({
   );
 }
 
-// ============================================================================
-// Component: Partner Card
-// ============================================================================
-
-function PartnerCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div
-      className="p-6 rounded-[24px]"
-      style={{ background: '#FFFFFF', border: '1px solid #F0EBE4' }}
-    >
-      <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-        style={{ background: 'rgba(212,151,59,0.1)' }}
-      >
-        {icon}
-      </div>
-      <h3
-        className="text-[18px] font-semibold mb-2"
-        style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
-      >
-        {title}
-      </h3>
-      <p className="text-[14px] leading-relaxed" style={{ color: '#5C574F' }}>
-        {description}
-      </p>
-    </div>
-  );
-}

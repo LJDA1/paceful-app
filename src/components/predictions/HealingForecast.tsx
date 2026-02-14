@@ -162,9 +162,9 @@ function Tooltip({ children, content }: { children: React.ReactNode; content: st
         {children}
       </div>
       {show && (
-        <div className="absolute z-50 w-64 p-3 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-lg -top-2 left-full ml-2 animate-fade-in">
+        <div className="absolute z-50 w-64 p-3 text-sm text-stone-700 bg-white border border-stone-200 rounded-lg shadow-lg -top-2 left-full ml-2 animate-fade-in">
           {content}
-          <div className="absolute w-2 h-2 bg-white border-l border-b border-gray-200 transform rotate-45 -left-1 top-4" />
+          <div className="absolute w-2 h-2 bg-white border-l border-b border-stone-200 transform rotate-45 -left-1 top-4" />
         </div>
       )}
     </div>
@@ -198,19 +198,19 @@ function ProgressBar({
     yellow: 'bg-amber-500',
     red: 'bg-rose-500',
     blue: 'bg-blue-500',
-    gray: 'bg-gray-400',
+    gray: 'bg-stone-400',
   };
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+      <div className="flex-1 h-3 bg-stone-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-1000 ease-out ${colorClasses[color]}`}
           style={{ width: `${width}%` }}
         />
       </div>
       {showLabel && (
-        <span className="text-sm font-medium text-gray-600 w-12 text-right">
+        <span className="text-sm font-medium text-stone-600 w-12 text-right">
           {Math.round(value)}%
         </span>
       )}
@@ -221,7 +221,7 @@ function ProgressBar({
 function InfoIcon({ className = '' }: { className?: string }) {
   return (
     <svg
-      className={`w-4 h-4 text-gray-400 ${className}`}
+      className={`w-4 h-4 text-stone-400 ${className}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -248,7 +248,7 @@ function SectionHeader({
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-stone-900 flex items-center gap-2">
           {title}
           {tooltip && (
             <Tooltip content={tooltip}>
@@ -256,7 +256,7 @@ function SectionHeader({
             </Tooltip>
           )}
         </h2>
-        {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-stone-500 mt-1">{subtitle}</p>}
       </div>
     </div>
   );
@@ -271,7 +271,7 @@ function Card({
 }) {
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-6 ${className}`}
+      className={`bg-white rounded-2xl shadow-sm border border-stone-100 p-6 ${className}`}
     >
       {children}
     </div>
@@ -286,7 +286,7 @@ function Badge({
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
 }) {
   const variants = {
-    default: 'bg-gray-100 text-gray-700',
+    default: 'bg-stone-100 text-stone-700',
     success: 'bg-paceful-primary-muted text-paceful-primary',
     warning: 'bg-amber-50 text-amber-700',
     danger: 'bg-rose-50 text-rose-700',
@@ -320,7 +320,7 @@ function TimelineSection({
           title="Your Healing Timeline"
           tooltip="These predictions are based on users who had similar breakup experiences and recovery patterns."
         />
-        <div className="flex items-center justify-center h-48 text-gray-400">
+        <div className="flex items-center justify-center h-48 text-stone-400">
           <p>Timeline predictions will appear as we gather more data</p>
         </div>
       </Card>
@@ -361,7 +361,7 @@ function TimelineSection({
     return (
       <div
         onClick={() => onMilestoneClick(type)}
-        className="p-5 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all cursor-pointer"
+        className="p-5 rounded-xl border border-stone-100 hover:border-stone-200 hover:shadow-md transition-all cursor-pointer"
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -369,8 +369,8 @@ function TimelineSection({
               {iconSvg}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{title}</h3>
-              <p className="text-sm text-gray-500">{description}</p>
+              <h3 className="font-semibold text-stone-900">{title}</h3>
+              <p className="text-sm text-stone-500">{description}</p>
             </div>
           </div>
           {isAchieved && <Badge variant="success">Achieved</Badge>}
@@ -380,28 +380,28 @@ function TimelineSection({
           <>
             <div className="space-y-3 mb-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Week 4</span>
+                <span className="text-stone-500">Week 4</span>
                 <ProgressBar
                   value={milestone.week4Probability * 100}
                   color={getProgressColor(milestone.week4Probability)}
                 />
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Week 8</span>
+                <span className="text-stone-500">Week 8</span>
                 <ProgressBar
                   value={milestone.week8Probability * 100}
                   color={getProgressColor(milestone.week8Probability)}
                 />
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Week 12</span>
+                <span className="text-stone-500">Week 12</span>
                 <ProgressBar
                   value={milestone.week12Probability * 100}
                   color={getProgressColor(milestone.week12Probability)}
                 />
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Week 16</span>
+                <span className="text-stone-500">Week 16</span>
                 <ProgressBar
                   value={milestone.week16Probability * 100}
                   color={getProgressColor(milestone.week16Probability)}
@@ -409,18 +409,18 @@ function TimelineSection({
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-100">
+            <div className="pt-4 border-t border-stone-100">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">
+                <span className="text-stone-600">
                   Median time:{' '}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-stone-900">
                     {formatWeeks(milestone.medianWeeks)}
                   </span>
                 </span>
                 <Tooltip
                   content={`Based on ${milestone.sampleSize} similar users. Fastest: ${formatWeeks(milestone.fastestWeeks)}, Slowest: ${formatWeeks(milestone.slowestWeeks)}`}
                 >
-                  <span className="text-gray-400 text-xs flex items-center gap-1">
+                  <span className="text-stone-400 text-xs flex items-center gap-1">
                     <InfoIcon className="w-3 h-3" />
                     {milestone.fastestWeeks !== null && milestone.slowestWeeks !== null && (
                       <>
@@ -475,9 +475,9 @@ function TimelineSection({
         />
       </div>
 
-      <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+      <div className="mt-6 p-4 bg-stone-50 rounded-xl">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm text-stone-600">
             <span className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-paceful-primary" />
               High likelihood (70%+)
@@ -487,7 +487,7 @@ function TimelineSection({
               Moderate (40-70%)
             </span>
             <span className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gray-400" />
+              <span className="w-3 h-3 rounded-full bg-stone-400" />
               Lower (&lt;40%)
             </span>
           </div>
@@ -516,7 +516,7 @@ function OutcomesSection({ outcomes }: { outcomes: OutcomePredictionResult | nul
           title="Likely Outcomes"
           tooltip="These outcomes are based on what happened to users in your cohort over 12-16 weeks."
         />
-        <div className="flex items-center justify-center h-32 text-gray-400">
+        <div className="flex items-center justify-center h-32 text-stone-400">
           <p>Outcome predictions will appear soon</p>
         </div>
       </Card>
@@ -538,11 +538,11 @@ function OutcomesSection({ outcomes }: { outcomes: OutcomePredictionResult | nul
     if (isPositive) {
       if (probability >= 0.7) return 'text-paceful-primary';
       if (probability >= 0.4) return 'text-amber-600';
-      return 'text-gray-500';
+      return 'text-stone-500';
     } else {
       if (probability >= 0.4) return 'text-amber-600';
       if (probability >= 0.2) return 'text-rose-500';
-      return 'text-gray-500';
+      return 'text-stone-500';
     }
   };
 
@@ -569,7 +569,7 @@ function OutcomesSection({ outcomes }: { outcomes: OutcomePredictionResult | nul
       <div className="space-y-1">
         {/* Positive Outcomes */}
         <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+          <h3 className="text-sm font-medium text-stone-500 uppercase tracking-wide mb-3">
             Positive Milestones
           </h3>
           <div className="space-y-4">
@@ -583,10 +583,10 @@ function OutcomesSection({ outcomes }: { outcomes: OutcomePredictionResult | nul
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-stone-900">
                         {outcome.label}
                       </span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-stone-500">
                         ~{outcome.typical_timing}
                       </span>
                     </div>
@@ -604,7 +604,7 @@ function OutcomesSection({ outcomes }: { outcomes: OutcomePredictionResult | nul
         {/* Risk Outcomes */}
         {outcomes.riskOutcomes.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+            <h3 className="text-sm font-medium text-stone-500 uppercase tracking-wide mb-3">
               Potential Challenges
             </h3>
             <div className="space-y-4">
@@ -618,10 +618,10 @@ function OutcomesSection({ outcomes }: { outcomes: OutcomePredictionResult | nul
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-stone-900">
                           {outcome.label}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-stone-500">
                           ~{outcome.typical_timing}
                         </span>
                       </div>
@@ -666,7 +666,7 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
           title="Risk Awareness"
           tooltip="We analyze patterns to help you prepare for potentially challenging moments."
         />
-        <div className="flex items-center justify-center h-32 text-gray-400">
+        <div className="flex items-center justify-center h-32 text-stone-400">
           <p>Risk analysis will appear soon</p>
         </div>
       </Card>
@@ -700,7 +700,7 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
       case 'medium':
         return 'border-l-amber-500';
       default:
-        return 'border-l-gray-300';
+        return 'border-l-stone-300';
     }
   };
 
@@ -715,7 +715,7 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Upcoming Dates */}
         <div>
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+          <h3 className="text-sm font-medium text-stone-500 uppercase tracking-wide mb-3">
             Upcoming Sensitive Dates
           </h3>
           {dateBasedRisks.length > 0 ? (
@@ -723,12 +723,12 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
               {dateBasedRisks.slice(0, 4).map((risk, i) => (
                 <div
                   key={i}
-                  className={`p-4 bg-gray-50 rounded-lg border-l-4 ${getRiskBorderColor(risk.level)}`}
+                  className={`p-4 bg-stone-50 rounded-lg border-l-4 ${getRiskBorderColor(risk.level)}`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span>{getRiskIcon(risk.level)}</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-stone-900">
                         {formatDate(risk.date!)}
                       </span>
                       {risk.daysUntil !== undefined && (
@@ -741,13 +741,13 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
                         </Badge>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-sm font-medium text-stone-600">
                       {Math.round(risk.probability * 100)}%
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{risk.description}</p>
+                  <p className="text-sm text-stone-600 mb-2">{risk.description}</p>
                   {risk.recommendations && risk.recommendations.length > 0 && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-stone-500">
                       <span className="font-medium">Tip:</span>{' '}
                       {risk.recommendations[0]}
                     </div>
@@ -756,7 +756,7 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
               ))}
             </div>
           ) : (
-            <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+            <div className="p-4 bg-stone-50 rounded-lg text-center text-stone-500">
               <p className="text-sm">No sensitive dates in the next few weeks</p>
             </div>
           )}
@@ -764,7 +764,7 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
 
         {/* Protective Factors */}
         <div>
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+          <h3 className="text-sm font-medium text-stone-500 uppercase tracking-wide mb-3">
             Your Protective Factors
           </h3>
           {risks.protective_factors.length > 0 ? (
@@ -778,7 +778,7 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-paceful-primary">✓</span>
-                      <span className="font-medium text-gray-900">{factor.label}</span>
+                      <span className="font-medium text-stone-900">{factor.label}</span>
                     </div>
                     <p className="text-sm text-paceful-primary">{factor.impact}</p>
                   </div>
@@ -786,17 +786,17 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
 
               {/* Missing protective factors as suggestions */}
               {risks.protective_factors.filter((f) => !f.present).length > 0 && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-2">
+                <div className="mt-4 p-4 bg-stone-50 rounded-lg">
+                  <p className="text-sm text-stone-600 mb-2">
                     <span className="font-medium">Consider adding:</span>
                   </p>
-                  <ul className="text-sm text-gray-500 space-y-1">
+                  <ul className="text-sm text-stone-500 space-y-1">
                     {risks.protective_factors
                       .filter((f) => !f.present)
                       .slice(0, 3)
                       .map((factor, i) => (
                         <li key={i} className="flex items-center gap-2">
-                          <span className="text-gray-400">○</span>
+                          <span className="text-stone-400">○</span>
                           {factor.label}
                         </li>
                       ))}
@@ -816,22 +816,22 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
 
       {/* Behavioral Risks */}
       {behavioralRisks.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-gray-100">
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+        <div className="mt-6 pt-6 border-t border-stone-100">
+          <h3 className="text-sm font-medium text-stone-500 uppercase tracking-wide mb-3">
             Patterns to Watch
           </h3>
           <div className="grid sm:grid-cols-2 gap-3">
             {behavioralRisks.slice(0, 4).map((risk, i) => (
-              <div key={i} className="p-3 bg-gray-50 rounded-lg">
+              <div key={i} className="p-3 bg-stone-50 rounded-lg">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-stone-900">
                     {risk.risk_type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                   </span>
                   <Badge variant={risk.level === 'high' ? 'danger' : 'warning'}>
                     {Math.round(risk.probability * 100)}%
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-500">{risk.description}</p>
+                <p className="text-xs text-stone-500">{risk.description}</p>
               </div>
             ))}
           </div>
@@ -839,10 +839,10 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
       )}
 
       {/* Overall Risk Summary */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+      <div className="mt-6 p-4 bg-stone-50 rounded-xl">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm text-gray-600">Net Risk Score</span>
+            <span className="text-sm text-stone-600">Net Risk Score</span>
             <div className="flex items-center gap-2 mt-1">
               <div className="w-32">
                 <ProgressBar
@@ -857,13 +857,13 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
                   showLabel={false}
                 />
               </div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-stone-900">
                 {Math.round(risks.net_risk_score * 100)}%
               </span>
             </div>
           </div>
           <div className="text-right">
-            <span className="text-sm text-gray-600">Trend</span>
+            <span className="text-sm text-stone-600">Trend</span>
             <div className="flex items-center gap-1 mt-1">
               {risks.risk_trend === 'decreasing' && (
                 <>
@@ -873,8 +873,8 @@ function RiskAlertsSection({ risks }: { risks: RiskAssessment | null }) {
               )}
               {risks.risk_trend === 'stable' && (
                 <>
-                  <span className="text-gray-400">→</span>
-                  <span className="text-sm text-gray-600">Stable</span>
+                  <span className="text-stone-400">→</span>
+                  <span className="text-sm text-stone-600">Stable</span>
                 </>
               )}
               {risks.risk_trend === 'increasing' && (
@@ -909,7 +909,7 @@ function CohortInfoSection({
   const confidence = getConfidenceLevel(timeline.cohortSize);
 
   return (
-    <Card className="bg-gradient-to-br from-gray-50 to-white">
+    <Card className="bg-gradient-to-br from-stone-50 to-white">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -928,10 +928,10 @@ function CohortInfoSection({
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Your Prediction Cohort</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="font-semibold text-stone-900">Your Prediction Cohort</h3>
+            <p className="text-sm text-stone-500">
               Predictions based on{' '}
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-stone-700">
                 {timeline.cohortSize} users
               </span>{' '}
               with {Math.round(timeline.similarityScore * 100)}% similar profiles
@@ -976,12 +976,12 @@ function HowItWorksModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
       <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-stone-900">
               How Predictions Work
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              className="p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -996,13 +996,13 @@ function HowItWorksModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
 
           <div className="space-y-6">
             <div>
-              <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+              <h3 className="font-medium text-stone-900 mb-2 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
                   1
                 </span>
                 Finding Your Cohort
               </h3>
-              <p className="text-sm text-gray-600 ml-8">
+              <p className="text-sm text-stone-600 ml-8">
                 We analyze your breakup context, emotional patterns, and recovery
                 behaviors to find users who had similar experiences. The more similar
                 the cohort, the more relevant the predictions.
@@ -1010,13 +1010,13 @@ function HowItWorksModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+              <h3 className="font-medium text-stone-900 mb-2 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
                   2
                 </span>
                 Analyzing Outcomes
               </h3>
-              <p className="text-sm text-gray-600 ml-8">
+              <p className="text-sm text-stone-600 ml-8">
                 We look at what happened to users in your cohort over 12-16 weeks:
                 when they reached milestones, what challenges they faced, and what
                 helped them recover.
@@ -1024,13 +1024,13 @@ function HowItWorksModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+              <h3 className="font-medium text-stone-900 mb-2 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
                   3
                 </span>
                 Statistical Methods
               </h3>
-              <p className="text-sm text-gray-600 ml-8">
+              <p className="text-sm text-stone-600 ml-8">
                 We use Kaplan-Meier survival analysis to calculate milestone
                 probabilities, and bootstrap confidence intervals to measure
                 uncertainty. The larger your cohort, the more reliable the
@@ -1039,13 +1039,13 @@ function HowItWorksModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+              <h3 className="font-medium text-stone-900 mb-2 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
                   4
                 </span>
                 Understanding Confidence
               </h3>
-              <p className="text-sm text-gray-600 ml-8">
+              <p className="text-sm text-stone-600 ml-8">
                 Confidence depends on cohort size and data consistency. Higher
                 confidence means predictions are more reliable. We&apos;re transparent
                 about uncertainty - predictions improve as we gather more data.
@@ -1099,11 +1099,11 @@ function MilestoneDetailModal({
               <div className="w-10 h-10 rounded-lg bg-paceful-primary-muted flex items-center justify-center text-paceful-primary">
                 {iconSvg}
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+              <h2 className="text-xl font-semibold text-stone-900">{title}</h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              className="p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -1117,44 +1117,44 @@ function MilestoneDetailModal({
           </div>
 
           <div className="space-y-4">
-            <p className="text-gray-600">
+            <p className="text-stone-600">
               This milestone is reached when your Emotional Readiness Score (ERS)
               consistently stays at or above <strong>{threshold}</strong>.
             </p>
 
-            <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div className="p-4 bg-stone-50 rounded-lg space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Median time</span>
-                <span className="font-semibold text-gray-900">
+                <span className="text-stone-600">Median time</span>
+                <span className="font-semibold text-stone-900">
                   {milestone.medianWeeks?.toFixed(1) ?? 'N/A'} weeks
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Fastest observed</span>
-                <span className="text-gray-900">
+                <span className="text-stone-600">Fastest observed</span>
+                <span className="text-stone-900">
                   {milestone.fastestWeeks ?? 'N/A'} weeks
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Slowest observed</span>
-                <span className="text-gray-900">
+                <span className="text-stone-600">Slowest observed</span>
+                <span className="text-stone-900">
                   {milestone.slowestWeeks ?? 'N/A'} weeks
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Sample size</span>
-                <span className="text-gray-900">{milestone.sampleSize} users</span>
+                <span className="text-stone-600">Sample size</span>
+                <span className="text-stone-900">{milestone.sampleSize} users</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Confidence</span>
-                <span className="text-gray-900">
+                <span className="text-stone-600">Confidence</span>
+                <span className="text-stone-900">
                   {Math.round(milestone.confidence * 100)}%
                 </span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">Probability by Week</h4>
+              <h4 className="font-medium text-stone-900">Probability by Week</h4>
               {[
                 { week: 4, prob: milestone.week4Probability },
                 { week: 8, prob: milestone.week8Probability },
@@ -1163,7 +1163,7 @@ function MilestoneDetailModal({
                 { week: 24, prob: milestone.week24Probability },
               ].map(({ week, prob }) => (
                 <div key={week} className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500 w-16">Week {week}</span>
+                  <span className="text-sm text-stone-500 w-16">Week {week}</span>
                   <div className="flex-1">
                     <ProgressBar
                       value={prob * 100}
@@ -1487,10 +1487,10 @@ export default function HealingForecast({ userId = 'demo-user' }: HealingForecas
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3" />
-          <div className="h-64 bg-gray-200 rounded-2xl" />
-          <div className="h-48 bg-gray-200 rounded-2xl" />
-          <div className="h-48 bg-gray-200 rounded-2xl" />
+          <div className="h-8 bg-stone-200 rounded w-1/3" />
+          <div className="h-64 bg-stone-200 rounded-2xl" />
+          <div className="h-48 bg-stone-200 rounded-2xl" />
+          <div className="h-48 bg-stone-200 rounded-2xl" />
         </div>
       </div>
     );
@@ -1501,7 +1501,7 @@ export default function HealingForecast({ userId = 'demo-user' }: HealingForecas
       <div className="max-w-4xl mx-auto p-6">
         <Card>
           <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">{data.error}</p>
+            <p className="text-stone-500 mb-4">{data.error}</p>
             <button
               onClick={handleRefresh}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -1521,13 +1521,13 @@ export default function HealingForecast({ userId = 'demo-user' }: HealingForecas
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Healing Forecast</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-stone-900">Healing Forecast</h1>
+          <p className="text-stone-500 mt-1">
             Personalized predictions based on your recovery journey
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-stone-500">
             Updated {formatLastUpdated(data.lastUpdated)}
           </span>
           <button
@@ -1574,9 +1574,9 @@ export default function HealingForecast({ userId = 'demo-user' }: HealingForecas
       {hasNoPredictions ? (
         <Card>
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-stone-100 flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-gray-400"
+                className="w-8 h-8 text-stone-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -1589,10 +1589,10 @@ export default function HealingForecast({ userId = 'demo-user' }: HealingForecas
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-stone-900 mb-2">
               Building Your Predictions
             </h3>
-            <p className="text-gray-500 max-w-md mx-auto">
+            <p className="text-stone-500 max-w-md mx-auto">
               We&apos;re analyzing your data to create personalized predictions. Keep
               journaling and tracking your mood - predictions will appear as we gather
               more insights about your healing journey.

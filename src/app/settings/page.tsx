@@ -14,6 +14,10 @@ interface ProfileData {
   first_name: string | null;
   date_of_birth: string | null;
   gender: string | null;
+  email_reminders_daily: boolean;
+  email_reminders_weekly: boolean;
+  seeking_match: boolean;
+  recovery_context: 'breakup' | 'divorce' | 'grief' | 'life_transition' | 'general_wellness';
 }
 
 interface Memory {
@@ -84,6 +88,22 @@ function XMarkIcon({ className, style }: { className?: string; style?: React.CSS
   );
 }
 
+function BellIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+    </svg>
+  );
+}
+
+function HeartIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+    </svg>
+  );
+}
+
 // Memory type labels and colors
 const MEMORY_TYPE_LABELS: Record<Memory['memory_type'], string> = {
   fact: 'Personal fact',
@@ -115,11 +135,23 @@ export default function SettingsPage() {
     first_name: '',
     date_of_birth: '',
     gender: '',
+    email_reminders_daily: true,
+    email_reminders_weekly: true,
+    seeking_match: false,
+    recovery_context: 'breakup',
   });
   const [email, setEmail] = useState('');
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+
+  // Notification state
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+  const [notificationsSaved, setNotificationsSaved] = useState(false);
+
+  // Matching state
+  const [isSavingMatching, setIsSavingMatching] = useState(false);
+  const [matchingSaved, setMatchingSaved] = useState(false);
 
   // Password state
   const [showPasswordFields, setShowPasswordFields] = useState(false);
@@ -166,7 +198,7 @@ export default function SettingsPage() {
       // Get profile data
       const { data } = await supabase
         .from('profiles')
-        .select('first_name, date_of_birth, gender')
+        .select('first_name, date_of_birth, gender, email_reminders_daily, email_reminders_weekly, seeking_match, recovery_context')
         .eq('user_id', userId)
         .single();
 
@@ -175,6 +207,10 @@ export default function SettingsPage() {
           first_name: data.first_name || '',
           date_of_birth: data.date_of_birth || '',
           gender: data.gender || '',
+          email_reminders_daily: data.email_reminders_daily ?? true,
+          email_reminders_weekly: data.email_reminders_weekly ?? true,
+          seeking_match: data.seeking_match ?? false,
+          recovery_context: data.recovery_context || 'breakup',
         });
       }
     } catch (err) {
@@ -242,6 +278,60 @@ export default function SettingsPage() {
       alert('Failed to save profile. Please try again.');
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  // Save notification preferences
+  const handleSaveNotifications = async () => {
+    if (!userId) return;
+    setIsSavingNotifications(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: userId,
+          email_reminders_daily: profile.email_reminders_daily,
+          email_reminders_weekly: profile.email_reminders_weekly,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      setNotificationsSaved(true);
+      setTimeout(() => setNotificationsSaved(false), 3000);
+    } catch (err) {
+      console.error('Error saving notifications:', err);
+      alert('Failed to save notification preferences. Please try again.');
+    } finally {
+      setIsSavingNotifications(false);
+    }
+  };
+
+  // Save matching preferences
+  const handleSaveMatching = async () => {
+    if (!userId) return;
+    setIsSavingMatching(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: userId,
+          seeking_match: profile.seeking_match,
+          recovery_context: profile.recovery_context,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      setMatchingSaved(true);
+      setTimeout(() => setMatchingSaved(false), 3000);
+    } catch (err) {
+      console.error('Error saving matching preferences:', err);
+      alert('Failed to save matching preferences. Please try again.');
+    } finally {
+      setIsSavingMatching(false);
     }
   };
 
@@ -677,6 +767,172 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* Notifications Section */}
+        <div
+          className="rounded-3xl p-5 mb-4"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <BellIcon className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+            <h2 className="text-[16px] font-semibold" style={{ color: 'var(--text)' }}>
+              Notifications
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {/* Daily reminders toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[14px] font-medium" style={{ color: 'var(--text)' }}>
+                  Daily mood reminders
+                </p>
+                <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
+                  Get a gentle nudge to log your mood
+                </p>
+              </div>
+              <button
+                onClick={() => setProfile({ ...profile, email_reminders_daily: !profile.email_reminders_daily })}
+                className="relative w-11 h-6 rounded-full transition-colors"
+                style={{ background: profile.email_reminders_daily ? 'var(--primary)' : 'var(--border)' }}
+                aria-label="Toggle daily mood reminders"
+              >
+                <span
+                  className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                  style={{ transform: profile.email_reminders_daily ? 'translateX(20px)' : 'translateX(0)' }}
+                />
+              </button>
+            </div>
+
+            {/* Weekly recap toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[14px] font-medium" style={{ color: 'var(--text)' }}>
+                  Weekly progress recap
+                </p>
+                <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
+                  Receive a summary of your week
+                </p>
+              </div>
+              <button
+                onClick={() => setProfile({ ...profile, email_reminders_weekly: !profile.email_reminders_weekly })}
+                className="relative w-11 h-6 rounded-full transition-colors"
+                style={{ background: profile.email_reminders_weekly ? 'var(--primary)' : 'var(--border)' }}
+                aria-label="Toggle weekly progress recap"
+              >
+                <span
+                  className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                  style={{ transform: profile.email_reminders_weekly ? 'translateX(20px)' : 'translateX(0)' }}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center gap-3">
+            <button
+              onClick={handleSaveNotifications}
+              disabled={isSavingNotifications}
+              className="px-6 py-2.5 rounded-full text-[14px] font-medium text-white transition-all disabled:opacity-50"
+              style={{ background: 'var(--primary)' }}
+            >
+              {isSavingNotifications ? 'Saving...' : 'Save preferences'}
+            </button>
+            {notificationsSaved && (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium"
+                style={{ background: 'rgba(91,138,114,0.1)', color: 'var(--primary)' }}
+              >
+                <CheckIcon className="w-3.5 h-3.5" />
+                Saved
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Matching Section */}
+        <div
+          className="rounded-3xl p-5 mb-4"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <HeartIcon className="w-5 h-5" style={{ color: '#D4973B' }} />
+            <h2 className="text-[16px] font-semibold" style={{ color: 'var(--text)' }}>
+              Matching
+            </h2>
+            <span
+              className="px-2 py-0.5 rounded-full text-[10px] font-medium uppercase"
+              style={{ background: 'rgba(212,151,59,0.15)', color: '#D4973B' }}
+            >
+              Coming Soon
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {/* Matching interest toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[14px] font-medium" style={{ color: 'var(--text)' }}>
+                  Interested in matching
+                </p>
+                <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
+                  Get notified when matching is available
+                </p>
+              </div>
+              <button
+                onClick={() => setProfile({ ...profile, seeking_match: !profile.seeking_match })}
+                className="relative w-11 h-6 rounded-full transition-colors"
+                style={{ background: profile.seeking_match ? '#D4973B' : 'var(--border)' }}
+                aria-label="Toggle matching interest"
+              >
+                <span
+                  className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                  style={{ transform: profile.seeking_match ? 'translateX(20px)' : 'translateX(0)' }}
+                />
+              </button>
+            </div>
+
+            {/* Recovery context dropdown */}
+            <div>
+              <label className="block text-[13px] font-medium mb-1.5" style={{ color: 'var(--text-sec)' }}>
+                What brought you to Paceful?
+              </label>
+              <select
+                value={profile.recovery_context}
+                onChange={(e) => setProfile({ ...profile, recovery_context: e.target.value as ProfileData['recovery_context'] })}
+                className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none transition-all appearance-none"
+                style={{ background: 'var(--bg-warm)', border: '1.5px solid var(--border-light)', color: 'var(--text)' }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--border-light)'}
+              >
+                <option value="breakup">Breakup</option>
+                <option value="divorce">Divorce</option>
+                <option value="grief">Grief or loss</option>
+                <option value="life_transition">Life transition</option>
+                <option value="general_wellness">General wellness</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center gap-3">
+            <button
+              onClick={handleSaveMatching}
+              disabled={isSavingMatching}
+              className="px-6 py-2.5 rounded-full text-[14px] font-medium text-white transition-all disabled:opacity-50"
+              style={{ background: '#D4973B' }}
+            >
+              {isSavingMatching ? 'Saving...' : 'Save preferences'}
+            </button>
+            {matchingSaved && (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium"
+                style={{ background: 'rgba(212,151,59,0.1)', color: '#D4973B' }}
+              >
+                <CheckIcon className="w-3.5 h-3.5" />
+                Saved
+              </span>
             )}
           </div>
         </div>

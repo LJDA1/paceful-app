@@ -225,36 +225,36 @@ function Tooltip({
 
       {isOpen && (
         <div
-          className={`absolute z-50 w-72 p-4 bg-white rounded-xl shadow-xl border border-gray-100
+          className={`absolute z-50 w-72 p-4 bg-white rounded-xl shadow-xl border border-stone-100
             ${position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'}
             left-0 transform transition-all duration-200 animate-in fade-in zoom-in-95`}
         >
           {/* Arrow */}
           <div
-            className={`absolute left-6 w-3 h-3 bg-white border-gray-100 transform rotate-45
+            className={`absolute left-6 w-3 h-3 bg-white border-stone-100 transform rotate-45
               ${position === 'top' ? 'bottom-0 translate-y-1/2 border-r border-b' : 'top-0 -translate-y-1/2 border-l border-t'}`}
           />
 
           {/* Content */}
-          <p className="text-sm text-gray-700 mb-3">{content}</p>
+          <p className="text-sm text-stone-700 mb-3">{content}</p>
 
           <div className="mb-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">
               What we measure:
             </p>
             <ul className="space-y-1">
               {details.map((detail, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
-                  <span className="text-gray-400 mt-0.5">•</span>
+                <li key={i} className="flex items-start gap-2 text-xs text-stone-600">
+                  <span className="text-stone-400 mt-0.5">•</span>
                   {detail}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="pt-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
-              <span className="font-medium text-gray-700">Tip:</span> {tip}
+          <div className="pt-3 border-t border-stone-100">
+            <p className="text-xs text-stone-500">
+              <span className="font-medium text-stone-700">Tip:</span> {tip}
             </p>
           </div>
         </div>
@@ -327,11 +327,11 @@ function ComponentBar({
             <div className={`p-1.5 rounded-lg ${config.color.light} ${config.color.text}`}>
               {config.icon}
             </div>
-            <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+            <span className="text-sm font-medium text-stone-700 group-hover:text-stone-900 transition-colors">
               {config.label}
             </span>
             <svg
-              className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="w-3.5 h-3.5 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={1.5}
@@ -348,12 +348,12 @@ function ComponentBar({
 
         <div className="flex items-center gap-3">
           {/* Weight Badge */}
-          <span className="text-xs text-gray-400 tabular-nums">
+          <span className="text-xs text-stone-400 tabular-nums">
             {Math.round(config.weight * 100)}% weight
           </span>
 
           {/* Score */}
-          <span className={`text-sm font-semibold tabular-nums min-w-[3rem] text-right ${hasData ? 'text-gray-900' : 'text-gray-400'}`}>
+          <span className={`text-sm font-semibold tabular-nums min-w-[3rem] text-right ${hasData ? 'text-stone-900' : 'text-stone-400'}`}>
             {hasData ? `${percentage}%` : '—'}
           </span>
         </div>
@@ -361,7 +361,7 @@ function ComponentBar({
 
       {/* Progress Bar */}
       <div className="relative">
-        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-2.5 bg-stone-100 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-300 ${config.color.bar}`}
             style={{ width: `${animatedWidth}%` }}
@@ -371,11 +371,11 @@ function ComponentBar({
         {/* Contribution indicator */}
         {hasData && contributionPercentage > 0 && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 h-4 border-l-2 border-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 -translate-y-1/2 h-4 border-l-2 border-stone-300 opacity-0 group-hover:opacity-100 transition-opacity"
             style={{ left: `${Math.min(animatedWidth, 98)}%` }}
           >
             <div className="absolute left-1 top-1/2 -translate-y-1/2 whitespace-nowrap">
-              <span className="text-[10px] font-medium text-gray-500 bg-white px-1 rounded">
+              <span className="text-[10px] font-medium text-stone-500 bg-white px-1 rounded">
                 +{contribution.toFixed(1)} pts
               </span>
             </div>
@@ -385,7 +385,7 @@ function ComponentBar({
 
       {/* No Data Message */}
       {!hasData && (
-        <p className="text-xs text-gray-400 mt-1.5 italic">
+        <p className="text-xs text-stone-400 mt-1.5 italic">
           Not enough data yet — keep using the app!
         </p>
       )}
@@ -417,12 +417,12 @@ function SummaryStats({
     .sort((a, b) => (components[a] || 0) - (components[b] || 0))[0];
 
   return (
-    <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl">
+    <div className="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-xl">
       <div className="text-center">
-        <p className="text-2xl font-semibold text-gray-900">{activeComponents}/6</p>
-        <p className="text-xs text-gray-500">Components Active</p>
+        <p className="text-2xl font-semibold text-stone-900">{activeComponents}/6</p>
+        <p className="text-xs text-stone-500">Components Active</p>
       </div>
-      <div className="text-center border-x border-gray-200">
+      <div className="text-center border-x border-stone-200">
         <div className="flex items-center justify-center gap-1.5">
           {strongestComponent && (
             <>
@@ -432,7 +432,7 @@ function SummaryStats({
             </>
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-1">Strongest Area</p>
+        <p className="text-xs text-stone-500 mt-1">Strongest Area</p>
       </div>
       <div className="text-center">
         <div className="flex items-center justify-center gap-1.5">
@@ -444,7 +444,7 @@ function SummaryStats({
             </>
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-1">Growth Area</p>
+        <p className="text-xs text-stone-500 mt-1">Growth Area</p>
       </div>
     </div>
   );
@@ -460,21 +460,21 @@ export default function ERSComponentBreakdown({
   animated = true,
 }: ERSComponentBreakdownProps) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className="px-6 py-4 border-b border-stone-100">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-stone-900">
               Score Breakdown
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-stone-500">
               Understand what contributes to your ERS
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-semibold text-gray-900">{totalScore.toFixed(1)}</p>
-            <p className="text-xs text-gray-500">Total Score</p>
+            <p className="text-2xl font-semibold text-stone-900">{totalScore.toFixed(1)}</p>
+            <p className="text-xs text-stone-500">Total Score</p>
           </div>
         </div>
       </div>
@@ -499,11 +499,11 @@ export default function ERSComponentBreakdown({
       </div>
 
       {/* Educational Footer */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+      <div className="px-6 py-4 bg-stone-50 border-t border-stone-100">
         <div className="flex items-start gap-3">
           <div className="p-2 bg-white rounded-lg shadow-sm">
             <svg
-              className="w-4 h-4 text-gray-400"
+              className="w-4 h-4 text-stone-400"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={1.5}
@@ -517,8 +517,8 @@ export default function ERSComponentBreakdown({
             </svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-700">How scores are calculated</p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-sm font-medium text-stone-700">How scores are calculated</p>
+            <p className="text-xs text-stone-500 mt-0.5">
               Each component is weighted differently. Your total ERS is the weighted sum of all
               active components, normalized to 0-100. Hover over each component for details.
             </p>

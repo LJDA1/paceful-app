@@ -68,7 +68,7 @@ export const DEMO_MOOD_ENTRIES = [
 export const DEMO_METRICS = {
   totalUsers: 50,
   totalPredictions: 1200,
-  avgAccuracy: 84,
+  avgAccuracy: 0, // No validated accuracy data yet
   avgERS: 58,
   stageDistribution: { healing: 16, rebuilding: 20, ready: 14 },
   moodEntries: 2100,

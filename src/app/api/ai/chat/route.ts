@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getMemories, addMemories, formatMemoriesForPrompt } from '@/lib/ai-memory';
 import { extractMemories } from '@/lib/ai-memory-extract';
 import { extractStructuredDataAsync } from '@/lib/data-extraction';
+import { getRecentSessions, formatSessionsForPrompt } from '@/lib/chat-persistence';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -75,9 +76,13 @@ export async function POST(request: Request) {
     const ersStage = ersRes.data?.ers_stage ?? 'unknown';
     const moodScore = moodRes.data?.mood_value ?? 'unknown';
 
-    // Fetch user memories
-    const memories = await getMemories(user.id, supabase, 20);
+    // Fetch user memories and recent chat sessions
+    const [memories, recentSessions] = await Promise.all([
+      getMemories(user.id, supabase, 20),
+      getRecentSessions(user.id, supabase, 5),
+    ]);
     const memoriesContext = formatMemoriesForPrompt(memories);
+    const sessionsContext = formatSessionsForPrompt(recentSessions);
 
     // Build system prompt
     const systemPrompt = `You are Pace, a compassionate companion in the Paceful app. You support people healing from breakups and emotional challenges. You are NOT a therapist and must never diagnose, prescribe, or claim to provide therapy.
@@ -101,7 +106,11 @@ Important rules:
 - Don't overuse their name
 - Keep your responses natural and conversational
 
-${memoriesContext}`;
+${memoriesContext}
+
+${sessionsContext ? `${sessionsContext}
+
+You can reference these past conversations naturally when relevant — e.g. "How did the party go?" or "Last time you mentioned starting a morning routine — how's that going?" Don't force references, only bring them up when they're relevant to what the user is saying.` : ''}`;
 
     // Prepare messages for Claude (last 20 messages max)
     const recentHistory = conversationHistory.slice(-20);

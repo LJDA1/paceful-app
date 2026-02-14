@@ -60,7 +60,7 @@ function CircularProgress({
           cx="96"
           cy="96"
           r={radius}
-          className="stroke-gray-200"
+          className="stroke-stone-200"
           strokeWidth="12"
           fill="none"
         />
@@ -85,7 +85,7 @@ function CircularProgress({
         <span className={`text-4xl font-bold ${config.color}`}>
           {score.toFixed(1)}
         </span>
-        <span className="text-sm text-gray-500 mt-1">ERS Score</span>
+        <span className="text-sm text-stone-500 mt-1">ERS Score</span>
       </div>
     </div>
   );
@@ -94,7 +94,7 @@ function CircularProgress({
 function DeltaIndicator({ delta }: { delta: number | null }) {
   if (delta === null || delta === undefined) {
     return (
-      <span className="text-gray-400 text-sm">No previous data</span>
+      <span className="text-stone-400 text-sm">No previous data</span>
     );
   }
 
@@ -104,7 +104,7 @@ function DeltaIndicator({ delta }: { delta: number | null }) {
   return (
     <div className={`flex items-center gap-1 ${
       isNeutral
-        ? 'text-gray-500'
+        ? 'text-stone-500'
         : isPositive
           ? 'text-paceful-primary'
           : 'text-rose-600'
@@ -146,23 +146,23 @@ function ComponentScore({
     <div className="flex items-center gap-3">
       <div className="flex-1">
         <div className="flex justify-between text-sm mb-1">
-          <span className={hasData ? 'text-gray-700' : 'text-gray-400'}>
+          <span className={hasData ? 'text-stone-700' : 'text-stone-400'}>
             {label}
           </span>
-          <span className={hasData ? 'text-gray-600' : 'text-gray-400'}>
+          <span className={hasData ? 'text-stone-600' : 'text-stone-400'}>
             {hasData ? `${(displayScore * 100).toFixed(0)}%` : 'No data'}
           </span>
         </div>
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-2 bg-stone-200 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              hasData ? 'bg-paceful-primary' : 'bg-gray-300'
+              hasData ? 'bg-paceful-primary' : 'bg-stone-300'
             }`}
             style={{ width: `${displayScore * 100}%` }}
           />
         </div>
       </div>
-      <span className="text-xs text-gray-400 w-10 text-right">
+      <span className="text-xs text-stone-400 w-10 text-right">
         {weight}%
       </span>
     </div>
@@ -237,9 +237,9 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8 animate-pulse">
         <div className="flex flex-col items-center">
-          <div className="w-48 h-48 rounded-full bg-gray-200" />
-          <div className="h-6 w-32 bg-gray-200 rounded mt-4" />
-          <div className="h-4 w-48 bg-gray-200 rounded mt-2" />
+          <div className="w-48 h-48 rounded-full bg-stone-200" />
+          <div className="h-6 w-32 bg-stone-200 rounded mt-4" />
+          <div className="h-4 w-48 bg-stone-200 rounded mt-2" />
         </div>
       </div>
     );
@@ -248,7 +248,7 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
   if (error || !ersData) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8">
-        <div className="text-center text-gray-500">
+        <div className="text-center text-stone-500">
           <p className="text-lg">{error || 'No ERS data available'}</p>
           <p className="text-sm mt-2">Complete activities to generate your ERS score</p>
         </div>
@@ -262,10 +262,10 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
       {/* Header */}
       <div className={`${config.bgLight} px-6 py-4 border-b`}>
-        <h2 className="text-xl font-semibold text-gray-800">
+        <h2 className="text-xl font-semibold text-stone-800">
           Emotional Readiness Score
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-stone-600">
           Last updated: {new Date(ersData.calculated_at).toLocaleDateString()}
         </p>
       </div>
@@ -286,7 +286,7 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
             </span>
           </div>
 
-          <p className="text-gray-600 text-center mt-2 max-w-xs">
+          <p className="text-stone-600 text-center mt-2 max-w-xs">
             {config.description}
           </p>
 
@@ -296,17 +296,17 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
           </div>
 
           {/* Confidence */}
-          <div className="mt-2 text-sm text-gray-500">
+          <div className="mt-2 text-sm text-stone-500">
             Confidence: {(ersData.ers_confidence * 100).toFixed(0)}%
           </div>
         </div>
 
         {/* Divider */}
-        <div className="my-8 border-t border-gray-200" />
+        <div className="my-8 border-t border-stone-200" />
 
         {/* Component Breakdown */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <h3 className="text-lg font-semibold text-stone-800 mb-4">
             Score Breakdown
           </h3>
           <div className="space-y-4">
@@ -345,30 +345,30 @@ export default function ERSDashboard({ userId }: ERSDashboardProps) {
 
         {/* Stage Progress */}
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <h3 className="text-lg font-semibold text-stone-800 mb-4">
             Your Journey
           </h3>
           <div className="flex items-center gap-2">
             {/* Healing */}
             <div className="flex-1">
               <div className={`h-2 rounded-l-full ${
-                ersData.ers_score >= 0 ? 'bg-rose-500' : 'bg-gray-200'
+                ersData.ers_score >= 0 ? 'bg-rose-500' : 'bg-stone-200'
               }`} />
-              <p className="text-xs text-center mt-1 text-gray-500">Healing</p>
+              <p className="text-xs text-center mt-1 text-stone-500">Healing</p>
             </div>
             {/* Rebuilding */}
             <div className="flex-1">
               <div className={`h-2 ${
-                ersData.ers_score >= 40 ? 'bg-amber-500' : 'bg-gray-200'
+                ersData.ers_score >= 40 ? 'bg-amber-500' : 'bg-stone-200'
               }`} />
-              <p className="text-xs text-center mt-1 text-gray-500">Rebuilding</p>
+              <p className="text-xs text-center mt-1 text-stone-500">Rebuilding</p>
             </div>
             {/* Ready */}
             <div className="flex-1">
               <div className={`h-2 rounded-r-full ${
-                ersData.ers_score >= 70 ? 'bg-paceful-primary' : 'bg-gray-200'
+                ersData.ers_score >= 70 ? 'bg-paceful-primary' : 'bg-stone-200'
               }`} />
-              <p className="text-xs text-center mt-1 text-gray-500">Ready</p>
+              <p className="text-xs text-center mt-1 text-stone-500">Ready</p>
             </div>
           </div>
           {/* Current position marker */}

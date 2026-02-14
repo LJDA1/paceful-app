@@ -36,6 +36,7 @@ interface ERSData {
 interface ProfileData {
   first_name: string | null;
   relationship_ended_at: string | null;
+  seeking_match: boolean | null;
 }
 
 interface WeeklyProgress {
@@ -246,6 +247,10 @@ export default function DashboardPage() {
   const [showReadinessCheck, setShowReadinessCheck] = useState(false);
   const [readinessSubmitted, setReadinessSubmitted] = useState(false);
   const [submittingReadiness, setSubmittingReadiness] = useState(false);
+
+  // Matching teaser state
+  const [matchingInterestSubmitting, setMatchingInterestSubmitting] = useState(false);
+  const [matchingInterestSubmitted, setMatchingInterestSubmitted] = useState(false);
   const [weeklyRecapData, setWeeklyRecapData] = useState<{
     daysLogged: number;
     avgMood: number;
@@ -315,7 +320,7 @@ export default function DashboardPage() {
         // Profile
         supabase
           .from('profiles')
-          .select('first_name, relationship_ended_at')
+          .select('first_name, relationship_ended_at, seeking_match')
           .eq('user_id', userId)
           .single(),
 
@@ -512,6 +517,28 @@ export default function DashboardPage() {
   const handleDismissReadinessCheck = () => {
     setShowReadinessCheck(false);
     // Don't update localStorage - will ask again next session
+  };
+
+  // Handle matching interest
+  const handleMatchingInterest = async () => {
+    if (!userId) return;
+    setMatchingInterestSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ seeking_match: true })
+        .eq('user_id', userId);
+
+      if (!error) {
+        setMatchingInterestSubmitted(true);
+        setProfile(prev => prev ? { ...prev, seeking_match: true } : null);
+      }
+    } catch (error) {
+      console.error('Failed to update matching interest:', error);
+    } finally {
+      setMatchingInterestSubmitting(false);
+    }
   };
 
   // Fetch AI insights (once per day, cached in localStorage)
@@ -1067,6 +1094,87 @@ export default function DashboardPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* Matching Teaser Card */}
+        {ersData && ersData.ers_score >= 40 && !profile?.seeking_match && !matchingInterestSubmitted && (
+          <div
+            className="mb-6 rounded-2xl overflow-hidden"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
+          >
+            {/* Gold accent bar */}
+            <div className="h-1" style={{ background: 'linear-gradient(90deg, #D4973B 0%, #E8A838 100%)' }} />
+
+            <div className="p-5">
+              <h3
+                className="text-[17px] font-semibold mb-2"
+                style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
+              >
+                Matching is coming
+              </h3>
+              <p className="text-[14px] mb-4" style={{ color: 'var(--text-sec)' }}>
+                When you&apos;re ready, Paceful will connect you with someone who truly understands your journey.
+                Your ERS score helps us find the right match.
+              </p>
+
+              {/* Readiness indicator */}
+              <div className="mb-4">
+                <div className="flex justify-between text-[12px] mb-1.5">
+                  <span style={{ color: 'var(--text-muted)' }}>Your readiness</span>
+                  <span style={{ color: 'var(--accent)' }}>{Math.round(ersData.ers_score)}/100</span>
+                </div>
+                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-light)' }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${ersData.ers_score}%`,
+                      background: 'linear-gradient(90deg, #D4973B 0%, #E8A838 100%)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleMatchingInterest}
+                disabled={matchingInterestSubmitting}
+                className="w-full py-3 rounded-full text-[14px] font-medium transition-all disabled:opacity-50"
+                style={{
+                  background: 'rgba(212,151,59,0.1)',
+                  color: '#D4973B',
+                  border: '1px solid rgba(212,151,59,0.2)'
+                }}
+              >
+                {matchingInterestSubmitting ? 'Saving...' : 'Notify me when it\'s ready'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Matching Interest Confirmation */}
+        {(profile?.seeking_match || matchingInterestSubmitted) && ersData && ersData.ers_score >= 40 && (
+          <div
+            className="mb-6 rounded-2xl p-5"
+            style={{ background: 'rgba(212,151,59,0.08)', border: '1px solid rgba(212,151,59,0.15)' }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(212,151,59,0.15)' }}
+              >
+                <svg className="w-5 h-5" style={{ color: '#D4973B' }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[14px] font-medium" style={{ color: 'var(--text)' }}>
+                  You&apos;re on the list
+                </p>
+                <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
+                  We&apos;ll notify you when matching is available
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

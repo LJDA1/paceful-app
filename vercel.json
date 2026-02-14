@@ -1,0 +1,47 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/daily-snapshot",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/daily-reminders",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/discover-patterns",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-recap",
+      "schedule": "0 9 * * 1"
+    }
+  ],
+  "functions": {
+    "src/app/api/admin/generate-synthetic/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/discover-patterns/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/daily-snapshot/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/weekly-recap/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/daily-reminders/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/ers/calculate/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/v1/ers/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

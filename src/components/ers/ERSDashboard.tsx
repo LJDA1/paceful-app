@@ -134,7 +134,7 @@ function CircularProgress({
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-gray-100"
+          className="text-stone-100"
         />
 
         {/* Gradient definition */}
@@ -181,10 +181,10 @@ function CircularProgress({
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-5xl font-light text-gray-900 tabular-nums">
+        <span className="text-5xl font-light text-stone-900 tabular-nums">
           {animatedScore.toFixed(0)}
         </span>
-        <span className="text-sm font-medium text-gray-400 mt-1">ERS Score</span>
+        <span className="text-sm font-medium text-stone-400 mt-1">ERS Score</span>
       </div>
     </div>
   );
@@ -216,7 +216,7 @@ function StageBadge({ stage }: { stage: ERSStage }) {
 function DeltaIndicator({ delta }: { delta: number | null }) {
   if (delta === null) {
     return (
-      <div className="flex items-center gap-1.5 text-gray-400">
+      <div className="flex items-center gap-1.5 text-stone-400">
         <span className="text-sm">No previous data</span>
       </div>
     );
@@ -227,8 +227,8 @@ function DeltaIndicator({ delta }: { delta: number | null }) {
 
   if (isNeutral) {
     return (
-      <div className="flex items-center gap-1.5 text-gray-500">
-        <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
+      <div className="flex items-center gap-1.5 text-stone-500">
+        <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center">
           <span className="text-xs">—</span>
         </div>
         <span className="text-sm font-medium">Steady this week</span>
@@ -265,7 +265,7 @@ function DeltaIndicator({ delta }: { delta: number | null }) {
         {isPositive ? '+' : ''}
         {delta.toFixed(1)}
       </span>
-      <span className="text-sm text-gray-500">this week</span>
+      <span className="text-sm text-stone-500">this week</span>
     </div>
   );
 }
@@ -281,7 +281,7 @@ function ConfidenceIndicator({ confidence }: { confidence: number }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+      <span className="text-xs font-medium text-stone-500 uppercase tracking-wide">
         Confidence
       </span>
       <div className="flex gap-1">
@@ -289,12 +289,12 @@ function ConfidenceIndicator({ confidence }: { confidence: number }) {
           <div
             key={i}
             className={`w-1.5 h-4 rounded-full transition-colors duration-300 ${
-              i < filledSegments ? 'bg-gray-400' : 'bg-gray-200'
+              i < filledSegments ? 'bg-stone-400' : 'bg-stone-200'
             }`}
           />
         ))}
       </div>
-      <span className="text-xs text-gray-400">{percentage}%</span>
+      <span className="text-xs text-stone-400">{percentage}%</span>
     </div>
   );
 }
@@ -319,17 +319,17 @@ function ComponentScoreBar({
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-center">
-        <span className={`text-sm ${hasData ? 'text-gray-700' : 'text-gray-400'}`}>
+        <span className={`text-sm ${hasData ? 'text-stone-700' : 'text-stone-400'}`}>
           {label}
         </span>
-        <span className={`text-sm font-medium ${hasData ? 'text-gray-900' : 'text-gray-400'}`}>
+        <span className={`text-sm font-medium ${hasData ? 'text-stone-900' : 'text-stone-400'}`}>
           {hasData ? `${percentage}%` : '—'}
         </span>
       </div>
-      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ease-out ${
-            hasData ? `bg-gradient-to-r ${config.gradient}` : 'bg-gray-200'
+            hasData ? `bg-gradient-to-r ${config.gradient}` : 'bg-stone-200'
           }`}
           style={{ width: `${percentage}%` }}
         />
@@ -344,11 +344,11 @@ function ComponentScoreBar({
 
 function LoadingSkeleton() {
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 animate-pulse">
+    <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-8 animate-pulse">
       <div className="flex flex-col items-center">
-        <div className="w-48 h-48 rounded-full bg-gray-100" />
-        <div className="h-8 w-28 bg-gray-100 rounded-full mt-6" />
-        <div className="h-4 w-36 bg-gray-100 rounded mt-3" />
+        <div className="w-48 h-48 rounded-full bg-stone-100" />
+        <div className="h-8 w-28 bg-stone-100 rounded-full mt-6" />
+        <div className="h-4 w-36 bg-stone-100 rounded mt-3" />
       </div>
     </div>
   );
@@ -360,11 +360,11 @@ function LoadingSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+    <div className="bg-white rounded-3xl shadow-sm border border-stone-100 p-8">
       <div className="flex flex-col items-center text-center py-8">
-        <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-2xl bg-stone-100 flex items-center justify-center mb-4">
           <svg
-            className="w-8 h-8 text-gray-400"
+            className="w-8 h-8 text-stone-400"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
@@ -377,10 +377,10 @@ function EmptyState() {
             />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <h3 className="text-lg font-semibold text-stone-900 mb-2">
           No ERS Score Yet
         </h3>
-        <p className="text-gray-500 max-w-xs">
+        <p className="text-stone-500 max-w-xs">
           Complete journal entries, mood check-ins, and exercises to generate your
           Emotional Readiness Score.
         </p>
@@ -433,7 +433,7 @@ function RecalculateButton({
       <button
         onClick={handleRecalculate}
         disabled={isRecalculating}
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <svg
           className={`w-4 h-4 ${isRecalculating ? 'animate-spin' : ''}`}
@@ -534,7 +534,7 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
 
   if (compact) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6">
         <div className="flex items-center gap-6">
           <CircularProgress
             score={ersData.ers_score}
@@ -553,15 +553,15 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
       {/* Header */}
-      <div className={`bg-gradient-to-r ${config.bgGradient} px-6 py-4 border-b border-gray-100`}>
+      <div className={`bg-gradient-to-r ${config.bgGradient} px-6 py-4 border-b border-stone-100`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-stone-900">
               Emotional Readiness
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-stone-500">
               Updated {new Date(ersData.calculated_at).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -595,7 +595,7 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
           </div>
 
           {/* Stage Description */}
-          <p className="text-gray-500 text-center mt-3 max-w-xs">
+          <p className="text-stone-500 text-center mt-3 max-w-xs">
             {config.description}
           </p>
 
@@ -606,11 +606,11 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
         </div>
 
         {/* Divider */}
-        <div className="my-8 border-t border-gray-100" />
+        <div className="my-8 border-t border-stone-100" />
 
         {/* Component Breakdown - Mood Focused */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+          <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wide mb-4">
             Score Breakdown
           </h3>
           <div className="space-y-4">
@@ -625,14 +625,14 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
               stage={ersData.ers_stage}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-4">
+          <p className="text-xs text-stone-400 mt-4">
             Based on your mood logs from the last 7 days. Log moods daily for more accurate scores.
           </p>
         </div>
 
         {/* Journey Progress */}
         <div className="mt-8">
-          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+          <h3 className="text-sm font-semibold text-stone-900 uppercase tracking-wide mb-4">
             Your Journey
           </h3>
           <div className="relative">
@@ -645,9 +645,9 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
 
             {/* Labels */}
             <div className="flex justify-between mt-2">
-              <span className="text-xs text-gray-500">Healing</span>
-              <span className="text-xs text-gray-500">Rebuilding</span>
-              <span className="text-xs text-gray-500">Ready</span>
+              <span className="text-xs text-stone-500">Healing</span>
+              <span className="text-xs text-stone-500">Rebuilding</span>
+              <span className="text-xs text-stone-500">Ready</span>
             </div>
 
             {/* Position marker */}
@@ -655,7 +655,7 @@ export default function ERSDashboard({ userId, compact = false, showRecalculate 
               className="absolute top-0 -mt-1 transition-all duration-700"
               style={{ left: `${Math.min(Math.max(ersData.ers_score, 2), 98)}%` }}
             >
-              <div className="w-4 h-4 rounded-full bg-white border-2 border-gray-900 shadow-md transform -translate-x-1/2" />
+              <div className="w-4 h-4 rounded-full bg-white border-2 border-stone-900 shadow-md transform -translate-x-1/2" />
             </div>
           </div>
         </div>

@@ -180,14 +180,14 @@ function MetricCard({
 }
 
 function AccuracyBar({ label, accuracy, count }: { label: string; accuracy: number; count: number }) {
-  const width = Math.max(accuracy, 5); // Minimum 5% width for visibility
+  const width = count > 0 ? Math.max(accuracy, 5) : 0; // No bar if no data
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-gray-700">{label}</span>
         <span className="text-gray-500">
-          {accuracy > 0 ? `${accuracy.toFixed(0)}%` : 'N/A'}
+          {count === 0 ? 'Collecting data' : `${accuracy.toFixed(0)}%`}
           {count > 0 && <span className="text-gray-400 ml-1">({count} samples)</span>}
         </span>
       </div>
@@ -351,7 +351,7 @@ function PredictionsDashboard() {
 
       const avgAccuracy = accuracyData && accuracyData.length > 0
         ? accuracyData.reduce((sum, r) => sum + (r.accuracy_score || 0), 0) / accuracyData.length * 100
-        : 84; // Default demo value
+        : 0; // No data yet
 
       setOverview({
         totalUsersWithPredictions: usersWithPredictions || 0,
@@ -383,26 +383,26 @@ function PredictionsDashboard() {
 
         setAccuracyByType({
           timeline: {
-            accuracy: timeline.count > 0 ? (timeline.total / timeline.count) * 100 : 87,
+            accuracy: timeline.count > 0 ? (timeline.total / timeline.count) * 100 : 0,
             count: timeline.count
           },
           outcome: {
-            accuracy: outcome.count > 0 ? (outcome.total / outcome.count) * 100 : 84,
+            accuracy: outcome.count > 0 ? (outcome.total / outcome.count) * 100 : 0,
             count: outcome.count
           },
           risk: {
-            accuracy: risk.count > 0 ? (risk.total / risk.count) * 100 : 79,
+            accuracy: risk.count > 0 ? (risk.total / risk.count) * 100 : 0,
             count: risk.count
           },
-          overall: overallCount > 0 ? (overallTotal / overallCount) * 100 : 84,
+          overall: overallCount > 0 ? (overallTotal / overallCount) * 100 : 0,
         });
       } else {
-        // Demo values
+        // No data yet
         setAccuracyByType({
-          timeline: { accuracy: 87, count: 0 },
-          outcome: { accuracy: 84, count: 0 },
-          risk: { accuracy: 79, count: 0 },
-          overall: 84,
+          timeline: { accuracy: 0, count: 0 },
+          outcome: { accuracy: 0, count: 0 },
+          risk: { accuracy: 0, count: 0 },
+          overall: 0,
         });
       }
 
