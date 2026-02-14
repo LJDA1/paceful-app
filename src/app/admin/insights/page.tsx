@@ -1,15 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
-
-// ============================================================================
-// Admin Email Check
-// ============================================================================
-
-const ADMIN_EMAILS = ['lewisjohnson004@gmail.com', 'lewisjo307@gmail.com'];
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 // ============================================================================
 // Types
@@ -160,10 +154,9 @@ function HorizontalBar({
 // ============================================================================
 
 export default function AdminInsightsPage() {
-  const router = useRouter();
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
   const supabase = createClient();
 
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Data states
@@ -175,19 +168,6 @@ export default function AdminInsightsPage() {
   const [riskIndicators, setRiskIndicators] = useState<RiskIndicator[]>([]);
   const [volumeBySource, setVolumeBySource] = useState<InsightVolume[]>([]);
   const [volumeByType, setVolumeByType] = useState<InsightVolume[]>([]);
-
-  // Check admin access
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
-        router.push('/dashboard');
-        return;
-      }
-      setIsAdmin(true);
-    };
-    checkAdmin();
-  }, [router, supabase.auth]);
 
   // Fetch all data
   const fetchData = useCallback(async () => {
@@ -392,7 +372,7 @@ export default function AdminInsightsPage() {
     }
   };
 
-  if (!isAdmin) {
+  if (adminLoading || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
         <div className="animate-spin w-8 h-8 border-2 border-stone-300 border-t-stone-600 rounded-full" />

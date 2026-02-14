@@ -1,14 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
-
-// ============================================================================
-// Admin Email Check
-// ============================================================================
-
-const ADMIN_EMAILS = ['lewisjohnson004@gmail.com', 'lewisjo307@gmail.com'];
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 // ============================================================================
 // Types
@@ -985,33 +979,9 @@ function AnalyticsDashboard() {
 // ============================================================================
 
 export default function AdminAnalyticsPage() {
-  const router = useRouter();
-  const supabase = createClient();
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, loading } = useAdminCheck();
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
-
-      if (ADMIN_EMAILS.includes(user.email?.toLowerCase() || '')) {
-        setIsAdmin(true);
-      } else {
-        router.push('/dashboard');
-      }
-
-      setChecking(false);
-    };
-
-    checkAdmin();
-  }, [router]);
-
-  if (checking) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
         <div className="animate-spin w-8 h-8 border-2 border-stone-300 border-t-stone-600 rounded-full" />

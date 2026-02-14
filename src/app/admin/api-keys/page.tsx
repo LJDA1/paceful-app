@@ -1,11 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
-
-// Admin email check
-const ADMIN_EMAILS = ['lewisjohnson004@gmail.com', 'lewisjo307@gmail.com'];
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 // ============================================================================
 // TYPES
@@ -967,42 +964,14 @@ function ApiKeysDashboard() {
 // ============================================================================
 
 export default function ApiKeysPage() {
-  const router = useRouter();
-  const supabase = createClient();
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
-
-      if (ADMIN_EMAILS.includes(user.email?.toLowerCase() || '')) {
-        setIsAdmin(true);
-      } else {
-        router.push('/dashboard');
-      }
-
-      setChecking(false);
-    };
-
-    checkAdmin();
-  }, [router]);
-
-  if (checking) {
+  if (adminLoading || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full" />
       </div>
     );
-  }
-
-  if (!isAdmin) {
-    return null;
   }
 
   return <ApiKeysDashboard />;
