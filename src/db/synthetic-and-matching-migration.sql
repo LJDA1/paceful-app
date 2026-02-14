@@ -17,7 +17,14 @@ ALTER TABLE recovery_trajectories ADD COLUMN IF NOT EXISTS is_synthetic boolean 
 ALTER TABLE discovered_patterns ADD COLUMN IF NOT EXISTS is_synthetic boolean DEFAULT false;
 
 -- ============================================================================
--- PART 2: Add matching readiness fields
+-- PART 2: Add breakup/relationship fields (for synthetic data)
+-- ============================================================================
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS breakup_date date;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS relationship_duration integer;
+
+-- ============================================================================
+-- PART 3: Add matching readiness fields
 -- ============================================================================
 
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS seeking_match boolean DEFAULT false;

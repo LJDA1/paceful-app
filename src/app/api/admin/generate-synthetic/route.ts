@@ -10,10 +10,19 @@ const ADMIN_KEY = process.env.ADMIN_API_KEY || 'paceful-admin-2024';
 
 // Lazy initialization to avoid build-time errors
 function getSupabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    console.error('[Synthetic] Missing environment variables:', {
+      hasUrl: !!url,
+      hasServiceKey: !!key,
+      urlPrefix: url?.substring(0, 20),
+    });
+    throw new Error('Missing Supabase configuration');
+  }
+
+  return createClient(url, key);
 }
 
 interface GenerationRequest {
@@ -48,8 +57,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    console.log('[Synthetic] POST request received');
+
     const body: GenerationRequest = await request.json();
     const { batchStart = 1, batchEnd = 25, useAI = true, dryRun = false } = body;
+
+    console.log('[Synthetic] Request params:', { batchStart, batchEnd, useAI, dryRun });
 
     // Validate range
     if (batchStart < 1 || batchEnd > 250 || batchStart > batchEnd) {
@@ -59,8 +72,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('[Synthetic] Creating Supabase client...');
     const supabase = getSupabaseAdmin();
+    console.log('[Synthetic] Supabase client created');
+
+    console.log('[Synthetic] Creating Anthropic client...');
     const anthropic = useAI ? new Anthropic() : null;
+    console.log('[Synthetic] Anthropic client:', anthropic ? 'created' : 'skipped (useAI=false)');
 
     // Generate all archetypes (deterministic)
     const allArchetypes = generateArchetypes(42);
@@ -85,14 +103,27 @@ export async function POST(request: NextRequest) {
         result.completed++;
       } catch (error) {
         const errorMsg = `Failed to generate ${profile.syntheticId}: ${error instanceof Error ? error.message : 'Unknown error'}`;
-        console.error(errorMsg);
+        console.error('[Synthetic] User generation failed:', {
+          syntheticId: profile.syntheticId,
+          error: error instanceof Error ? error.stack : error,
+        });
         result.errors.push(errorMsg);
       }
     }
 
+    console.log('[Synthetic] Generation complete:', {
+      completed: result.completed,
+      total: result.total,
+      errors: result.errors.length,
+    });
+
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Synthetic generation error:', error);
+    console.error('[Synthetic] FATAL ERROR:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error,
+    });
     return NextResponse.json(
       { error: 'Generation failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -114,30 +145,7 @@ async function generateSingleUser(
   ersScore: number | null;
 }> {
   const email = `${profile.syntheticId}@paceful.synthetic`;
-
-  // 1. Check if user already exists
-  const { data: existingUser } = await supabase
-    .from('profiles')
-    .select('user_id')
-    .eq('is_synthetic', true)
-    .ilike('first_name', profile.firstName)
-    .limit(1);
-
-  // Check by email pattern in auth
-  const { data: authUsers } = await supabase.auth.admin.listUsers();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const existingAuth = authUsers?.users?.find((u: any) => u.email === email);
-
-  if (existingAuth) {
-    // User already exists, skip
-    return {
-      syntheticId: profile.syntheticId,
-      firstName: profile.firstName,
-      moodEntries: 0,
-      journalEntries: 0,
-      ersScore: null,
-    };
-  }
+  console.log(`[Synthetic] Generating user: ${profile.syntheticId} (${profile.firstName})`);
 
   if (dryRun) {
     // Just generate data without inserting
@@ -153,7 +161,7 @@ async function generateSingleUser(
     };
   }
 
-  // 2. Create auth user
+  // 1. Create auth user (trigger will auto-create profile row)
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     password: `synthetic-${profile.syntheticId}-${Date.now()}`,
@@ -164,18 +172,37 @@ async function generateSingleUser(
     },
   });
 
-  if (authError || !authData.user) {
-    throw new Error(`Auth creation failed: ${authError?.message}`);
+  // Handle "user already exists" as a skip, not an error
+  if (authError) {
+    if (authError.message?.includes('already') || authError.code === 'email_exists') {
+      console.log(`[Synthetic] User ${profile.syntheticId} already exists, skipping`);
+      return {
+        syntheticId: profile.syntheticId,
+        firstName: profile.firstName,
+        moodEntries: 0,
+        journalEntries: 0,
+        ersScore: null,
+      };
+    }
+    console.error('[Synthetic] Auth creation error:', authError.message);
+    throw new Error(`Auth creation failed: ${authError.message}`);
+  }
+
+  if (!authData.user) {
+    throw new Error('Auth creation failed: No user returned');
   }
 
   const userId = authData.user.id;
+  console.log(`[Synthetic] Created auth user: ${userId}`);
 
-  // 3. Create profile
+  // 2. UPDATE the profile (trigger already created it, we just need to fill in the fields)
   const breakupDate = new Date();
   breakupDate.setDate(breakupDate.getDate() - profile.journeyLengthDays);
 
-  const { error: profileError } = await supabase.from('profiles').insert({
-    user_id: userId,
+  // Small delay to ensure trigger has completed
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  const { error: profileError } = await supabase.from('profiles').update({
     first_name: profile.firstName,
     date_of_birth: generateBirthDate(profile.age),
     gender: profile.gender,
@@ -186,14 +213,16 @@ async function generateSingleUser(
     seeking_match: profile.seekingMatch,
     match_preferences: profile.matchPreferences,
     recovery_context: profile.recoveryContext,
-    created_at: breakupDate.toISOString(),
-  });
+  }).eq('user_id', userId);
 
   if (profileError) {
+    console.error('[Synthetic] Profile update error:', profileError);
     // Clean up auth user
     await supabase.auth.admin.deleteUser(userId);
-    throw new Error(`Profile creation failed: ${profileError.message}`);
+    throw new Error(`Profile update failed: ${profileError.message}`);
   }
+
+  console.log(`[Synthetic] Updated profile for ${profile.syntheticId}`);
 
   // 4. Generate mood timeline
   const moodTimeline = generateMoodTimeline(profile, breakupDate);
