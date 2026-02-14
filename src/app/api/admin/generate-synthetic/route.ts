@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateArchetypes, SyntheticUserProfile } from '@/lib/synthetic/user-archetypes';
-import { generateMoodTimeline, SyntheticMoodEntry } from '@/lib/synthetic/mood-generator';
+import { generateMoodTimeline } from '@/lib/synthetic/mood-generator';
 import { generateJournalEntries, generatePlaceholderJournalEntries } from '@/lib/synthetic/journal-generator';
 import { calculateAndStoreERSScore } from '@/lib/ers-calculator';
 
@@ -144,8 +144,11 @@ async function generateSingleUser(
   journalEntries: number;
   ersScore: number | null;
 }> {
-  const email = `${profile.syntheticId}@paceful.synthetic`;
   console.log(`[Synthetic] Generating user: ${profile.syntheticId} (${profile.firstName})`);
+
+  // Calculate breakup date
+  const breakupDate = new Date();
+  breakupDate.setDate(breakupDate.getDate() - profile.journeyLengthDays);
 
   if (dryRun) {
     // Just generate data without inserting
@@ -161,48 +164,12 @@ async function generateSingleUser(
     };
   }
 
-  // 1. Create auth user (trigger will auto-create profile row)
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password: `synthetic-${profile.syntheticId}-${Date.now()}`,
-    email_confirm: true,
-    user_metadata: {
-      is_synthetic: true,
-      synthetic_id: profile.syntheticId,
-    },
-  });
+  // Generate a random UUID for this synthetic user (no auth.users needed - FK disabled)
+  const userId = crypto.randomUUID();
 
-  // Handle "user already exists" as a skip, not an error
-  if (authError) {
-    if (authError.message?.includes('already') || authError.code === 'email_exists') {
-      console.log(`[Synthetic] User ${profile.syntheticId} already exists, skipping`);
-      return {
-        syntheticId: profile.syntheticId,
-        firstName: profile.firstName,
-        moodEntries: 0,
-        journalEntries: 0,
-        ersScore: null,
-      };
-    }
-    console.error('[Synthetic] Auth creation error:', authError.message);
-    throw new Error(`Auth creation failed: ${authError.message}`);
-  }
-
-  if (!authData.user) {
-    throw new Error('Auth creation failed: No user returned');
-  }
-
-  const userId = authData.user.id;
-  console.log(`[Synthetic] Created auth user: ${userId}`);
-
-  // 2. UPDATE the profile (trigger already created it, we just need to fill in the fields)
-  const breakupDate = new Date();
-  breakupDate.setDate(breakupDate.getDate() - profile.journeyLengthDays);
-
-  // Small delay to ensure trigger has completed
-  await new Promise(resolve => setTimeout(resolve, 100));
-
-  const { error: profileError } = await supabase.from('profiles').update({
+  // 1. Insert profile directly
+  const { error: profileError } = await supabase.from('profiles').insert({
+    user_id: userId,
     first_name: profile.firstName,
     date_of_birth: generateBirthDate(profile.age),
     gender: profile.gender,
@@ -213,26 +180,25 @@ async function generateSingleUser(
     seeking_match: profile.seekingMatch,
     match_preferences: profile.matchPreferences,
     recovery_context: profile.recoveryContext,
-  }).eq('user_id', userId);
+  });
 
   if (profileError) {
-    console.error('[Synthetic] Profile update error:', profileError);
-    // Clean up auth user
-    await supabase.auth.admin.deleteUser(userId);
-    throw new Error(`Profile update failed: ${profileError.message}`);
+    console.error('[Synthetic] Profile insert error:', profileError);
+    throw new Error(`Profile insert failed: ${profileError.message}`);
   }
 
-  console.log(`[Synthetic] Updated profile for ${profile.syntheticId}`);
+  console.log(`[Synthetic] Created profile for ${profile.syntheticId} with user_id: ${userId}`);
 
-  // 4. Generate mood timeline
+  // 2. Generate mood timeline
   const moodTimeline = generateMoodTimeline(profile, breakupDate);
+  console.log(`[Synthetic] Generated ${moodTimeline.length} mood entries for ${profile.syntheticId}`);
 
-  // 5. Insert mood entries
+  // 3. Insert mood entries
   const moodInserts = moodTimeline.map(entry => ({
     user_id: userId,
     mood_value: entry.moodScore,
+    mood_label: entry.moodScore <= 2 ? 'low' : entry.moodScore <= 3 ? 'moderate' : 'high',
     emotions: entry.emotions,
-    notes: entry.notes,
     logged_at: entry.loggedAt.toISOString(),
     is_synthetic: true,
   }));
@@ -243,11 +209,13 @@ async function generateSingleUser(
       .insert(moodInserts);
 
     if (moodError) {
-      console.error(`Mood insert error for ${profile.syntheticId}:`, moodError);
+      console.error(`Mood insert error for ${profile.syntheticId}:`, JSON.stringify(moodError, null, 2));
+    } else {
+      console.log(`[Synthetic] Inserted ${moodInserts.length} mood entries for ${profile.syntheticId}`);
     }
   }
 
-  // 6. Generate journal entries
+  // 4. Generate journal entries
   let journalEntries;
   if (anthropic) {
     journalEntries = await generateJournalEntries(profile, moodTimeline, anthropic);
@@ -255,11 +223,13 @@ async function generateSingleUser(
     journalEntries = generatePlaceholderJournalEntries(profile, moodTimeline);
   }
 
-  // 7. Insert journal entries
+  // 5. Insert journal entries
   const journalInserts = journalEntries.map(entry => ({
     user_id: userId,
-    title: entry.title,
-    content: entry.content,
+    entry_title: entry.title,
+    entry_content: entry.content,
+    word_count: entry.content.split(/\s+/).length,
+    status: 'published',
     created_at: entry.createdAt.toISOString(),
     is_synthetic: true,
   }));
@@ -274,7 +244,7 @@ async function generateSingleUser(
     }
   }
 
-  // 8. Calculate ERS score
+  // 6. Calculate ERS score
   let ersScore: number | null = null;
   try {
     const ersResult = await calculateAndStoreERSScore(userId);
@@ -291,7 +261,7 @@ async function generateSingleUser(
     console.error(`ERS calculation error for ${profile.syntheticId}:`, error);
   }
 
-  // 9. Log activity
+  // 7. Log activity
   await supabase.from('activity_logs').insert({
     user_id: userId,
     event_type: 'synthetic_user_created',
@@ -372,19 +342,18 @@ export async function DELETE(request: NextRequest) {
       results[table] = count || 0;
     }
 
-    // Get synthetic user IDs
+    // Get synthetic profile user_ids before deleting
     const { data: syntheticProfiles } = await supabase
       .from('profiles')
       .select('user_id')
       .eq('is_synthetic', true);
 
-    // Count profiles
+    // Count and delete profiles
     const { count: profileCount } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .eq('is_synthetic', true);
 
-    // Delete profiles
     await supabase
       .from('profiles')
       .delete()
@@ -392,19 +361,7 @@ export async function DELETE(request: NextRequest) {
 
     results['profiles'] = profileCount || 0;
 
-    // Delete auth users
-    let authDeleted = 0;
-    if (syntheticProfiles) {
-      for (const profile of syntheticProfiles) {
-        try {
-          await supabase.auth.admin.deleteUser(profile.user_id);
-          authDeleted++;
-        } catch (error) {
-          console.error(`Error deleting auth user ${profile.user_id}:`, error);
-        }
-      }
-    }
-    results['auth_users'] = authDeleted;
+    // No auth.users cleanup needed - we don't create them anymore
 
     return NextResponse.json({
       success: true,
