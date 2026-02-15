@@ -311,22 +311,31 @@ function AIProgressDashboard() {
 
       // ========== 1. DATA VOLUME ==========
 
-      // Mood entries
-      const { data: moodData } = await supabase
+      // Mood entries - use count queries for accuracy
+      const { count: moodSynthetic } = await supabase
         .from('mood_entries')
-        .select('id, is_synthetic');
-      const moodTotal = moodData?.length || 0;
-      const moodSynthetic = moodData?.filter(m => m.is_synthetic).length || 0;
-      const moodReal = moodTotal - moodSynthetic;
+        .select('*', { count: 'exact', head: true })
+        .eq('is_synthetic', true);
 
-      // Journal entries
-      const { data: journalData } = await supabase
+      const { count: moodReal } = await supabase
+        .from('mood_entries')
+        .select('*', { count: 'exact', head: true })
+        .or('is_synthetic.eq.false,is_synthetic.is.null');
+
+      const moodTotal = (moodSynthetic || 0) + (moodReal || 0);
+
+      // Journal entries - use count queries for accuracy
+      const { count: journalSynthetic } = await supabase
         .from('journal_entries')
-        .select('id, is_synthetic')
-        .is('deleted_at', null);
-      const journalTotal = journalData?.length || 0;
-      const journalSynthetic = journalData?.filter(j => j.is_synthetic).length || 0;
-      const journalReal = journalTotal - journalSynthetic;
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null)
+        .eq('is_synthetic', true);
+
+      const { count: journalReal } = await supabase
+        .from('journal_entries')
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null)
+        .or('is_synthetic.eq.false,is_synthetic.is.null');
 
       // Extracted insights
       const { count: insightsCount } = await supabase
@@ -354,9 +363,11 @@ function AIProgressDashboard() {
         .select('*', { count: 'exact', head: true })
         .not('summary', 'is', null);
 
+      const journalTotal = (journalSynthetic || 0) + (journalReal || 0);
+
       setDataVolume({
-        moodEntries: { total: moodTotal, real: moodReal, synthetic: moodSynthetic },
-        journalEntries: { total: journalTotal, real: journalReal, synthetic: journalSynthetic },
+        moodEntries: { total: moodTotal, real: moodReal || 0, synthetic: moodSynthetic || 0 },
+        journalEntries: { total: journalTotal, real: journalReal || 0, synthetic: journalSynthetic || 0 },
         extractedInsights: insightsCount || 0,
         discoveredPatterns: patternsCount || 0,
         recoveryTrajectories: trajectoriesCount || 0,
@@ -366,19 +377,34 @@ function AIProgressDashboard() {
 
       // ========== 2. PATTERN QUALITY ==========
 
+      // Use count queries for confidence levels (confidence is decimal 0.0-1.0)
+      const { count: highConfidence } = await supabase
+        .from('discovered_patterns')
+        .select('*', { count: 'exact', head: true })
+        .gte('confidence', 0.7);
+
+      const { count: mediumConfidence } = await supabase
+        .from('discovered_patterns')
+        .select('*', { count: 'exact', head: true })
+        .gte('confidence', 0.4)
+        .lt('confidence', 0.7);
+
+      const { count: lowConfidence } = await supabase
+        .from('discovered_patterns')
+        .select('*', { count: 'exact', head: true })
+        .lt('confidence', 0.4);
+
+      const byConfidence = {
+        high: highConfidence || 0,
+        medium: mediumConfidence || 0,
+        low: lowConfidence || 0,
+      };
+
+      // Get all patterns for theme and scope analysis
       const { data: patterns } = await supabase
         .from('discovered_patterns')
-        .select('id, confidence_score, pattern_type, recovery_context, created_at')
+        .select('id, confidence, pattern_type, scope, created_at')
         .order('created_at', { ascending: false });
-
-      // By confidence level
-      const byConfidence = { high: 0, medium: 0, low: 0 };
-      (patterns || []).forEach(p => {
-        const score = p.confidence_score || 0;
-        if (score >= 0.7) byConfidence.high++;
-        else if (score >= 0.4) byConfidence.medium++;
-        else byConfidence.low++;
-      });
 
       // Top themes (by pattern_type)
       const themeCounts: Record<string, number> = {};
@@ -391,18 +417,24 @@ function AIProgressDashboard() {
         .slice(0, 10)
         .map(([theme, count]) => ({ theme, count }));
 
-      // By recovery context
-      const contextCounts: Record<string, number> = {};
+      // By scope (individual vs aggregate patterns)
+      const scopeCounts: Record<string, number> = {};
       (patterns || []).forEach(p => {
-        const context = p.recovery_context || 'unspecified';
-        contextCounts[context] = (contextCounts[context] || 0) + 1;
+        const scope = p.scope || 'unknown';
+        scopeCounts[scope] = (scopeCounts[scope] || 0) + 1;
       });
-      const byRecoveryContext = Object.entries(contextCounts)
+      const byRecoveryContext = Object.entries(scopeCounts)
         .sort((a, b) => b[1] - a[1])
         .map(([context, count]) => ({ context, count }));
 
-      // Last discovery run
-      const lastDiscoveryRun = patterns?.[0]?.created_at || null;
+      // Last discovery run - get max created_at
+      const { data: latestPattern } = await supabase
+        .from('discovered_patterns')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      const lastDiscoveryRun = latestPattern?.created_at || null;
 
       setPatternQuality({
         byConfidence,
@@ -746,11 +778,11 @@ function AIProgressDashboard() {
               )}
             </div>
 
-            {/* By recovery context */}
+            {/* By scope */}
             <div>
-              <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>By Recovery Context</h4>
+              <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>By Scope</h4>
               {patternQuality.byRecoveryContext.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No context data yet</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No scope data yet</p>
               ) : (
                 <div className="space-y-1">
                   {patternQuality.byRecoveryContext.slice(0, 5).map((ctx, idx) => (
