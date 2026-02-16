@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import Anthropic from '@anthropic-ai/sdk';
 import { extractStructuredDataAsync } from '@/lib/data-extraction';
+import { authenticateRequest } from '@/lib/auth-api';
 
 interface ReflectRequest {
   entryText: string;
@@ -12,23 +11,8 @@ interface ReflectRequest {
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-
-    // Create authenticated Supabase client
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-        },
-      }
-    );
-
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Authenticate user (supports both cookie and Bearer token auth)
+    const { user, supabase, error: authError } = await authenticateRequest(request);
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

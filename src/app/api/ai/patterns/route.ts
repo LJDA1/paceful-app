@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
+import { authenticateRequest } from '@/lib/auth-api';
 
 // ============================================================================
 // Types
@@ -105,31 +106,15 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Check authorization (admin or cron)
+    // Check authorization (admin, cron, or Bearer token)
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
     const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
 
     if (!isCron) {
-      // Check for admin user
-      const { createServerClient } = await import('@supabase/ssr');
-      const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-
-      const authSupabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll();
-            },
-          },
-        }
-      );
-
-      const { data: { user } } = await authSupabase.auth.getUser();
-      if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
+      // Check for admin user (supports both cookie and Bearer token auth)
+      const { user, error: authError } = await authenticateRequest(request);
+      if (authError || !user || !ADMIN_EMAILS.includes(user.email || '')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
