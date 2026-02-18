@@ -1,0 +1,1033 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+type CodeLang = 'curl' | 'javascript' | 'python';
+
+interface CodeBlockProps {
+  code: string | Record<CodeLang, string>;
+  language?: string;
+}
+
+function CodeBlock({ code, language }: CodeBlockProps) {
+  const [copied, setCopied] = useState(false);
+  const [lang, setLang] = useState<CodeLang>('curl');
+
+  const isMultiLang = typeof code === 'object';
+  const displayCode = isMultiLang ? code[lang] : code;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(displayCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Basic syntax highlighting
+  const highlightCode = (text: string) => {
+    return text
+      .replace(/(["'`])([^"'`]*)\1/g, '<span style="color: #CE9178">$&</span>')
+      .replace(/\b(const|let|var|await|async|function|return|import|from|export)\b/g, '<span style="color: #569CD6">$1</span>')
+      .replace(/\/\/.*/g, '<span style="color: #6A9955">$&</span>')
+      .replace(/#.*/g, '<span style="color: #6A9955">$&</span>')
+      .replace(/\b(true|false|null|undefined)\b/g, '<span style="color: #569CD6">$1</span>');
+  };
+
+  return (
+    <div style={{
+      position: 'relative',
+      backgroundColor: '#2D2D2D',
+      borderRadius: '8px',
+      marginBottom: '16px',
+    }}>
+      {isMultiLang && (
+        <div style={{
+          display: 'flex',
+          gap: '0',
+          borderBottom: '1px solid #3D3D3A',
+        }}>
+          {(['curl', 'javascript', 'python'] as CodeLang[]).map((l) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              style={{
+                padding: '8px 16px',
+                fontSize: '12px',
+                backgroundColor: lang === l ? '#3D3D3A' : 'transparent',
+                color: lang === l ? '#FFFFFF' : '#9A938A',
+                border: 'none',
+                cursor: 'pointer',
+                textTransform: 'capitalize',
+              }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
+      <button
+        onClick={handleCopy}
+        style={{
+          position: 'absolute',
+          top: isMultiLang ? '44px' : '8px',
+          right: '8px',
+          padding: '4px 8px',
+          fontSize: '11px',
+          backgroundColor: copied ? '#5B8A72' : '#3D3D3A',
+          color: '#FFFFFF',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+      <pre
+        style={{
+          padding: '16px',
+          margin: 0,
+          fontFamily: 'monospace',
+          fontSize: '13px',
+          lineHeight: 1.6,
+          color: '#E5E0D9',
+          overflowX: 'auto',
+        }}
+        dangerouslySetInnerHTML={{ __html: highlightCode(displayCode) }}
+      />
+    </div>
+  );
+}
+
+function MethodBadge({ method }: { method: 'GET' | 'POST' | 'PUT' | 'DELETE' }) {
+  const colors = {
+    GET: '#5B8A72',
+    POST: '#5B7FB5',
+    PUT: '#C4973B',
+    DELETE: '#B56B6B',
+  };
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '4px 8px',
+      backgroundColor: colors[method],
+      color: '#FFFFFF',
+      fontSize: '12px',
+      fontWeight: 600,
+      borderRadius: '4px',
+      marginRight: '8px',
+    }}>
+      {method}
+    </span>
+  );
+}
+
+function ParamsTable({ params }: { params: { name: string; type: string; required: boolean; description: string }[] }) {
+  return (
+    <table style={{
+      width: '100%',
+      borderCollapse: 'collapse',
+      fontSize: '14px',
+      marginBottom: '16px',
+    }}>
+      <thead>
+        <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+          <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Name</th>
+          <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Type</th>
+          <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Required</th>
+          <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {params.map((p) => (
+          <tr key={p.name} style={{ borderBottom: '1px solid #E5E0D9' }}>
+            <td style={{ padding: '8px 0' }}><code style={{ color: '#5B8A72' }}>{p.name}</code></td>
+            <td style={{ padding: '8px 0', color: '#6B6560' }}>{p.type}</td>
+            <td style={{ padding: '8px 0' }}>
+              {p.required ? <span style={{ color: '#B56B6B' }}>Yes</span> : <span style={{ color: '#9A938A' }}>No</span>}
+            </td>
+            <td style={{ padding: '8px 0', color: '#6B6560' }}>{p.description}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+const NAV_SECTIONS = [
+  { id: 'getting-started', label: 'Getting Started' },
+  { id: 'authentication', label: 'Authentication' },
+  { id: 'users', label: 'Users', children: [
+    { id: 'register-user', label: 'Register User' },
+  ]},
+  { id: 'mood', label: 'Mood', children: [
+    { id: 'log-mood', label: 'Log Mood' },
+  ]},
+  { id: 'journal', label: 'Journal', children: [
+    { id: 'create-entry', label: 'Create Entry' },
+  ]},
+  { id: 'ers', label: 'ERS Scores', children: [
+    { id: 'get-score', label: 'Get Score' },
+    { id: 'calculate-score', label: 'Calculate Score' },
+    { id: 'batch-scores', label: 'Batch Scores' },
+  ]},
+  { id: 'analytics', label: 'Analytics', children: [
+    { id: 'summary', label: 'Summary' },
+  ]},
+  { id: 'webhooks', label: 'Webhooks', children: [
+    { id: 'register-webhook', label: 'Register Webhook' },
+    { id: 'webhook-events', label: 'Events' },
+  ]},
+  { id: 'widgets', label: 'Widgets', children: [
+    { id: 'mood-widget', label: 'MoodWidget' },
+    { id: 'journal-widget', label: 'JournalWidget' },
+    { id: 'ers-display', label: 'ERSDisplay' },
+    { id: 'paceful-provider', label: 'PacefulProvider' },
+  ]},
+  { id: 'error-handling', label: 'Error Handling' },
+  { id: 'rate-limits', label: 'Rate Limits' },
+];
+
+export default function PartnerDocs() {
+  const [activeSection, setActiveSection] = useState('getting-started');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = NAV_SECTIONS.flatMap(s => s.children ? [s, ...s.children] : [s]);
+      for (const section of sections) {
+        const el = document.getElementById(section.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 100 && rect.bottom > 100) {
+            setActiveSection(section.id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const styles = {
+    page: {
+      display: 'flex',
+      minHeight: '100vh',
+      backgroundColor: '#F9F6F2',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    } as React.CSSProperties,
+    sidebar: {
+      width: '250px',
+      backgroundColor: '#FFFFFF',
+      borderRight: '1px solid #E5E0D9',
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      bottom: 0,
+      overflowY: 'auto' as const,
+      padding: '24px',
+    } as React.CSSProperties,
+    sidebarHeader: {
+      marginBottom: '24px',
+    } as React.CSSProperties,
+    sidebarTitle: {
+      fontSize: '18px',
+      fontWeight: 700,
+      color: '#1F1D1A',
+      marginBottom: '4px',
+    } as React.CSSProperties,
+    sidebarVersion: {
+      fontSize: '12px',
+      color: '#9A938A',
+    } as React.CSSProperties,
+    navItem: (active: boolean, isChild: boolean) => ({
+      display: 'block',
+      padding: isChild ? '6px 0 6px 16px' : '8px 0',
+      fontSize: isChild ? '13px' : '14px',
+      color: active ? '#5B8A72' : '#6B6560',
+      fontWeight: active ? 600 : 400,
+      textDecoration: 'none',
+      cursor: 'pointer',
+      borderLeft: active ? '2px solid #5B8A72' : '2px solid transparent',
+      marginLeft: isChild ? '0' : '0',
+    }) as React.CSSProperties,
+    main: {
+      flex: 1,
+      marginLeft: '250px',
+      padding: '32px 48px',
+      maxWidth: '900px',
+    } as React.CSSProperties,
+    section: {
+      marginBottom: '64px',
+    } as React.CSSProperties,
+    sectionTitle: {
+      fontSize: '28px',
+      fontWeight: 700,
+      color: '#1F1D1A',
+      marginBottom: '16px',
+      paddingTop: '24px',
+    } as React.CSSProperties,
+    subsectionTitle: {
+      fontSize: '20px',
+      fontWeight: 600,
+      color: '#1F1D1A',
+      marginBottom: '12px',
+      paddingTop: '16px',
+    } as React.CSSProperties,
+    paragraph: {
+      fontSize: '15px',
+      color: '#6B6560',
+      lineHeight: 1.7,
+      marginBottom: '16px',
+    } as React.CSSProperties,
+    endpoint: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: '8px',
+      padding: '24px',
+      marginBottom: '24px',
+      border: '1px solid #E5E0D9',
+    } as React.CSSProperties,
+    endpointPath: {
+      fontSize: '16px',
+      fontFamily: 'monospace',
+      color: '#1F1D1A',
+      marginBottom: '12px',
+    } as React.CSSProperties,
+    backLink: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '4px',
+      color: '#5B8A72',
+      textDecoration: 'none',
+      fontSize: '14px',
+      marginBottom: '24px',
+    } as React.CSSProperties,
+  };
+
+  return (
+    <div style={styles.page}>
+      {/* Sidebar */}
+      <nav style={styles.sidebar}>
+        <div style={styles.sidebarHeader}>
+          <div style={styles.sidebarTitle}>Paceful API Docs</div>
+          <div style={styles.sidebarVersion}>v1.0</div>
+        </div>
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.id}>
+            <a
+              onClick={() => scrollTo(section.id)}
+              style={styles.navItem(activeSection === section.id, false)}
+            >
+              {section.label}
+            </a>
+            {section.children?.map((child) => (
+              <a
+                key={child.id}
+                onClick={() => scrollTo(child.id)}
+                style={styles.navItem(activeSection === child.id, true)}
+              >
+                {child.label}
+              </a>
+            ))}
+          </div>
+        ))}
+        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #E5E0D9' }}>
+          <Link href="/partners" style={{ ...styles.navItem(false, false), color: '#5B8A72' }}>
+            ← Back to Partners
+          </Link>
+          <Link href="/partners/dashboard" style={{ ...styles.navItem(false, false), color: '#5B8A72' }}>
+            Dashboard
+          </Link>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main style={styles.main}>
+        <Link href="/partners" style={styles.backLink}>
+          ← Back to Partners
+        </Link>
+
+        {/* Getting Started */}
+        <section id="getting-started" style={styles.section}>
+          <h1 style={styles.sectionTitle}>Getting Started</h1>
+          <p style={styles.paragraph}>
+            The Paceful API enables you to integrate emotional intelligence into your platform.
+            Measure emotional readiness, track mood and journaling, and receive webhooks for key events.
+          </p>
+          <p style={styles.paragraph}>
+            <strong>Base URL:</strong>{' '}
+            <code style={{ backgroundColor: '#E5E0D9', padding: '2px 6px', borderRadius: '4px' }}>
+              https://paceful-app.vercel.app/api/v1/partner
+            </code>
+          </p>
+
+          <h3 style={styles.subsectionTitle}>Quick Start</h3>
+          <CodeBlock code={`// 1. Install the SDK
+npm install @paceful/sdk
+
+// 2. Initialize the client
+import { PacefulClient } from '@paceful/sdk';
+
+const paceful = new PacefulClient({
+  apiKey: 'pk_live_your_api_key'
+});
+
+// 3. Register a user
+await paceful.users.register({
+  externalId: 'user-123'
+});
+
+// 4. Log mood data
+await paceful.mood.log({
+  externalId: 'user-123',
+  mood: 4,
+  note: 'Feeling good today'
+});
+
+// 5. Get ERS score
+const ers = await paceful.ers.get('user-123');
+console.log(ers.ersScore, ers.stage);`} />
+
+          <p style={styles.paragraph}>
+            Need an API key?{' '}
+            <a href="mailto:partners@paceful.com?subject=API Key Request" style={{ color: '#5B8A72' }}>
+              Contact partners@paceful.com
+            </a>
+          </p>
+        </section>
+
+        {/* Authentication */}
+        <section id="authentication" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Authentication</h2>
+          <p style={styles.paragraph}>
+            All API requests require authentication using your API key. Include it in the{' '}
+            <code>X-API-Key</code> header with every request.
+          </p>
+          <p style={styles.paragraph}>
+            <strong>Key formats:</strong><br />
+            • <code>pk_test_*</code> — Sandbox environment (for development)<br />
+            • <code>pk_live_*</code> — Production environment
+          </p>
+          <CodeBlock code={{
+            curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/info" \\
+  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Content-Type: application/json"`,
+            javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/info', {
+  headers: {
+    'X-API-Key': 'pk_live_your_api_key',
+    'Content-Type': 'application/json'
+  }
+});`,
+            python: `import requests
+
+response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/partner/info',
+    headers={
+        'X-API-Key': 'pk_live_your_api_key',
+        'Content-Type': 'application/json'
+    }
+)`
+          }} />
+        </section>
+
+        {/* Users */}
+        <section id="users" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Users</h2>
+          <p style={styles.paragraph}>
+            Register and manage users in your Paceful integration. Each user is identified by your
+            system's external ID.
+          </p>
+
+          <div id="register-user" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /users/register
+            </div>
+            <p style={styles.paragraph}>
+              Register a new user or update existing user context. Returns a Paceful user ID.
+            </p>
+            <ParamsTable params={[
+              { name: 'externalId', type: 'string', required: true, description: 'Your unique identifier for this user' },
+              { name: 'context', type: 'object', required: false, description: 'Optional user context (age range, preferences)' },
+              { name: 'consentGiven', type: 'boolean', required: false, description: 'Whether user consented to data processing' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/users/register" \\
+  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"externalId": "user-123", "consentGiven": true}'`,
+              javascript: `const user = await paceful.users.register({
+  externalId: 'user-123',
+  consentGiven: true
+});`,
+              python: `user = paceful.users.register(
+    external_id='user-123',
+    consent_given=True
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "pacefulUserId": "pf_abc123def456",
+    "externalId": "user-123",
+    "status": "active"
+  }
+}`} />
+          </div>
+        </section>
+
+        {/* Mood */}
+        <section id="mood" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Mood</h2>
+          <p style={styles.paragraph}>
+            Track mood data for your users. Mood logs contribute to ERS calculations.
+          </p>
+
+          <div id="log-mood" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /mood/log
+            </div>
+            <p style={styles.paragraph}>
+              Log a mood entry for a user. Triggers <code>mood.logged</code> webhook.
+            </p>
+            <ParamsTable params={[
+              { name: 'externalId', type: 'string', required: true, description: 'Your user identifier' },
+              { name: 'score', type: 'number', required: true, description: 'Mood score 1-5 (1=struggling, 5=great)' },
+              { name: 'label', type: 'string', required: false, description: 'Mood label (e.g., "Good", "Okay")' },
+              { name: 'emotions', type: 'string[]', required: false, description: 'Associated emotions (e.g., ["anxious", "hopeful"])' },
+              { name: 'note', type: 'string', required: false, description: 'Optional note from user' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/mood/log" \\
+  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"externalId": "user-123", "score": 4, "emotions": ["hopeful", "calm"]}'`,
+              javascript: `const mood = await paceful.mood.log({
+  externalId: 'user-123',
+  mood: 4,
+  emotions: ['hopeful', 'calm']
+});`,
+              python: `mood = paceful.mood.log(
+    external_id='user-123',
+    score=4,
+    emotions=['hopeful', 'calm']
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "logged": true,
+    "moodId": "mood_xyz789",
+    "timestamp": "2026-02-17T12:00:00Z"
+  }
+}`} />
+          </div>
+        </section>
+
+        {/* Journal */}
+        <section id="journal" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Journal</h2>
+          <p style={styles.paragraph}>
+            Create journal entries with AI-powered reflection and sentiment analysis.
+          </p>
+
+          <div id="create-entry" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /journal/entry
+            </div>
+            <p style={styles.paragraph}>
+              Create a journal entry. Returns AI reflection and sentiment analysis.
+            </p>
+            <ParamsTable params={[
+              { name: 'externalId', type: 'string', required: true, description: 'Your user identifier' },
+              { name: 'content', type: 'string', required: true, description: 'Journal entry content' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/journal/entry" \\
+  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"externalId": "user-123", "content": "Today I reflected on my progress..."}'`,
+              javascript: `const entry = await paceful.journal.create({
+  externalId: 'user-123',
+  content: 'Today I reflected on my progress...'
+});`,
+              python: `entry = paceful.journal.create(
+    external_id='user-123',
+    content='Today I reflected on my progress...'
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "entryId": "journal_abc123",
+    "sentiment": "Hopeful",
+    "sentimentScore": 0.78,
+    "aiReflection": "Your entry shows meaningful growth in self-awareness...",
+    "wordCount": 156
+  }
+}`} />
+          </div>
+        </section>
+
+        {/* ERS */}
+        <section id="ers" style={styles.section}>
+          <h2 style={styles.sectionTitle}>ERS Scores</h2>
+          <p style={styles.paragraph}>
+            The Emotional Readiness Score (ERS) is a 0-100 score measuring emotional recovery
+            across 5 clinical dimensions.
+          </p>
+
+          <div id="get-score" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /ers/{'{externalId}'}
+            </div>
+            <p style={styles.paragraph}>
+              Get the current ERS score for a user. Returns cached score if recent (&lt;24h).
+            </p>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "userId": "user-123",
+    "ersScore": 66,
+    "stage": "ready",
+    "dimensions": {
+      "emotionalStability": 72,
+      "selfAwareness": 68,
+      "socialConnection": 65,
+      "purposeClarity": 60,
+      "resilienceGrowth": 70
+    },
+    "calculatedAt": "2026-02-17T12:00:00Z",
+    "trend": {
+      "direction": "up",
+      "weeklyChange": 3.2,
+      "daysTracked": 14
+    }
+  }
+}`} />
+          </div>
+
+          <div id="calculate-score" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /ers/calculate
+            </div>
+            <p style={styles.paragraph}>
+              Force a fresh ERS calculation. Triggers <code>ers.stage_changed</code> webhook if stage changes.
+            </p>
+            <ParamsTable params={[
+              { name: 'externalId', type: 'string', required: true, description: 'Your user identifier' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "ersScore": 66,
+    "stage": "ready",
+    "dimensions": { ... },
+    "previousScore": 63,
+    "change": 3,
+    "dataPointsUsed": 42
+  }
+}`} />
+          </div>
+
+          <div id="batch-scores" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /ers/batch
+            </div>
+            <p style={styles.paragraph}>
+              Get ERS scores for multiple users in a single request. Maximum 50 users.
+            </p>
+            <ParamsTable params={[
+              { name: 'externalIds', type: 'string[]', required: true, description: 'Array of user identifiers (max 50)' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "results": [
+      { "externalId": "user-1", "ersScore": 66, "stage": "ready", "calculatedAt": "..." },
+      { "externalId": "user-2", "ersScore": 45, "stage": "rebuilding", "calculatedAt": "..." }
+    ],
+    "totalRequested": 2,
+    "totalReturned": 2
+  }
+}`} />
+          </div>
+        </section>
+
+        {/* Analytics */}
+        <section id="analytics" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Analytics</h2>
+          <p style={styles.paragraph}>
+            Get aggregate analytics across your user base.
+          </p>
+
+          <div id="summary" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /analytics/summary?period=30d
+            </div>
+            <p style={styles.paragraph}>
+              Get aggregate analytics for your partner account. Supports period filtering.
+            </p>
+            <ParamsTable params={[
+              { name: 'period', type: 'string', required: false, description: 'Time period: 7d, 30d, 90d, or all (default: 30d)' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "totalUsers": 1250,
+    "averageErs": 58.3,
+    "stageDistribution": {
+      "healing": 0.25,
+      "rebuilding": 0.45,
+      "ready": 0.30
+    },
+    "engagementMetrics": {
+      "avgMoodLogsPerWeek": 4.2,
+      "avgJournalEntriesPerWeek": 1.8
+    },
+    "period": "30d"
+  }
+}`} />
+          </div>
+        </section>
+
+        {/* Webhooks */}
+        <section id="webhooks" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Webhooks</h2>
+          <p style={styles.paragraph}>
+            Receive real-time notifications when events occur. Webhooks are signed with
+            HMAC-SHA256 for verification.
+          </p>
+
+          <div id="register-webhook" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /webhooks/register
+            </div>
+            <p style={styles.paragraph}>
+              Register a webhook endpoint. Returns a secret for signature verification.
+            </p>
+            <ParamsTable params={[
+              { name: 'url', type: 'string', required: true, description: 'HTTPS webhook URL' },
+              { name: 'events', type: 'string[]', required: true, description: 'Events to subscribe to' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "webhookId": "wh_abc123",
+    "secret": "whsec_abc123def456...",
+    "events": ["ers.stage_changed", "mood.critical"]
+  }
+}`} />
+          </div>
+
+          <div id="webhook-events" style={styles.endpoint}>
+            <h3 style={styles.subsectionTitle}>Webhook Events</h3>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Event</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}><code>ers.stage_changed</code></td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>User moves between stages (healing → rebuilding → ready)</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}><code>ers.score_threshold</code></td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>Score crosses a custom threshold</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}><code>mood.critical</code></td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>3+ consecutive low mood entries (score 1-2)</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}><code>mood.logged</code></td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>Every mood log</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}><code>journal.created</code></td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>Every journal entry</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Example Payload</h4>
+            <CodeBlock code={`{
+  "event": "ers.stage_changed",
+  "timestamp": "2026-02-17T12:00:00Z",
+  "data": {
+    "externalId": "user-123",
+    "previousStage": "rebuilding",
+    "newStage": "ready",
+    "previousScore": 64,
+    "newScore": 68
+  }
+}`} />
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Verifying Signatures</h4>
+            <CodeBlock code={`import { Webhooks } from '@paceful/sdk';
+
+// In your webhook handler:
+const isValid = Webhooks.verifySignature(
+  rawBody,
+  request.headers['x-paceful-signature'],
+  process.env.PACEFUL_WEBHOOK_SECRET
+);
+
+if (!isValid) {
+  return res.status(401).send('Invalid signature');
+}`} />
+          </div>
+        </section>
+
+        {/* Widgets */}
+        <section id="widgets" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Widgets</h2>
+          <p style={styles.paragraph}>
+            Pre-built React components for common interactions. Install with{' '}
+            <code>npm install @paceful/sdk</code>.
+          </p>
+
+          <div id="mood-widget" style={styles.endpoint}>
+            <h3 style={styles.subsectionTitle}>MoodWidget</h3>
+            <p style={styles.paragraph}>Self-contained mood check-in component.</p>
+            <ParamsTable params={[
+              { name: 'apiKey', type: 'string', required: false, description: 'API key (optional with PacefulProvider)' },
+              { name: 'userId', type: 'string', required: false, description: 'User ID (optional with PacefulProvider)' },
+              { name: 'theme', type: "'light' | 'dark'", required: false, description: 'Color theme (default: light)' },
+              { name: 'brandColor', type: 'string', required: false, description: 'Primary color (default: #5B8A72)' },
+              { name: 'compact', type: 'boolean', required: false, description: 'Skip emotion selection (default: false)' },
+              { name: 'onComplete', type: 'function', required: false, description: 'Callback when mood is logged' },
+            ]} />
+            <CodeBlock code={`import { MoodWidget } from '@paceful/sdk';
+
+<MoodWidget
+  apiKey="pk_live_..."
+  userId="user-123"
+  theme="light"
+  brandColor="#5B8A72"
+  onComplete={(mood) => console.log('Logged:', mood)}
+/>`} />
+          </div>
+
+          <div id="journal-widget" style={styles.endpoint}>
+            <h3 style={styles.subsectionTitle}>JournalWidget</h3>
+            <p style={styles.paragraph}>Journal entry component with AI reflection.</p>
+            <ParamsTable params={[
+              { name: 'apiKey', type: 'string', required: false, description: 'API key (optional with PacefulProvider)' },
+              { name: 'userId', type: 'string', required: false, description: 'User ID (optional with PacefulProvider)' },
+              { name: 'theme', type: "'light' | 'dark'", required: false, description: 'Color theme (default: light)' },
+              { name: 'showPrompt', type: 'boolean', required: false, description: 'Show random prompt (default: true)' },
+              { name: 'showAIReflection', type: 'boolean', required: false, description: 'Show AI reflection (default: true)' },
+              { name: 'maxLength', type: 'number', required: false, description: 'Max characters (default: 2000)' },
+            ]} />
+            <CodeBlock code={`import { JournalWidget } from '@paceful/sdk';
+
+<JournalWidget
+  apiKey="pk_live_..."
+  userId="user-123"
+  showPrompt={true}
+  showAIReflection={true}
+  onComplete={(entry) => console.log('Saved:', entry)}
+/>`} />
+          </div>
+
+          <div id="ers-display" style={styles.endpoint}>
+            <h3 style={styles.subsectionTitle}>ERSDisplay</h3>
+            <p style={styles.paragraph}>ERS score visualization with dimensions and trend.</p>
+            <ParamsTable params={[
+              { name: 'apiKey', type: 'string', required: false, description: 'API key (optional with PacefulProvider)' },
+              { name: 'userId', type: 'string', required: false, description: 'User ID (optional with PacefulProvider)' },
+              { name: 'theme', type: "'light' | 'dark'", required: false, description: 'Color theme (default: light)' },
+              { name: 'showDimensions', type: 'boolean', required: false, description: 'Show dimension bars (default: true)' },
+              { name: 'showTrend', type: 'boolean', required: false, description: 'Show trend badge (default: true)' },
+              { name: 'compact', type: 'boolean', required: false, description: 'Smaller ring, hide dimensions (default: false)' },
+            ]} />
+            <CodeBlock code={`import { ERSDisplay } from '@paceful/sdk';
+
+<ERSDisplay
+  apiKey="pk_live_..."
+  userId="user-123"
+  showDimensions={true}
+  showTrend={true}
+  onLoad={(ers) => console.log('ERS:', ers)}
+/>`} />
+          </div>
+
+          <div id="paceful-provider" style={styles.endpoint}>
+            <h3 style={styles.subsectionTitle}>PacefulProvider</h3>
+            <p style={styles.paragraph}>Context provider for credentials. Wrap your app to avoid passing apiKey/userId to every widget.</p>
+            <CodeBlock code={`import { PacefulProvider, MoodWidget, ERSDisplay } from '@paceful/sdk';
+
+function App() {
+  return (
+    <PacefulProvider
+      apiKey={process.env.PACEFUL_API_KEY}
+      userId={currentUser.id}
+    >
+      <MoodWidget />
+      <ERSDisplay />
+    </PacefulProvider>
+  );
+}`} />
+          </div>
+        </section>
+
+        {/* Error Handling */}
+        <section id="error-handling" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Error Handling</h2>
+          <p style={styles.paragraph}>
+            The API returns consistent error responses with a code and message.
+          </p>
+          <CodeBlock code={`{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid API key"
+  }
+}`} />
+
+          <h3 style={styles.subsectionTitle}>Error Codes</h3>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '14px',
+          }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Status</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Code</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { status: 400, code: 'BAD_REQUEST', desc: 'Invalid request parameters' },
+                { status: 401, code: 'UNAUTHORIZED', desc: 'Invalid or missing API key' },
+                { status: 403, code: 'FORBIDDEN', desc: 'Insufficient permissions' },
+                { status: 404, code: 'NOT_FOUND', desc: 'Resource not found' },
+                { status: 429, code: 'RATE_LIMITED', desc: 'Rate limit exceeded' },
+                { status: 500, code: 'INTERNAL_ERROR', desc: 'Server error' },
+              ].map((err) => (
+                <tr key={err.code} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}>{err.status}</td>
+                  <td style={{ padding: '8px 0' }}><code>{err.code}</code></td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>{err.desc}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <h3 style={styles.subsectionTitle}>SDK Error Handling</h3>
+          <CodeBlock code={`import {
+  PacefulError,
+  PacefulAuthError,
+  PacefulRateLimitError,
+  PacefulNotFoundError
+} from '@paceful/sdk';
+
+try {
+  const ers = await paceful.ers.get('user-123');
+} catch (error) {
+  if (error instanceof PacefulRateLimitError) {
+    // Retry after error.retryAfter seconds
+    console.log('Rate limited, retry after:', error.retryAfter);
+  } else if (error instanceof PacefulNotFoundError) {
+    console.log('User not found');
+  } else if (error instanceof PacefulAuthError) {
+    console.log('Invalid API key');
+  }
+}`} />
+        </section>
+
+        {/* Rate Limits */}
+        <section id="rate-limits" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Rate Limits</h2>
+          <p style={styles.paragraph}>
+            Rate limits vary by plan tier. Check headers for current usage.
+          </p>
+
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '14px',
+            marginBottom: '24px',
+          }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Tier</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Requests/Hour</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Requests/Day</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                <td style={{ padding: '8px 0' }}>Starter</td>
+                <td style={{ padding: '8px 0', color: '#6B6560' }}>100</td>
+                <td style={{ padding: '8px 0', color: '#6B6560' }}>2,000</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                <td style={{ padding: '8px 0' }}>Growth</td>
+                <td style={{ padding: '8px 0', color: '#6B6560' }}>500</td>
+                <td style={{ padding: '8px 0', color: '#6B6560' }}>10,000</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                <td style={{ padding: '8px 0' }}>Enterprise</td>
+                <td style={{ padding: '8px 0', color: '#6B6560' }}>Unlimited</td>
+                <td style={{ padding: '8px 0', color: '#6B6560' }}>Unlimited</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style={styles.subsectionTitle}>Rate Limit Headers</h3>
+          <CodeBlock code={`X-RateLimit-Limit: 100        # Max requests per hour
+X-RateLimit-Remaining: 87    # Requests remaining
+X-RateLimit-Reset: 1708185600 # Unix timestamp when limit resets`} />
+        </section>
+
+        {/* Footer */}
+        <footer style={{ paddingTop: '48px', borderTop: '1px solid #E5E0D9', marginTop: '48px' }}>
+          <p style={{ fontSize: '14px', color: '#9A938A' }}>
+            Need help? Contact{' '}
+            <a href="mailto:partners@paceful.com" style={{ color: '#5B8A72' }}>partners@paceful.com</a>
+          </p>
+          <p style={{ fontSize: '14px', color: '#9A938A' }}>
+            © 2026 Paceful · Built by LJ
+          </p>
+        </footer>
+      </main>
+    </div>
+  );
+}

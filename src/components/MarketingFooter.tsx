@@ -14,7 +14,8 @@ const FOOTER_COLUMNS = [
   {
     title: 'Company',
     links: [
-      { href: '/design-partners', label: 'Partners' },
+      { href: '/partners', label: 'Partners' },
+      { href: '/partners/docs', label: 'Partner API' },
       { href: '/investors', label: 'Investors' },
     ],
   },
