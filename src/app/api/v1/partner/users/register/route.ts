@@ -3,6 +3,7 @@
  *
  * Register a new user for a partner integration.
  * Creates a shadow user in the Paceful system linked to the partner's external ID.
+ * Optionally accepts a disruptionType to optimize ERS scoring for the user's recovery context.
  */
 
 import { NextRequest } from 'next/server';
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { externalId, context, consentGiven } = body;
+    const { externalId, context, consentGiven, disruptionType } = body;
 
     // Validate required fields
     if (!externalId || typeof externalId !== 'string' || externalId.trim() === '') {
@@ -61,6 +62,17 @@ export async function POST(request: NextRequest) {
       return partnerApiError('externalId is required', 'BAD_REQUEST', 400);
     }
 
+    const VALID_DISRUPTION_TYPES = ['breakup', 'grief', 'burnout', 'addiction_recovery', 'divorce', 'layoff', 'trauma', 'life_transition', 'other'];
+
+    if (disruptionType && !VALID_DISRUPTION_TYPES.includes(disruptionType)) {
+      await logPartnerApiUsage(validation.partnerId!, '/api/v1/partner/users/register', 'POST', 400, Date.now() - startTime);
+      return partnerApiError(
+        `Invalid disruptionType. Must be one of: ${VALID_DISRUPTION_TYPES.join(', ')}`,
+        'BAD_REQUEST',
+        400
+      );
+    }
+
     const supabase = getSupabaseAdmin();
     const partnerId = validation.partnerId!;
     const trimmedExternalId = externalId.trim();
@@ -68,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Check if user already exists for this partner
     const { data: existingUser, error: lookupError } = await supabase
       .from('partner_users')
-      .select('id, paceful_user_id, external_id')
+      .select('id, paceful_user_id, external_id, disruption_type')
       .eq('partner_id', partnerId)
       .eq('external_id', trimmedExternalId)
       .single();
@@ -86,6 +98,7 @@ export async function POST(request: NextRequest) {
       return partnerApiSuccess({
         pacefulUserId: existingUser.id,
         externalId: existingUser.external_id,
+        disruptionType: existingUser.disruption_type || null,
         status: 'existing',
       });
     }
@@ -115,6 +128,7 @@ export async function POST(request: NextRequest) {
           is_partner_user: true,
           partner_id: partnerId,
           external_id: trimmedExternalId,
+          disruption_type: disruptionType || null,
         },
       });
 
@@ -143,6 +157,7 @@ export async function POST(request: NextRequest) {
         context: context || null,
         consent_given: consentGiven === true,
         consent_timestamp: consentGiven === true ? new Date().toISOString() : null,
+        disruption_type: disruptionType || null,
         created_at: new Date().toISOString(),
       })
       .select('id, external_id')
@@ -168,14 +183,12 @@ export async function POST(request: NextRequest) {
       Date.now() - startTime
     );
 
-    return partnerApiSuccess(
-      {
-        pacefulUserId: partnerUser.id,
-        externalId: partnerUser.external_id,
-        status: 'registered',
-      },
-      201
-    );
+    return partnerApiSuccess({
+      pacefulUserId: partnerUser.id,
+      externalId: partnerUser.external_id,
+      disruptionType: disruptionType || null,
+      status: 'registered',
+    }, 201);
   } catch (error) {
     console.error('User registration error:', error);
     await logPartnerApiUsage(
