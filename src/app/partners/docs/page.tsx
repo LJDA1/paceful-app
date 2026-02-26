@@ -170,6 +170,10 @@ const NAV_SECTIONS = [
     { id: 'calculate-score', label: 'Calculate Score' },
     { id: 'batch-scores', label: 'Batch Scores' },
   ]},
+  { id: 'snapshot', label: 'Snapshot Assessment', children: [
+    { id: 'snapshot-questions', label: 'Get Questions' },
+    { id: 'snapshot-submit', label: 'Submit Assessment' },
+  ]},
   { id: 'analytics', label: 'Analytics', children: [
     { id: 'summary', label: 'Summary' },
   ]},
@@ -672,6 +676,217 @@ response = requests.get(
     "totalReturned": 2
   }
 }`} />
+          </div>
+        </section>
+
+        {/* Snapshot Assessment */}
+        <section id="snapshot" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Snapshot Assessment</h2>
+          <p style={styles.paragraph}>
+            A lightweight emotional readiness check — 10 clinically-informed questions that return an
+            estimated ERS score without requiring historical data. Perfect for onboarding assessments
+            or quick check-ins.
+          </p>
+          <p style={styles.paragraph}>
+            The assessment measures 5 dimensions (2 questions each) on a 1-5 Likert scale:
+          </p>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '14px',
+            marginBottom: '24px',
+          }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Dimension</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Weight</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { dim: 'emotional_stability', weight: '25%', desc: 'Mood consistency and emotional reactivity' },
+                { dim: 'social_readiness', weight: '25%', desc: 'Openness to connections and social presence' },
+                { dim: 'coping_capacity', weight: '20%', desc: 'Handling stress and bouncing back' },
+                { dim: 'self_reflection', weight: '15%', desc: 'Processing experiences and understanding patterns' },
+                { dim: 'behavioral_engagement', weight: '15%', desc: 'Maintaining routines and self-care' },
+              ].map((d) => (
+                <tr key={d.dim} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}><code>{d.dim}</code></td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>{d.weight}</td>
+                  <td style={{ padding: '8px 0', color: '#6B6560' }}>{d.desc}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div id="snapshot-questions" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /assess/snapshot/questions
+            </div>
+            <p style={styles.paragraph}>
+              Returns the 10 assessment questions with dimension mapping and answer options.
+            </p>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/assess/snapshot/questions" \\
+  -H "X-API-Key: pk_live_your_api_key"`,
+              javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/assess/snapshot/questions', {
+  headers: { 'X-API-Key': 'pk_live_your_api_key' }
+});
+const { questions, dimensions } = await response.json();`,
+              python: `response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/assess/snapshot/questions',
+    headers={'X-API-Key': 'pk_live_your_api_key'}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "questions": [
+      {
+        "id": 1,
+        "dimension": "emotional_stability",
+        "text": "Over the past week, how often have you experienced sudden mood swings?",
+        "scale": {
+          "1": "Very often (multiple times daily)",
+          "2": "Often (daily)",
+          "3": "Sometimes (a few times this week)",
+          "4": "Rarely (once or twice)",
+          "5": "Never or almost never"
+        }
+      },
+      // ... 9 more questions
+    ],
+    "dimensions": [
+      { "id": "emotional_stability", "name": "Emotional Stability", "weight": 0.25 },
+      // ...
+    ],
+    "instructions": {
+      "totalQuestions": 10,
+      "questionsPerDimension": 2,
+      "scaleType": "likert",
+      "scaleRange": { "min": 1, "max": 5 }
+    }
+  }
+}`} />
+          </div>
+
+          <div id="snapshot-submit" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /assess/snapshot
+            </div>
+            <p style={styles.paragraph}>
+              Submit assessment responses to receive an estimated ERS score. All 10 questions must be answered.
+            </p>
+            <ParamsTable params={[
+              { name: 'responses', type: 'array', required: true, description: 'Array of 10 response objects' },
+              { name: 'responses[].dimension', type: 'string', required: true, description: 'Dimension ID (e.g., "emotional_stability")' },
+              { name: 'responses[].question_id', type: 'number', required: true, description: 'Question ID (1-10)' },
+              { name: 'responses[].value', type: 'number', required: true, description: 'Likert scale value (1-5)' },
+              { name: 'externalId', type: 'string', required: false, description: 'Optional user identifier for tracking' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/assess/snapshot" \\
+  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "externalId": "user-123",
+    "responses": [
+      { "dimension": "emotional_stability", "question_id": 1, "value": 4 },
+      { "dimension": "emotional_stability", "question_id": 2, "value": 3 },
+      { "dimension": "self_reflection", "question_id": 3, "value": 4 },
+      { "dimension": "self_reflection", "question_id": 4, "value": 4 },
+      { "dimension": "coping_capacity", "question_id": 5, "value": 3 },
+      { "dimension": "coping_capacity", "question_id": 6, "value": 4 },
+      { "dimension": "behavioral_engagement", "question_id": 7, "value": 4 },
+      { "dimension": "behavioral_engagement", "question_id": 8, "value": 3 },
+      { "dimension": "social_readiness", "question_id": 9, "value": 3 },
+      { "dimension": "social_readiness", "question_id": 10, "value": 4 }
+    ]
+  }'`,
+              javascript: `const result = await fetch('https://paceful-app.vercel.app/api/v1/assess/snapshot', {
+  method: 'POST',
+  headers: {
+    'X-API-Key': 'pk_live_your_api_key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    externalId: 'user-123',
+    responses: [
+      { dimension: 'emotional_stability', question_id: 1, value: 4 },
+      { dimension: 'emotional_stability', question_id: 2, value: 3 },
+      // ... all 10 responses
+    ]
+  })
+});`,
+              python: `result = requests.post(
+    'https://paceful-app.vercel.app/api/v1/assess/snapshot',
+    headers={
+        'X-API-Key': 'pk_live_your_api_key',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'externalId': 'user-123',
+        'responses': [
+            {'dimension': 'emotional_stability', 'question_id': 1, 'value': 4},
+            # ... all 10 responses
+        ]
+    }
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "ers_snapshot": 66,
+    "dimensions": {
+      "emotional_stability": 63,
+      "self_reflection": 75,
+      "coping_capacity": 63,
+      "behavioral_engagement": 63,
+      "social_readiness": 63
+    },
+    "readiness_label": "Rebuilding",
+    "confidence": "estimated",
+    "assessment_id": "snap_m3x7k_a1b2c3",
+    "timestamp": "2026-02-26T12:00:00Z"
+  }
+}`} />
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Readiness Labels</h4>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Score Range</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Label</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Interpretation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { range: '0-39', label: 'Not Ready', interp: 'Significant support needed' },
+                  { range: '40-59', label: 'Healing', interp: 'Active recovery in progress' },
+                  { range: '60-74', label: 'Rebuilding', interp: 'Building resilience and stability' },
+                  { range: '75-100', label: 'Ready', interp: 'Emotionally prepared for new challenges' },
+                ].map((r) => (
+                  <tr key={r.label} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}>{r.range}</td>
+                    <td style={{ padding: '8px 0' }}><strong>{r.label}</strong></td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{r.interp}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
