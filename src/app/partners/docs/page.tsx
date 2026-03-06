@@ -174,6 +174,10 @@ const NAV_SECTIONS = [
     { id: 'snapshot-questions', label: 'Get Questions' },
     { id: 'snapshot-submit', label: 'Submit Assessment' },
   ]},
+  { id: 'partner-config', label: 'Partner Config', children: [
+    { id: 'get-config', label: 'Get Config' },
+    { id: 'update-config', label: 'Update Config' },
+  ]},
   { id: 'analytics', label: 'Analytics', children: [
     { id: 'summary', label: 'Summary' },
   ]},
@@ -321,7 +325,7 @@ export default function PartnerDocs() {
       <nav style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <div style={styles.sidebarTitle}>Paceful API Docs</div>
-          <div style={styles.sidebarVersion}>v1.2</div>
+          <div style={styles.sidebarVersion}>v1.3</div>
         </div>
         {NAV_SECTIONS.map((section) => (
           <div key={section.id}>
@@ -788,8 +792,11 @@ const { questions, dimensions } = await response.json();`,
               { name: 'responses[].question_id', type: 'number', required: true, description: 'Question ID (1-10)' },
               { name: 'responses[].value', type: 'number', required: true, description: 'Likert scale value (1-5)' },
               { name: 'externalId', type: 'string', required: false, description: 'Optional user identifier for tracking' },
-              { name: 'config', type: 'object', required: false, description: 'Configuration options' },
-              { name: 'config.verbosity', type: 'string', required: false, description: 'Response detail level: "minimal" (default), "standard", or "clinical"' },
+              { name: 'config', type: 'object', required: false, description: 'Configuration options (overrides partner defaults)' },
+              { name: 'config.verbosity', type: 'string', required: false, description: '"minimal" (default), "standard", or "clinical"' },
+              { name: 'config.tone', type: 'string', required: false, description: '"clinical" (default), "casual", or "motivational"' },
+              { name: 'config.score_format', type: 'string', required: false, description: '"numerical" (default), "percentage", "tier_label", or "traffic_light"' },
+              { name: 'config.traffic_light_thresholds', type: 'object', required: false, description: 'Custom thresholds: {red_max: 33, yellow_max: 66}' },
             ]} />
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
@@ -895,8 +902,77 @@ const { questions, dimensions } = await response.json();`,
               </tbody>
             </table>
 
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Tone Options</h4>
+            <p style={styles.paragraph}>
+              Control the language register using <code>config.tone</code>:
+            </p>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Tone</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Style</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Use Case</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { tone: 'clinical', style: 'Professional, objective', use: 'Healthcare providers, clinical settings (default)' },
+                  { tone: 'casual', style: 'Friendly, approachable', use: 'Consumer apps, peer support platforms' },
+                  { tone: 'motivational', style: 'Encouraging, growth-focused', use: 'Coaching apps, wellness programs' },
+                ].map((t) => (
+                  <tr key={t.tone} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}><code>{t.tone}</code></td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{t.style}</td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{t.use}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Score Format Options</h4>
+            <p style={styles.paragraph}>
+              Control how scores are displayed using <code>config.score_format</code>:
+            </p>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Format</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Example</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { format: 'numerical', example: '66', desc: 'Raw 0-100 score (default)' },
+                  { format: 'percentage', example: '"66%"', desc: 'Score with % suffix' },
+                  { format: 'tier_label', example: '"high"', desc: 'Text label (very_low/low/moderate/high/very_high)' },
+                  { format: 'traffic_light', example: '"green"', desc: 'red/yellow/green based on thresholds' },
+                ].map((f) => (
+                  <tr key={f.format} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}><code>{f.format}</code></td>
+                    <td style={{ padding: '8px 0' }}><code>{f.example}</code></td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{f.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={styles.paragraph}>
+              For <code>traffic_light</code>, default thresholds are: red (0-33), yellow (34-66), green (67-100).
+              Override with <code>config.traffic_light_thresholds</code>: <code>{'{'}red_max: 40, yellow_max: 70{'}'}</code>
+            </p>
+
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response (standard verbosity)</h4>
-            <CodeBlock code={`// Request with config: { "verbosity": "standard" }
+            <CodeBlock code={`// Request with config: { "verbosity": "standard", "tone": "casual" }
 {
   "success": true,
   "data": {
@@ -918,7 +994,9 @@ const { questions, dimensions } = await response.json();`,
     "timestamp": "2026-02-26T12:00:00Z",
     "meta": {
       "verbosity": "standard",
-      "api_version": "1.2.0",
+      "tone": "casual",
+      "score_format": "numerical",
+      "api_version": "1.3.0",
       "model_version": "ers-v1"
     }
   }
@@ -946,7 +1024,9 @@ const { questions, dimensions } = await response.json();`,
     "confidence": "estimated",
     "meta": {
       "verbosity": "clinical",
-      "api_version": "1.2.0",
+      "tone": "clinical",
+      "score_format": "numerical",
+      "api_version": "1.3.0",
       "model_version": "ers-v1"
     }
   }
@@ -981,6 +1061,95 @@ const { questions, dimensions } = await response.json();`,
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        {/* Partner Config */}
+        <section id="partner-config" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Partner Config</h2>
+          <p style={styles.paragraph}>
+            Set default configuration for your API responses. These defaults apply to all requests
+            unless overridden by per-request <code>config</code> parameters.
+          </p>
+
+          <div id="get-config" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /partner/config
+            </div>
+            <p style={styles.paragraph}>
+              Retrieve your current default configuration settings.
+            </p>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "config": {
+    "verbosity": "minimal",
+    "tone": "clinical",
+    "score_format": "numerical",
+    "traffic_light_thresholds": { "red_max": 33, "yellow_max": 66 },
+    "include_signals": true,
+    "include_trend": true
+  },
+  "is_default": true,
+  "partner_id": "your_partner_id"
+}`} />
+          </div>
+
+          <div id="update-config" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="PUT" />
+              /partner/config
+            </div>
+            <p style={styles.paragraph}>
+              Update your default configuration. Only include fields you want to change.
+            </p>
+            <ParamsTable params={[
+              { name: 'config', type: 'object', required: true, description: 'Configuration object with fields to update' },
+              { name: 'config.verbosity', type: 'string', required: false, description: '"minimal", "standard", or "clinical"' },
+              { name: 'config.tone', type: 'string', required: false, description: '"clinical", "casual", or "motivational"' },
+              { name: 'config.score_format', type: 'string', required: false, description: '"numerical", "percentage", "tier_label", or "traffic_light"' },
+              { name: 'config.traffic_light_thresholds', type: 'object', required: false, description: '{red_max: number, yellow_max: number}' },
+              { name: 'config.include_signals', type: 'boolean', required: false, description: 'Include top_signals in response' },
+              { name: 'config.include_trend', type: 'boolean', required: false, description: 'Include trend data in response' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X PUT "https://paceful-app.vercel.app/api/v1/partner/config" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{ "config": { "verbosity": "standard", "tone": "casual", "score_format": "percentage" } }'`,
+              javascript: `await fetch('https://paceful-app.vercel.app/api/v1/partner/config', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer pk_live_your_api_key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    config: { verbosity: 'standard', tone: 'casual', score_format: 'percentage' }
+  })
+});`,
+              python: `requests.put(
+    'https://paceful-app.vercel.app/api/v1/partner/config',
+    headers={
+        'Authorization': 'Bearer pk_live_your_api_key',
+        'Content-Type': 'application/json'
+    },
+    json={'config': {'verbosity': 'standard', 'tone': 'casual', 'score_format': 'percentage'}}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "config": {
+    "verbosity": "standard",
+    "tone": "casual",
+    "score_format": "percentage",
+    "traffic_light_thresholds": { "red_max": 33, "yellow_max": 66 },
+    "include_signals": true,
+    "include_trend": true
+  },
+  "partner_id": "your_partner_id",
+  "updated_at": "2026-03-06T12:00:00Z"
+}`} />
           </div>
         </section>
 
