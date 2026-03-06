@@ -3,6 +3,11 @@
  *
  * Submit snapshot assessment responses and receive an estimated ERS score.
  * This is a lightweight emotional readiness check that doesn't require historical data.
+ *
+ * Supports the ERS Explainability Layer with configurable verbosity:
+ * - minimal: score + label only (default, backward compatible)
+ * - standard: score + label + reasoning + trend + trend_delta + top_signals
+ * - clinical: all of standard + recommended_action
  */
 
 import { NextRequest } from 'next/server';
@@ -26,6 +31,8 @@ const VALID_DIMENSIONS = [
 ] as const;
 
 type Dimension = (typeof VALID_DIMENSIONS)[number];
+type Verbosity = 'minimal' | 'standard' | 'clinical';
+type Trend = 'improving' | 'stable' | 'declining';
 
 // Dimension weights for calculating overall ERS
 const DIMENSION_WEIGHTS: Record<Dimension, number> = {
@@ -59,110 +66,200 @@ interface DimensionScores {
   social_readiness: number;
 }
 
-interface DimensionResult {
+// Minimal response (backward compatible)
+interface DimensionResultMinimal {
   score: number;
   label: string;
-  insight: string;
 }
 
-// Question descriptions for insight generation
-const QUESTION_CONTEXTS: Record<number, { low: string; high: string }> = {
-  1: { low: 'frequent mood fluctuations', high: 'stable mood patterns' },
-  2: { low: 'slow emotional recovery', high: 'quick emotional rebalancing' },
-  3: { low: 'limited pattern awareness', high: 'strong self-awareness of emotional patterns' },
-  4: { low: 'difficulty processing past experiences', high: 'healthy reflection on past experiences' },
-  5: { low: 'limited coping strategies', high: 'effective stress management techniques' },
-  6: { low: 'slow recovery from setbacks', high: 'resilient bounce-back from challenges' },
-  7: { low: 'inconsistent daily routines', high: 'consistent self-care practices' },
-  8: { low: 'low motivation for growth', high: 'active engagement in personal development' },
-  9: { low: 'hesitation about new connections', high: 'openness to forming new relationships' },
-  10: { low: 'difficulty being present socially', high: 'genuine engagement in social settings' },
+// Standard response
+interface DimensionResultStandard extends DimensionResultMinimal {
+  reasoning: string;
+  trend: Trend;
+  trend_delta: number | null;
+  top_signals: string[];
+}
+
+// Clinical response
+interface DimensionResultClinical extends DimensionResultStandard {
+  recommended_action: string;
+}
+
+type DimensionResult = DimensionResultMinimal | DimensionResultStandard | DimensionResultClinical;
+
+// Signal catalog - behavioral metadata inputs the reasoning engine references
+const DIMENSION_SIGNALS: Record<Dimension, string[]> = {
+  emotional_stability: ['mood_variance', 'time_of_day_consistency', 'session_frequency'],
+  self_reflection: ['reflection_completions', 'session_duration', 'feature_usage_breadth'],
+  coping_capacity: ['coping_tool_usage', 'goal_completion_rate', 'session_duration'],
+  behavioral_engagement: ['session_frequency', 'streak_length', 'feature_usage_breadth'],
+  social_readiness: ['social_feature_usage', 'session_frequency', 'feature_usage_breadth'],
 };
 
 function getScoreLabel(score: number): string {
-  if (score < 25) return 'Needs Support';
-  if (score < 50) return 'Developing';
-  if (score < 75) return 'Progressing';
-  return 'Strong';
+  if (score < 25) return 'very_low';
+  if (score < 40) return 'low';
+  if (score < 60) return 'moderate';
+  if (score < 80) return 'high';
+  return 'very_high';
 }
 
-function generateDimensionInsight(
+// Determine top 2 signals based on response values
+function getTopSignals(dimension: Dimension, values: number[]): string[] {
+  const signals = DIMENSION_SIGNALS[dimension];
+  // For snapshot assessments, signals are derived from the question responses
+  // Return the top 2 most relevant signals for this dimension
+  return signals.slice(0, 2);
+}
+
+// Generate recommended action for clinical verbosity
+function generateRecommendedAction(
   dimension: Dimension,
-  values: number[],
-  score: number
+  score: number,
+  trend: Trend
 ): string {
-  const questionIds = QUESTIONS_PER_DIMENSION[dimension];
-  const q1Context = QUESTION_CONTEXTS[questionIds[0]];
-  const q2Context = QUESTION_CONTEXTS[questionIds[1]];
+  const isLow = score < 40;
+  const isMid = score >= 40 && score < 70;
+  const isHigh = score >= 70;
 
-  const v1 = values[0];
-  const v2 = values[1];
-  const avg = (v1 + v2) / 2;
-
-  // Determine primary signals based on response values
-  const signal1 = v1 >= 4 ? q1Context.high : v1 <= 2 ? q1Context.low : null;
-  const signal2 = v2 >= 4 ? q2Context.high : v2 <= 2 ? q2Context.low : null;
-
-  // Build insight based on dimension and score range
   switch (dimension) {
     case 'emotional_stability':
-      if (score >= 75) {
-        return `Strong emotional regulation indicated by ${signal1 || 'moderate mood consistency'} and ${signal2 || 'reasonable recovery time'}. This suggests a stable emotional foundation.`;
-      } else if (score >= 50) {
-        return `Moderate emotional stability with ${v1 >= 3 ? 'some mood consistency' : 'occasional mood swings'} and ${v2 >= 3 ? 'adequate recovery capacity' : 'room to improve emotional rebalancing'}. Building resilience is in progress.`;
-      } else if (score >= 25) {
-        return `Developing emotional regulation. Responses indicate ${signal1 || 'variable mood patterns'} and ${signal2 || 'extended recovery periods'}. Focused support in this area may help.`;
+      if (isLow) return 'Consider exploring recent stressors — mood variance indicators suggest emotional regulation challenges.';
+      if (isMid) return 'Emotional baseline is moderate. May benefit from introducing mindfulness or grounding exercises.';
+      return 'Emotional stability is strong. Consider maintenance strategies to sustain current patterns.';
+
+    case 'self_reflection':
+      if (isLow) return 'Consider introducing structured reflection prompts — current self-awareness indicators are limited.';
+      if (isMid) return 'Reflection engagement is developing. May be a good time to introduce deeper journaling prompts.';
+      return 'Self-reflection capacity is strong. Consider exploring more complex emotional patterns.';
+
+    case 'coping_capacity':
+      if (isLow) return 'Priority should be placed on building a basic coping toolkit — current resources appear limited.';
+      if (isMid) return 'Coping tool usage is developing. Consider introducing a new technique to build range.';
+      return 'Coping capacity is well-developed. Consider stress-testing with more challenging scenarios.';
+
+    case 'behavioral_engagement':
+      if (isLow) return 'Consider a re-engagement check-in or goal reset — routine indicators suggest disconnection.';
+      if (isMid) return 'Engagement is moderate. May benefit from habit stacking or accountability structures.';
+      return 'Behavioral engagement is strong. Consider expanding to new growth areas.';
+
+    case 'social_readiness':
+      if (isLow) return 'Individual healing may need to progress before social re-engagement — readiness indicators are low.';
+      if (isMid) return 'Social readiness is developing. Consider low-pressure social activities or peer support.';
+      return 'User may be ready for group or peer-based activities — social indicators are strong.';
+
+    default:
+      return 'Continue monitoring progress and adjust support as needed.';
+  }
+}
+
+// Generate reasoning string with signal references
+function generateReasoning(
+  dimension: Dimension,
+  values: number[],
+  score: number,
+  trend: Trend
+): string {
+  const signals = getTopSignals(dimension, values);
+  const signalStr = signals.join(' and ');
+  const v1 = values[0];
+  const v2 = values[1];
+
+  // Generate reasoning based on dimension and score tier
+  switch (dimension) {
+    case 'emotional_stability':
+      if (score >= 70) {
+        return `Strong emotional regulation indicated. Assessment responses suggest ${v1 >= 4 ? 'stable mood patterns' : 'moderate mood consistency'} and ${v2 >= 4 ? 'quick emotional recovery' : 'adequate recovery capacity'}. Key signals: ${signalStr}.`;
+      } else if (score >= 40) {
+        return `Moderate emotional stability observed. ${v1 <= 2 ? 'Mood variance is elevated' : 'Some mood fluctuation noted'} with ${v2 <= 2 ? 'extended recovery periods' : 'variable recovery time'}. Key signals: ${signalStr}.`;
       } else {
-        return `Significant emotional volatility indicated by ${q1Context.low} and ${q2Context.low}. This dimension would benefit from targeted intervention and support.`;
+        return `Emotional stability requires support. Assessment indicates ${v1 <= 2 ? 'frequent mood fluctuations' : 'inconsistent mood patterns'} and ${v2 <= 2 ? 'difficulty regaining balance' : 'slow emotional recovery'}. Key signals: ${signalStr}.`;
       }
 
     case 'self_reflection':
-      if (score >= 75) {
-        return `High self-awareness demonstrated through ${signal1 || 'good pattern recognition'} and ${signal2 || 'healthy processing of experiences'}. Strong foundation for continued growth.`;
-      } else if (score >= 50) {
-        return `Moderate reflective capacity with ${v1 >= 3 ? 'emerging pattern awareness' : 'limited insight into emotional triggers'} and ${v2 >= 3 ? 'some ability to process experiences' : 'difficulty with past reflection'}. Journaling may accelerate progress.`;
-      } else if (score >= 25) {
-        return `Developing self-reflection skills. ${signal1 || 'Pattern recognition is still building'} and ${signal2 || 'processing past experiences remains challenging'}. Guided reflection exercises could help.`;
+      if (score >= 70) {
+        return `High self-awareness demonstrated. Responses indicate ${v1 >= 4 ? 'strong pattern recognition' : 'good insight into emotional triggers'} and ${v2 >= 4 ? 'healthy processing of past experiences' : 'ability to reflect constructively'}. Key signals: ${signalStr}.`;
+      } else if (score >= 40) {
+        return `Moderate reflective capacity. ${v1 <= 2 ? 'Pattern awareness is limited' : 'Some pattern recognition present'} with ${v2 <= 2 ? 'difficulty processing past experiences' : 'variable reflection ability'}. Key signals: ${signalStr}.`;
       } else {
-        return `Limited self-reflection capacity indicated by ${q1Context.low} and ${q2Context.low}. Professional support may help develop these crucial skills.`;
+        return `Self-reflection capacity is developing. Assessment suggests ${v1 <= 2 ? 'limited insight into emotional patterns' : 'emerging pattern awareness'} and ${v2 <= 2 ? 'challenges processing difficult experiences' : 'reflection barriers present'}. Key signals: ${signalStr}.`;
       }
 
     case 'coping_capacity':
-      if (score >= 75) {
-        return `Strong coping toolkit evidenced by ${signal1 || 'effective stress strategies'} and ${signal2 || 'quick setback recovery'}. Well-equipped to handle challenges.`;
-      } else if (score >= 50) {
-        return `Adequate coping resources with ${v1 >= 3 ? 'some effective strategies' : 'limited stress relief options'} and ${v2 >= 3 ? 'reasonable recovery from setbacks' : 'extended disruption from challenges'}. Expanding coping skills would strengthen resilience.`;
-      } else if (score >= 25) {
-        return `Developing coping capacity. Responses suggest ${signal1 || 'few reliable coping strategies'} and ${signal2 || 'difficulty bouncing back'}. Building a broader toolkit is recommended.`;
+      if (score >= 70) {
+        return `Strong coping toolkit evident. Responses suggest ${v1 >= 4 ? 'effective stress management strategies' : 'adequate coping resources'} and ${v2 >= 4 ? 'resilient recovery from setbacks' : 'good bounce-back capacity'}. Key signals: ${signalStr}.`;
+      } else if (score >= 40) {
+        return `Moderate coping resources available. ${v1 <= 2 ? 'Coping strategies appear limited' : 'Some coping tools in use'} with ${v2 <= 2 ? 'extended disruption from setbacks' : 'variable recovery from challenges'}. Key signals: ${signalStr}.`;
       } else {
-        return `Limited coping resources indicated by ${q1Context.low} and ${q2Context.low}. Priority should be placed on developing healthy stress management techniques.`;
+        return `Coping capacity needs development. Assessment indicates ${v1 <= 2 ? 'few reliable coping strategies' : 'limited stress management tools'} and ${v2 <= 2 ? 'significant difficulty recovering from setbacks' : 'prolonged impact from challenges'}. Key signals: ${signalStr}.`;
       }
 
     case 'behavioral_engagement':
-      if (score >= 75) {
-        return `High behavioral engagement shown through ${signal1 || 'strong routine maintenance'} and ${signal2 || 'motivated self-improvement'}. Active participation in recovery is evident.`;
-      } else if (score >= 50) {
-        return `Moderate engagement with ${v1 >= 3 ? 'somewhat consistent routines' : 'irregular self-care habits'} and ${v2 >= 3 ? 'periodic growth efforts' : 'limited motivation for change'}. Incremental habit building may help.`;
-      } else if (score >= 25) {
-        return `Low behavioral engagement indicated by ${signal1 || 'disrupted daily routines'} and ${signal2 || 'minimal growth motivation'}. Small, achievable goals could rebuild momentum.`;
+      if (score >= 70) {
+        return `High behavioral engagement shown. Responses indicate ${v1 >= 4 ? 'consistent daily routines' : 'mostly stable self-care practices'} and ${v2 >= 4 ? 'strong motivation for personal growth' : 'active engagement in development'}. Key signals: ${signalStr}.`;
+      } else if (score >= 40) {
+        return `Moderate engagement observed. ${v1 <= 2 ? 'Daily routines are inconsistent' : 'Some routine maintenance noted'} with ${v2 <= 2 ? 'limited motivation for growth' : 'variable engagement levels'}. Key signals: ${signalStr}.`;
       } else {
-        return `Minimal behavioral engagement with ${q1Context.low} and ${q2Context.low}. External structure and accountability support may be beneficial.`;
+        return `Behavioral engagement is low. Assessment suggests ${v1 <= 2 ? 'disrupted daily routines' : 'inconsistent self-care habits'} and ${v2 <= 2 ? 'minimal growth motivation' : 'limited engagement with development'}. Key signals: ${signalStr}.`;
       }
 
     case 'social_readiness':
-      if (score >= 75) {
-        return `High social readiness demonstrated by ${signal1 || 'openness to connections'} and ${signal2 || 'genuine social engagement'}. Well-positioned for relationship building.`;
-      } else if (score >= 50) {
-        return `Moderate social readiness with ${v1 >= 3 ? 'cautious openness to connections' : 'significant hesitation about relationships'} and ${v2 >= 3 ? 'ability to engage when motivated' : 'difficulty being present socially'}. Gradual social exposure may help.`;
-      } else if (score >= 25) {
-        return `Developing social readiness. Responses indicate ${signal1 || 'reluctance toward new connections'} and ${signal2 || 'limited social presence'}. Low-pressure social activities are recommended.`;
+      if (score >= 70) {
+        return `High social readiness indicated. Responses suggest ${v1 >= 4 ? 'openness to new connections' : 'cautious but positive social outlook'} and ${v2 >= 4 ? 'genuine presence in social settings' : 'ability to engage socially'}. Key signals: ${signalStr}.`;
+      } else if (score >= 40) {
+        return `Moderate social readiness. ${v1 <= 2 ? 'Hesitation about new connections noted' : 'Mixed feelings about social engagement'} with ${v2 <= 2 ? 'difficulty being present socially' : 'variable social presence'}. Key signals: ${signalStr}.`;
       } else {
-        return `Low social readiness indicated by ${q1Context.low} and ${q2Context.low}. Individual healing may need to progress before social re-engagement.`;
+        return `Social readiness is developing. Assessment indicates ${v1 <= 2 ? 'significant reluctance toward new connections' : 'social hesitation present'} and ${v2 <= 2 ? 'challenges with social presence' : 'limited social engagement'}. Key signals: ${signalStr}.`;
       }
 
     default:
-      return `Score of ${score} based on assessment responses.`;
+      return `Assessment complete. Score of ${score} based on evaluation responses. Key signals: ${signalStr}.`;
   }
+}
+
+// Build dimension result based on verbosity level
+function buildDimensionResult(
+  dimension: Dimension,
+  values: number[],
+  score: number,
+  verbosity: Verbosity
+): DimensionResult {
+  const label = getScoreLabel(score);
+
+  // Minimal: score + label only (backward compatible)
+  if (verbosity === 'minimal') {
+    return { score, label };
+  }
+
+  // For snapshot assessments: trend is always stable, delta is null (no prior assessment)
+  const trend: Trend = 'stable';
+  const trend_delta: number | null = null;
+  const top_signals = getTopSignals(dimension, values);
+  const reasoning = generateReasoning(dimension, values, score, trend);
+
+  // Standard: score + label + reasoning + trend + trend_delta + top_signals
+  if (verbosity === 'standard') {
+    return {
+      score,
+      label,
+      reasoning,
+      trend,
+      trend_delta,
+      top_signals,
+    };
+  }
+
+  // Clinical: all of standard + recommended_action
+  const recommended_action = generateRecommendedAction(dimension, score, trend);
+  return {
+    score,
+    label,
+    reasoning,
+    trend,
+    trend_delta,
+    top_signals,
+    recommended_action,
+  };
 }
 
 function getReadinessLabel(score: number): string {
@@ -217,7 +314,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { responses, externalId } = body;
+    const { responses, externalId, config } = body;
+
+    // Parse verbosity from config, default to 'minimal' for backward compatibility
+    const verbosity: Verbosity =
+      config?.verbosity && ['minimal', 'standard', 'clinical'].includes(config.verbosity)
+        ? config.verbosity
+        : 'minimal';
 
     // Validate responses array exists
     if (!responses || !Array.isArray(responses)) {
@@ -443,43 +546,60 @@ export async function POST(request: NextRequest) {
       Date.now() - startTime
     );
 
-    // Generate dimension results with insights
+    // Generate dimension results based on verbosity level
     const dimensionResults: Record<Dimension, DimensionResult> = {
-      emotional_stability: {
-        score: dimensionScores.emotional_stability,
-        label: getScoreLabel(dimensionScores.emotional_stability),
-        insight: generateDimensionInsight('emotional_stability', dimensionResponses.emotional_stability, dimensionScores.emotional_stability),
-      },
-      self_reflection: {
-        score: dimensionScores.self_reflection,
-        label: getScoreLabel(dimensionScores.self_reflection),
-        insight: generateDimensionInsight('self_reflection', dimensionResponses.self_reflection, dimensionScores.self_reflection),
-      },
-      coping_capacity: {
-        score: dimensionScores.coping_capacity,
-        label: getScoreLabel(dimensionScores.coping_capacity),
-        insight: generateDimensionInsight('coping_capacity', dimensionResponses.coping_capacity, dimensionScores.coping_capacity),
-      },
-      behavioral_engagement: {
-        score: dimensionScores.behavioral_engagement,
-        label: getScoreLabel(dimensionScores.behavioral_engagement),
-        insight: generateDimensionInsight('behavioral_engagement', dimensionResponses.behavioral_engagement, dimensionScores.behavioral_engagement),
-      },
-      social_readiness: {
-        score: dimensionScores.social_readiness,
-        label: getScoreLabel(dimensionScores.social_readiness),
-        insight: generateDimensionInsight('social_readiness', dimensionResponses.social_readiness, dimensionScores.social_readiness),
-      },
+      emotional_stability: buildDimensionResult(
+        'emotional_stability',
+        dimensionResponses.emotional_stability,
+        dimensionScores.emotional_stability,
+        verbosity
+      ),
+      self_reflection: buildDimensionResult(
+        'self_reflection',
+        dimensionResponses.self_reflection,
+        dimensionScores.self_reflection,
+        verbosity
+      ),
+      coping_capacity: buildDimensionResult(
+        'coping_capacity',
+        dimensionResponses.coping_capacity,
+        dimensionScores.coping_capacity,
+        verbosity
+      ),
+      behavioral_engagement: buildDimensionResult(
+        'behavioral_engagement',
+        dimensionResponses.behavioral_engagement,
+        dimensionScores.behavioral_engagement,
+        verbosity
+      ),
+      social_readiness: buildDimensionResult(
+        'social_readiness',
+        dimensionResponses.social_readiness,
+        dimensionScores.social_readiness,
+        verbosity
+      ),
     };
 
-    return partnerApiSuccess({
+    // Build response with meta information
+    const response: Record<string, unknown> = {
       ers_snapshot: ersSnapshot,
       dimensions: dimensionResults,
       readiness_label: readinessLabel,
       confidence: 'estimated',
       assessment_id: assessmentId,
       timestamp: timestamp,
-    });
+    };
+
+    // Add meta block for non-minimal responses
+    if (verbosity !== 'minimal') {
+      response.meta = {
+        verbosity,
+        api_version: '1.2.0',
+        model_version: 'ers-v1',
+      };
+    }
+
+    return partnerApiSuccess(response);
   } catch (error) {
     console.error('Snapshot assessment error:', error);
     await logPartnerApiUsage(
