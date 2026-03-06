@@ -321,7 +321,7 @@ export default function PartnerDocs() {
       <nav style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <div style={styles.sidebarTitle}>Paceful API Docs</div>
-          <div style={styles.sidebarVersion}>v1.0</div>
+          <div style={styles.sidebarVersion}>v1.2</div>
         </div>
         {NAV_SECTIONS.map((section) => (
           <div key={section.id}>
@@ -788,6 +788,8 @@ const { questions, dimensions } = await response.json();`,
               { name: 'responses[].question_id', type: 'number', required: true, description: 'Question ID (1-10)' },
               { name: 'responses[].value', type: 'number', required: true, description: 'Likert scale value (1-5)' },
               { name: 'externalId', type: 'string', required: false, description: 'Optional user identifier for tracking' },
+              { name: 'config', type: 'object', required: false, description: 'Configuration options' },
+              { name: 'config.verbosity', type: 'string', required: false, description: 'Response detail level: "minimal" (default), "standard", or "clinical"' },
             ]} />
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
@@ -796,6 +798,7 @@ const { questions, dimensions } = await response.json();`,
   -H "Content-Type: application/json" \\
   -d '{
     "externalId": "user-123",
+    "config": { "verbosity": "standard" },
     "responses": [
       { "dimension": "emotional_stability", "question_id": 1, "value": 4 },
       { "dimension": "emotional_stability", "question_id": 2, "value": 3 },
@@ -817,6 +820,7 @@ const { questions, dimensions } = await response.json();`,
   },
   body: JSON.stringify({
     externalId: 'user-123',
+    config: { verbosity: 'standard' }, // or 'minimal' (default), 'clinical'
     responses: [
       { dimension: 'emotional_stability', question_id: 1, value: 4 },
       { dimension: 'emotional_stability', question_id: 2, value: 3 },
@@ -832,6 +836,7 @@ const { questions, dimensions } = await response.json();`,
     },
     json={
         'externalId': 'user-123',
+        'config': {'verbosity': 'standard'},  # or 'minimal' (default), 'clinical'
         'responses': [
             {'dimension': 'emotional_stability', 'question_id': 1, 'value': 4},
             # ... all 10 responses
@@ -839,22 +844,111 @@ const { questions, dimensions } = await response.json();`,
     }
 )`
             }} />
-            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response (minimal verbosity - default)</h4>
             <CodeBlock code={`{
   "success": true,
   "data": {
     "ers_snapshot": 66,
     "dimensions": {
-      "emotional_stability": 63,
-      "self_reflection": 75,
-      "coping_capacity": 63,
-      "behavioral_engagement": 63,
-      "social_readiness": 63
+      "emotional_stability": { "score": 63, "label": "high" },
+      "self_reflection": { "score": 75, "label": "high" },
+      "coping_capacity": { "score": 63, "label": "high" },
+      "behavioral_engagement": { "score": 63, "label": "high" },
+      "social_readiness": { "score": 63, "label": "high" }
     },
     "readiness_label": "Rebuilding",
     "confidence": "estimated",
     "assessment_id": "snap_m3x7k_a1b2c3",
     "timestamp": "2026-02-26T12:00:00Z"
+  }
+}`} />
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Verbosity Levels</h4>
+            <p style={styles.paragraph}>
+              Control the level of detail returned using <code>config.verbosity</code>:
+            </p>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Level</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Fields Returned</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Use Case</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { level: 'minimal', fields: 'score, label', use: 'Default, backward compatible. Quick checks.' },
+                  { level: 'standard', fields: 'score, label, reasoning, trend, trend_delta, top_signals', use: 'User-facing insights, dashboards.' },
+                  { level: 'clinical', fields: 'All standard fields + recommended_action', use: 'Clinical/coach interfaces, care planning.' },
+                ].map((v) => (
+                  <tr key={v.level} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}><code>{v.level}</code></td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{v.fields}</td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{v.use}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response (standard verbosity)</h4>
+            <CodeBlock code={`// Request with config: { "verbosity": "standard" }
+{
+  "success": true,
+  "data": {
+    "ers_snapshot": 66,
+    "dimensions": {
+      "emotional_stability": {
+        "score": 63,
+        "label": "high",
+        "reasoning": "Moderate emotional stability observed. Some mood fluctuation noted with variable recovery time. Key signals: mood_variance and time_of_day_consistency.",
+        "trend": "stable",
+        "trend_delta": null,
+        "top_signals": ["mood_variance", "time_of_day_consistency"]
+      }
+      // ... other dimensions
+    },
+    "readiness_label": "Rebuilding",
+    "confidence": "estimated",
+    "assessment_id": "snap_m3x7k_a1b2c3",
+    "timestamp": "2026-02-26T12:00:00Z",
+    "meta": {
+      "verbosity": "standard",
+      "api_version": "1.2.0",
+      "model_version": "ers-v1"
+    }
+  }
+}`} />
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response (clinical verbosity)</h4>
+            <CodeBlock code={`// Request with config: { "verbosity": "clinical" }
+{
+  "success": true,
+  "data": {
+    "ers_snapshot": 24,
+    "dimensions": {
+      "coping_capacity": {
+        "score": 13,
+        "label": "very_low",
+        "reasoning": "Coping capacity needs development. Assessment indicates few reliable coping strategies and significant difficulty recovering from setbacks. Key signals: coping_tool_usage and goal_completion_rate.",
+        "trend": "stable",
+        "trend_delta": null,
+        "top_signals": ["coping_tool_usage", "goal_completion_rate"],
+        "recommended_action": "Priority should be placed on building a basic coping toolkit — current resources appear limited."
+      }
+      // ... other dimensions with recommended_action
+    },
+    "readiness_label": "Not Ready",
+    "confidence": "estimated",
+    "meta": {
+      "verbosity": "clinical",
+      "api_version": "1.2.0",
+      "model_version": "ers-v1"
+    }
   }
 }`} />
 
