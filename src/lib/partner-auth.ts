@@ -7,6 +7,7 @@
 
 import { NextRequest } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { CURRENT_API_VERSION, MINIMUM_SUPPORTED_VERSION } from '@/lib/api-version';
 
 // Lazy initialization for Supabase admin client
 let _supabaseAdmin: SupabaseClient | null = null;
@@ -36,9 +37,10 @@ export interface PartnerKeyValidation {
 
 export interface RateLimitResult {
   allowed: boolean;
-  remaining: number;
-  resetAt: string;
-  retryAfter?: number;
+  limit: number;        // Total requests allowed per hour
+  remaining: number;    // Requests remaining in current window
+  reset: number;        // Unix timestamp (seconds) when the window resets
+  retryAfter?: number;  // Seconds until retry (only if rate limited)
 }
 
 // ============================================================================
@@ -190,13 +192,16 @@ export async function validatePartnerKey(request: NextRequest): Promise<PartnerK
 
 /**
  * Check rate limit for a partner
+ * Returns rate limit info with Unix timestamps for standard headers
  */
 export async function checkPartnerRateLimit(
   partnerId: string,
   rateLimit: number
 ): Promise<RateLimitResult> {
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const resetAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const now = Date.now();
+  const oneHourAgo = new Date(now - 60 * 60 * 1000).toISOString();
+  // Reset is 1 hour from now (Unix timestamp in seconds)
+  const reset = Math.floor((now + 60 * 60 * 1000) / 1000);
 
   try {
     const supabase = getSupabaseAdmin();
@@ -210,30 +215,32 @@ export async function checkPartnerRateLimit(
     if (error) {
       // On error, allow the request but log it
       console.error('Rate limit check error:', error);
-      return { allowed: true, remaining: rateLimit, resetAt };
+      return { allowed: true, limit: rateLimit, remaining: rateLimit, reset };
     }
 
     const used = count || 0;
     const remaining = Math.max(0, rateLimit - used);
 
     if (remaining <= 0) {
-      const retryAfter = Math.ceil((new Date(resetAt).getTime() - Date.now()) / 1000);
+      const retryAfter = Math.max(0, reset - Math.floor(now / 1000));
       return {
         allowed: false,
+        limit: rateLimit,
         remaining: 0,
-        resetAt,
+        reset,
         retryAfter,
       };
     }
 
     return {
       allowed: true,
+      limit: rateLimit,
       remaining,
-      resetAt,
+      reset,
     };
   } catch (error) {
     console.error('Rate limit check failed:', error);
-    return { allowed: true, remaining: rateLimit, resetAt };
+    return { allowed: true, limit: rateLimit, remaining: rateLimit, reset };
   }
 }
 
@@ -288,14 +295,34 @@ const CORS_HEADERS = {
 };
 
 /**
- * Create a standardized error response
+ * Create a standardized error response with optional rate limit headers
  */
 export function partnerApiError(
   message: string,
   code: string,
   status: number,
-  headers?: Record<string, string>
+  headers?: Record<string, string>,
+  rateLimit?: RateLimitResult
 ): Response {
+  const responseHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...CORS_HEADERS,
+    // Version headers on all responses
+    'X-API-Version': CURRENT_API_VERSION,
+    'X-API-Min-Version': MINIMUM_SUPPORTED_VERSION,
+    ...headers,
+  };
+
+  // Add rate limit headers if provided
+  if (rateLimit) {
+    responseHeaders['X-RateLimit-Limit'] = String(rateLimit.limit);
+    responseHeaders['X-RateLimit-Remaining'] = String(rateLimit.remaining);
+    responseHeaders['X-RateLimit-Reset'] = String(rateLimit.reset);
+    if (rateLimit.retryAfter !== undefined) {
+      responseHeaders['Retry-After'] = String(rateLimit.retryAfter);
+    }
+  }
+
   return new Response(
     JSON.stringify({
       error: {
@@ -305,30 +332,39 @@ export function partnerApiError(
     }),
     {
       status,
-      headers: {
-        'Content-Type': 'application/json',
-        ...CORS_HEADERS,
-        ...headers,
-      },
+      headers: responseHeaders,
     }
   );
 }
 
 /**
- * Create a standardized success response
+ * Create a standardized success response with optional rate limit headers
  */
 export function partnerApiSuccess(
   data: unknown,
   status: number = 200,
-  headers?: Record<string, string>
+  headers?: Record<string, string>,
+  rateLimit?: RateLimitResult
 ): Response {
+  const responseHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...CORS_HEADERS,
+    // Version headers on all responses
+    'X-API-Version': CURRENT_API_VERSION,
+    'X-API-Min-Version': MINIMUM_SUPPORTED_VERSION,
+    ...headers,
+  };
+
+  // Add rate limit headers if provided
+  if (rateLimit) {
+    responseHeaders['X-RateLimit-Limit'] = String(rateLimit.limit);
+    responseHeaders['X-RateLimit-Remaining'] = String(rateLimit.remaining);
+    responseHeaders['X-RateLimit-Reset'] = String(rateLimit.reset);
+  }
+
   return new Response(JSON.stringify(data), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...CORS_HEADERS,
-      ...headers,
-    },
+    headers: responseHeaders,
   });
 }
 
@@ -341,24 +377,10 @@ export function handlePartnerCors(): Response {
     headers: {
       ...CORS_HEADERS,
       'Access-Control-Max-Age': '86400',
+      // Version headers on all responses including CORS preflight
+      'X-API-Version': CURRENT_API_VERSION,
+      'X-API-Min-Version': MINIMUM_SUPPORTED_VERSION,
     },
   });
 }
 
-/**
- * Add rate limit headers to response
- */
-export function withRateLimitHeaders(
-  response: Response,
-  rateLimit: RateLimitResult & { limit: number }
-): Response {
-  const headers = new Headers(response.headers);
-  headers.set('X-RateLimit-Limit', String(rateLimit.limit));
-  headers.set('X-RateLimit-Remaining', String(rateLimit.remaining));
-  headers.set('X-RateLimit-Reset', rateLimit.resetAt);
-
-  return new Response(response.body, {
-    status: response.status,
-    headers,
-  });
-}

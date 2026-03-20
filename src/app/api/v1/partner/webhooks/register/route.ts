@@ -16,6 +16,7 @@ import {
   handlePartnerCors,
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 // Allowed webhook events
 const ALLOWED_EVENTS = [
@@ -32,6 +33,13 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('webhooks_register', body);
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -50,7 +58,8 @@ export async function POST(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -67,7 +76,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('url is required', 'BAD_REQUEST', 400);
+      return partnerApiError('url is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     if (!url.startsWith('https://')) {
@@ -78,7 +87,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('url must start with https://', 'BAD_REQUEST', 400);
+      return partnerApiError('url must start with https://', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     // Validate URL format
@@ -92,7 +101,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('Invalid URL format', 'BAD_REQUEST', 400);
+      return partnerApiError('Invalid URL format', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     // Validate events
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('events must be a non-empty array', 'BAD_REQUEST', 400);
+      return partnerApiError('events must be a non-empty array', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const invalidEvents = events.filter(e => !ALLOWED_EVENTS.includes(e));
@@ -119,7 +128,9 @@ export async function POST(request: NextRequest) {
       return partnerApiError(
         `Invalid events: ${invalidEvents.join(', ')}. Allowed: ${ALLOWED_EVENTS.join(', ')}`,
         'BAD_REQUEST',
-        400
+        400,
+        undefined,
+        rateLimit
       );
     }
 
@@ -154,7 +165,7 @@ export async function POST(request: NextRequest) {
           500,
           Date.now() - startTime
         );
-        return partnerApiError('Failed to update webhook', 'INTERNAL_ERROR', 500);
+        return partnerApiError('Failed to update webhook', 'INTERNAL_ERROR', 500, undefined, rateLimit);
       }
 
       await logPartnerApiUsage(
@@ -170,7 +181,7 @@ export async function POST(request: NextRequest) {
         secret: existingWebhook.webhook_secret,
         events,
         status: 'updated',
-      });
+      }, 200, undefined, rateLimit);
     }
 
     // Create new webhook
@@ -198,7 +209,7 @@ export async function POST(request: NextRequest) {
         500,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to register webhook', 'INTERNAL_ERROR', 500);
+      return partnerApiError('Failed to register webhook', 'INTERNAL_ERROR', 500, undefined, rateLimit);
     }
 
     await logPartnerApiUsage(
@@ -216,7 +227,9 @@ export async function POST(request: NextRequest) {
         events,
         status: 'created',
       },
-      201
+      201,
+      undefined,
+      rateLimit
     );
   } catch (error) {
     console.error('Webhook registration error:', error);
@@ -227,6 +240,6 @@ export async function POST(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

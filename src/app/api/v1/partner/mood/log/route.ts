@@ -16,6 +16,7 @@ import {
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
 import { sendUserWebhook } from '@/lib/webhook-sender';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 export async function OPTIONS() {
   return handlePartnerCors();
@@ -23,6 +24,13 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('mood_log', body);
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -41,7 +49,8 @@ export async function POST(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -58,7 +67,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('externalId is required', 'BAD_REQUEST', 400);
+      return partnerApiError('externalId is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     if (typeof score !== 'number' || score < 1 || score > 5) {
@@ -69,7 +78,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('score must be a number between 1 and 5', 'BAD_REQUEST', 400);
+      return partnerApiError('score must be a number between 1 and 5', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const supabase = getSupabaseAdmin();
@@ -91,7 +100,7 @@ export async function POST(request: NextRequest) {
         404,
         Date.now() - startTime
       );
-      return partnerApiError('User not found', 'NOT_FOUND', 404);
+      return partnerApiError('User not found', 'NOT_FOUND', 404, undefined, rateLimit);
     }
 
     // Insert mood log
@@ -118,7 +127,7 @@ export async function POST(request: NextRequest) {
         500,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to log mood', 'INTERNAL_ERROR', 500);
+      return partnerApiError('Failed to log mood', 'INTERNAL_ERROR', 500, undefined, rateLimit);
     }
 
     // Check for critical mood pattern (3+ consecutive low scores)
@@ -166,7 +175,9 @@ export async function POST(request: NextRequest) {
         moodId: moodLog.id,
         timestamp: moodLog.logged_at,
       },
-      201
+      201,
+      undefined,
+      rateLimit
     );
   } catch (error) {
     console.error('Mood log error:', error);
@@ -177,6 +188,6 @@ export async function POST(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

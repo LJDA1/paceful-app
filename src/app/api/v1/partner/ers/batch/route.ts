@@ -15,6 +15,7 @@ import {
   handlePartnerCors,
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 export async function OPTIONS() {
   return handlePartnerCors();
@@ -22,6 +23,13 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('ers_batch', body);
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -40,7 +48,8 @@ export async function POST(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -57,7 +66,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('externalIds must be an array', 'BAD_REQUEST', 400);
+      return partnerApiError('externalIds must be an array', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     if (externalIds.length === 0) {
@@ -68,7 +77,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('externalIds array cannot be empty', 'BAD_REQUEST', 400);
+      return partnerApiError('externalIds array cannot be empty', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     if (externalIds.length > 50) {
@@ -79,7 +88,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('Maximum 50 externalIds per request', 'BAD_REQUEST', 400);
+      return partnerApiError('Maximum 50 externalIds per request', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     // Deduplicate and validate IDs
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
         500,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to fetch users', 'INTERNAL_ERROR', 500);
+      return partnerApiError('Failed to fetch users', 'INTERNAL_ERROR', 500, undefined, rateLimit);
     }
 
     if (!partnerUsers || partnerUsers.length === 0) {
@@ -119,7 +128,7 @@ export async function POST(request: NextRequest) {
         results: [],
         totalRequested: externalIds.length,
         totalReturned: 0,
-      });
+      }, 200, undefined, rateLimit);
     }
 
     // Build a map of external_id to partner_user_id
@@ -147,7 +156,7 @@ export async function POST(request: NextRequest) {
         500,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to fetch ERS scores', 'INTERNAL_ERROR', 500);
+      return partnerApiError('Failed to fetch ERS scores', 'INTERNAL_ERROR', 500, undefined, rateLimit);
     }
 
     // Group scores by user and get latest for each
@@ -197,7 +206,7 @@ export async function POST(request: NextRequest) {
       results,
       totalRequested: externalIds.length,
       totalReturned: results.length,
-    });
+    }, 200, undefined, rateLimit);
   } catch (error) {
     console.error('Batch ERS error:', error);
     await logPartnerApiUsage(
@@ -207,6 +216,6 @@ export async function POST(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

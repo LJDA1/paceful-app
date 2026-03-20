@@ -21,6 +21,7 @@ import {
   getLatestPartnerERS,
   getPartnerERSTrend,
 } from '@/lib/partner-ers-calculator';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 export async function OPTIONS() {
   return handlePartnerCors();
@@ -31,6 +32,13 @@ export async function GET(
   { params }: { params: Promise<{ externalId: string }> }
 ) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const { externalId } = await params;
+    return sandboxResponse('ers_get', { externalId });
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -49,7 +57,8 @@ export async function GET(
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -64,7 +73,7 @@ export async function GET(
         400,
         Date.now() - startTime
       );
-      return partnerApiError('externalId is required', 'BAD_REQUEST', 400);
+      return partnerApiError('externalId is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const supabase = getSupabaseAdmin();
@@ -86,7 +95,7 @@ export async function GET(
         404,
         Date.now() - startTime
       );
-      return partnerApiError('User not found', 'NOT_FOUND', 404);
+      return partnerApiError('User not found', 'NOT_FOUND', 404, undefined, rateLimit);
     }
 
     // Get latest ERS score
@@ -136,7 +145,7 @@ export async function GET(
         weeklyChange: trend.weeklyChange,
         daysTracked: trend.daysTracked,
       },
-    });
+    }, 200, undefined, rateLimit);
   } catch (error) {
     console.error('ERS fetch error:', error);
     await logPartnerApiUsage(
@@ -146,6 +155,6 @@ export async function GET(
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

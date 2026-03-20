@@ -415,18 +415,34 @@ export default function PartnersLandingPage() {
             Integrate it in minutes.
           </p>
           <div style={styles.heroCtas}>
-            <a
-              href="mailto:partners@paceful.com?subject=Design Partner Program Application"
-              style={styles.ctaPrimary}
+            <Link
+              href="/partners/signup"
+              style={{
+                ...styles.ctaPrimary,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '18px',
+                padding: '16px 32px',
+              }}
             >
-              Apply for Design Partner Program
-            </a>
+              Get Your API Key in 30 Seconds
+              <span style={{ fontSize: '20px' }}>→</span>
+            </Link>
+          </div>
+          <div style={{ ...styles.heroCtas, marginTop: '12px' }}>
             <Link href="/partners/docs" style={styles.ctaSecondary}>
               View Documentation
             </Link>
+            <a
+              href="mailto:partners@paceful.com?subject=Design Partner Program Application"
+              style={styles.ctaSecondary}
+            >
+              Design Partner Program
+            </a>
           </div>
           <p style={styles.heroNote}>
-            Free 90-day access · Direct founder support · 10 spots available
+            Instant sandbox access · No credit card required · Start building now
           </p>
         </div>
       </section>
@@ -703,15 +719,27 @@ export default function PartnersLandingPage() {
       {/* Final CTA */}
       <section style={styles.finalCta}>
         <h2 style={styles.finalCtaTitle}>Ready to integrate emotional intelligence?</h2>
-        <p style={styles.finalCtaSubtitle}>Apply for the Design Partner Program — 10 spots available</p>
-        <a
-          href="mailto:partners@paceful.com?subject=Design Partner Program Application"
-          style={styles.finalCtaButton}
+        <p style={styles.finalCtaSubtitle}>Get your sandbox API key instantly — start building in 30 seconds</p>
+        <Link
+          href="/partners/signup"
+          style={{
+            ...styles.finalCtaButton,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '18px',
+            padding: '16px 36px',
+          }}
         >
-          Apply Now
-        </a>
-        <p style={styles.finalCtaEmail}>
-          Questions? <a href="mailto:partners@paceful.com" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>partners@paceful.com</a>
+          Get Your Free API Key
+          <span style={{ fontSize: '20px' }}>→</span>
+        </Link>
+        <p style={{ ...styles.finalCtaEmail, marginTop: '24px' }}>
+          Need a production key?{' '}
+          <a href="mailto:partners@paceful.com?subject=Production API Key Request" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+            Contact us
+          </a>
+          {' '}for approval within 24 hours
         </p>
       </section>
 
@@ -722,9 +750,10 @@ export default function PartnersLandingPage() {
           <div style={styles.footerLinks}>
             <Link href="/" style={styles.footerLink}>Home</Link>
             <Link href="/partners" style={styles.footerLink}>Partners</Link>
+            <Link href="/partners/signup" style={styles.footerLink}>Get API Key</Link>
             <Link href="/partners/docs" style={styles.footerLink}>Docs</Link>
+            <Link href="/partners/changelog" style={styles.footerLink}>Changelog</Link>
             <Link href="/privacy" style={styles.footerLink}>Privacy</Link>
-            <Link href="/terms" style={styles.footerLink}>Terms</Link>
           </div>
           <div style={styles.footerCopyright}>
             Built by LJ · © 2026 Paceful

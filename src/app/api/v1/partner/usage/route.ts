@@ -14,6 +14,7 @@ import {
   partnerApiSuccess,
   handlePartnerCors,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 export async function OPTIONS() {
   return handlePartnerCors();
@@ -21,6 +22,12 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    return sandboxResponse('partner_usage', {});
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -33,13 +40,14 @@ export async function GET(request: NextRequest) {
   }
 
   // Check rate limit
-  const rateLimit = await checkPartnerRateLimit(validation.partnerId!, validation.rateLimit);
-  if (!rateLimit.allowed) {
+  const rateLimitResult = await checkPartnerRateLimit(validation.partnerId!, validation.rateLimit);
+  if (!rateLimitResult.allowed) {
     return partnerApiError(
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimitResult
     );
   }
 
@@ -53,7 +61,7 @@ export async function GET(request: NextRequest) {
       totalCalls30d: 847,
       callsToday: 23,
       rateLimitPerHour,
-      rateLimitRemaining: Math.max(0, rateLimitPerHour - Math.floor(Math.random() * 20)),
+      rateLimitRemaining: rateLimitResult.remaining,
       topEndpoints: [
         { endpoint: '/ers/{id}', calls: 342 },
         { endpoint: '/mood/log', calls: 228 },
@@ -71,7 +79,7 @@ export async function GET(request: NextRequest) {
       Date.now() - startTime
     );
 
-    return partnerApiSuccess(mockUsageData);
+    return partnerApiSuccess(mockUsageData, 200, undefined, rateLimitResult);
   } catch (error) {
     console.error('Usage stats error:', error);
     await logPartnerApiUsage(
@@ -81,6 +89,6 @@ export async function GET(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimitResult);
   }
 }

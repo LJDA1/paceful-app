@@ -264,6 +264,7 @@ function Sidebar({ activeSection }: { activeSection: string }) {
       icon: <ChartIcon className="w-4 h-4" />,
       children: [
         { id: 'endpoint-ers-single', label: '/ers/:userId', method: 'GET' as const },
+        { id: 'endpoint-ers-history', label: '/ers/:userId/history', method: 'GET' as const },
         { id: 'endpoint-ers-batch', label: '/ers/batch', method: 'GET' as const },
         { id: 'endpoint-analytics', label: '/analytics/summary', method: 'GET' as const },
       ]
@@ -276,6 +277,25 @@ function Sidebar({ activeSection }: { activeSection: string }) {
         { id: 'endpoint-aggregate', label: '/aggregate', method: 'GET' as const },
         { id: 'endpoint-individual', label: '/individual', method: 'POST' as const },
         { id: 'endpoint-health', label: '/health', method: 'GET' as const },
+      ]
+    },
+    {
+      id: 'webhook-deliveries',
+      label: 'Webhook Deliveries',
+      icon: <SignalIcon className="w-4 h-4" />,
+      children: [
+        { id: 'endpoint-deliveries-list', label: '/deliveries', method: 'GET' as const },
+        { id: 'endpoint-delivery-detail', label: '/deliveries/:id', method: 'GET' as const },
+        { id: 'endpoint-delivery-retry', label: '/deliveries/:id/retry', method: 'POST' as const },
+      ]
+    },
+    {
+      id: 'health-status',
+      label: 'Health & Status',
+      icon: <StatusIcon className="w-4 h-4" />,
+      children: [
+        { id: 'endpoint-status-public', label: '/status', method: 'GET' as const },
+        { id: 'endpoint-health-partner', label: '/partner/health', method: 'GET' as const },
       ]
     },
     { id: 'code-examples', label: 'Code Examples', icon: <CodeIcon className="w-4 h-4" /> },
@@ -338,8 +358,10 @@ export default function ApiDocsPage() {
     const handleScroll = () => {
       const sections = [
         'getting-started', 'authentication',
-        'endpoint-ers-single', 'endpoint-ers-batch', 'endpoint-analytics',
+        'endpoint-ers-single', 'endpoint-ers-history', 'endpoint-ers-batch', 'endpoint-analytics',
         'endpoint-aggregate', 'endpoint-individual', 'endpoint-health',
+        'endpoint-deliveries-list', 'endpoint-delivery-detail', 'endpoint-delivery-retry',
+        'endpoint-status-public', 'endpoint-health-partner',
         'code-examples', 'error-handling', 'rate-limits', 'support'
       ];
 
@@ -548,6 +570,114 @@ export default function ApiDocsPage() {
               />
             </section>
 
+            <section id="endpoint-ers-history" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/api/v1/ers/:userId/history</code>
+              </div>
+              <h2
+                className="text-[24px] font-bold mb-4"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                ERS History &amp; Trends
+              </h2>
+              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
+                Get historical ERS scores over time with trend analysis. Perfect for dashboards, progress reports, and outcome measurement.
+              </p>
+
+              <h3 className="text-[15px] font-semibold mb-3" style={{ color: '#1F1D1A' }}>Path Parameters</h3>
+              <ParamTable params={[
+                { name: 'userId', type: 'string', required: true, description: 'External user ID' },
+              ]} />
+
+              <h3 className="text-[15px] font-semibold mt-6 mb-3" style={{ color: '#1F1D1A' }}>Query Parameters</h3>
+              <ParamTable params={[
+                { name: 'period', type: 'string', required: false, description: '"7d", "30d", "90d", or "all" (default: "30d")' },
+                { name: 'granularity', type: 'string', required: false, description: '"daily", "weekly", or "monthly" (default: "daily")' },
+                { name: 'include_dimensions', type: 'boolean', required: false, description: 'Include dimension breakdowns (default: true)' },
+              ]} />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/partner/ers/user_123/history?period=30d&granularity=weekly" \\
+  -H "Authorization: Bearer pk_your_api_key"`}
+                language="bash"
+              />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-[13px]" style={{ color: '#5C574F' }}>Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "userId": "user_123",
+  "period": "30d",
+  "granularity": "weekly",
+  "currentScore": 62,
+  "currentStage": "rebuilding",
+  "trend": {
+    "direction": "improving",
+    "totalChange": 14,
+    "weeklyRate": 3.5,
+    "dataPointsUsed": 4
+  },
+  "milestones": [
+    {
+      "date": "2026-03-05T00:00:00Z",
+      "type": "stage_transition",
+      "from": "healing",
+      "to": "rebuilding",
+      "scoreAtTransition": 45
+    }
+  ],
+  "history": [
+    {
+      "date": "2026-02-18T00:00:00Z",
+      "score": 48,
+      "stage": "healing",
+      "dimensions": {
+        "emotional_stability": 42,
+        "self_reflection": 55,
+        "coping_capacity": 50,
+        "behavioral_engagement": 44,
+        "social_readiness": 49
+      }
+    },
+    {
+      "date": "2026-02-25T00:00:00Z",
+      "score": 55,
+      "stage": "rebuilding",
+      "dimensions": {
+        "emotional_stability": 50,
+        "self_reflection": 58,
+        "coping_capacity": 54,
+        "behavioral_engagement": 52,
+        "social_readiness": 56
+      }
+    }
+  ]
+}`}
+                language="json"
+                title="Response Body"
+              />
+
+              <div
+                className="mt-6 p-4 rounded-2xl"
+                style={{ background: 'rgba(91,138,114,0.08)', border: '1px solid rgba(91,138,114,0.2)' }}
+              >
+                <div className="flex items-start gap-3">
+                  <ChartIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#5B8A72' }} />
+                  <div>
+                    <h4 className="font-semibold text-[14px]" style={{ color: '#5B8A72' }}>Trend Direction</h4>
+                    <p className="text-[13px] mt-1" style={{ color: '#5C574F' }}>
+                      &quot;improving&quot; = +3 or more points, &quot;declining&quot; = -3 or more points, &quot;stable&quot; = within ±3 points.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <section id="endpoint-ers-batch" className="scroll-mt-24">
               <div className="flex items-center gap-3 mb-4">
                 <MethodBadge method="GET" />
@@ -689,6 +819,315 @@ export default function ApiDocsPage() {
               />
             </section>
 
+            {/* WEBHOOK DELIVERIES */}
+            <section id="endpoint-deliveries-list" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/webhooks/deliveries</code>
+              </div>
+              <h2
+                className="text-[24px] font-bold mb-4"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                List Webhook Deliveries
+              </h2>
+              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
+                List all webhook delivery attempts with filtering and pagination. Useful for monitoring webhook health and debugging delivery issues.
+              </p>
+
+              <h3 className="text-[15px] font-semibold mb-3" style={{ color: '#1F1D1A' }}>Query Parameters</h3>
+              <ParamTable params={[
+                { name: 'webhook_id', type: 'string (UUID)', required: false, description: 'Filter by specific webhook' },
+                { name: 'status', type: 'string', required: false, description: 'Filter: "pending", "delivered", "retrying", "failed"' },
+                { name: 'event_type', type: 'string', required: false, description: 'Filter by event type (e.g., "ers.stage_changed")' },
+                { name: 'since', type: 'string (ISO datetime)', required: false, description: 'Only show deliveries after this time' },
+                { name: 'limit', type: 'integer', required: false, description: 'Results per page (default: 50, max: 200)' },
+                { name: 'offset', type: 'integer', required: false, description: 'Pagination offset (default: 0)' },
+              ]} />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/partner/webhooks/deliveries?status=failed&limit=10" \\
+  -H "Authorization: Bearer pk_live_abc123"`}
+                language="bash"
+              />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-[13px]" style={{ color: '#5C574F' }}>Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "deliveries": [
+    {
+      "id": "del_abc123",
+      "webhookId": "wh_xyz789",
+      "eventType": "ers.stage_changed",
+      "status": "delivered",
+      "httpStatusCode": 200,
+      "attemptCount": 1,
+      "maxAttempts": 3,
+      "deliveredAt": "2026-03-18T10:30:00Z",
+      "createdAt": "2026-03-18T10:29:58Z",
+      "durationMs": 234
+    }
+  ],
+  "pagination": {
+    "total": 47,
+    "limit": 10,
+    "offset": 0,
+    "hasMore": true
+  }
+}`}
+                language="json"
+                title="Response Body"
+              />
+            </section>
+
+            <section id="endpoint-delivery-detail" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/webhooks/deliveries/:deliveryId</code>
+              </div>
+              <h2
+                className="text-[24px] font-bold mb-4"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                Get Delivery Details
+              </h2>
+              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
+                Get full details of a specific delivery including the payload that was sent.
+              </p>
+
+              <h3 className="text-[15px] font-semibold mb-3" style={{ color: '#1F1D1A' }}>Path Parameters</h3>
+              <ParamTable params={[
+                { name: 'deliveryId', type: 'string (UUID)', required: true, description: 'The delivery ID' },
+              ]} />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/partner/webhooks/deliveries/del_abc123" \\
+  -H "Authorization: Bearer pk_live_abc123"`}
+                language="bash"
+              />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-[13px]" style={{ color: '#5C574F' }}>Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "id": "del_abc123",
+  "webhookId": "wh_xyz789",
+  "eventType": "ers.stage_changed",
+  "payload": {
+    "event": "ers.stage_changed",
+    "timestamp": "2026-03-18T10:29:58Z",
+    "data": {
+      "externalId": "user_123",
+      "previousStage": "healing",
+      "newStage": "rebuilding",
+      "ersScore": 62
+    }
+  },
+  "status": "delivered",
+  "httpStatusCode": 200,
+  "responseBody": "{\\"received\\":true}",
+  "attemptCount": 1,
+  "maxAttempts": 3,
+  "deliveredAt": "2026-03-18T10:30:00Z",
+  "createdAt": "2026-03-18T10:29:58Z",
+  "durationMs": 234
+}`}
+                language="json"
+                title="Response Body"
+              />
+            </section>
+
+            <section id="endpoint-delivery-retry" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="POST" />
+                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/webhooks/deliveries/:deliveryId/retry</code>
+              </div>
+              <h2
+                className="text-[24px] font-bold mb-4"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                Retry Failed Delivery
+              </h2>
+              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
+                Manually retry a failed webhook delivery. Only works for deliveries with status &quot;failed&quot;.
+              </p>
+
+              <h3 className="text-[15px] font-semibold mb-3" style={{ color: '#1F1D1A' }}>Path Parameters</h3>
+              <ParamTable params={[
+                { name: 'deliveryId', type: 'string (UUID)', required: true, description: 'The delivery ID to retry' },
+              ]} />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
+              <CodeBlock
+                code={`curl -X POST "https://api.paceful.app/api/v1/partner/webhooks/deliveries/del_abc123/retry" \\
+  -H "Authorization: Bearer pk_live_abc123"`}
+                language="bash"
+              />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-[13px]" style={{ color: '#5C574F' }}>Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "retried": true,
+  "deliveryId": "del_abc123",
+  "newStatus": "delivered",
+  "success": true,
+  "httpStatusCode": 200
+}`}
+                language="json"
+                title="Response Body"
+              />
+
+              <div
+                className="mt-6 p-4 rounded-2xl"
+                style={{ background: 'rgba(212,151,59,0.08)', border: '1px solid rgba(212,151,59,0.2)' }}
+              >
+                <div className="flex items-start gap-3">
+                  <AlertIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#D4973B' }} />
+                  <div>
+                    <h4 className="font-semibold text-[14px]" style={{ color: '#D4973B' }}>Note</h4>
+                    <p className="text-[13px] mt-1" style={{ color: '#5C574F' }}>
+                      Retries are only allowed for deliveries with status &quot;failed&quot;. Attempting to retry a delivery in any other state will return a 400 error.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* HEALTH & STATUS */}
+            <section id="endpoint-status-public" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/api/v1/status</code>
+              </div>
+              <h2
+                className="text-[24px] font-bold mb-4"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                Public Status Check
+              </h2>
+              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
+                Public endpoint for monitoring service health. No authentication required. Ideal for uptime monitoring tools like Pingdom, UptimeRobot, or custom dashboards.
+              </p>
+
+              <div
+                className="mb-6 p-4 rounded-2xl"
+                style={{ background: 'rgba(91,138,114,0.08)', border: '1px solid rgba(91,138,114,0.2)' }}
+              >
+                <div className="flex items-start gap-3">
+                  <LockIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#5B8A72' }} />
+                  <div>
+                    <h4 className="font-semibold text-[14px]" style={{ color: '#5B8A72' }}>No Authentication</h4>
+                    <p className="text-[13px] mt-1" style={{ color: '#5C574F' }}>
+                      This endpoint is publicly accessible. Response is cached for 30 seconds to prevent abuse.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/status"`}
+                language="bash"
+              />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-[13px]" style={{ color: '#5C574F' }}>Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "status": "operational",
+  "version": "0.1.0",
+  "timestamp": "2026-03-18T15:30:00Z",
+  "services": {
+    "api": { "status": "operational", "responseTimeMs": 12 },
+    "database": { "status": "operational", "responseTimeMs": 45 },
+    "ers_engine": { "status": "operational" }
+  },
+  "uptime": "99.9%"
+}`}
+                language="json"
+                title="Response Body"
+              />
+            </section>
+
+            <section id="endpoint-health-partner" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-4">
+                <MethodBadge method="GET" />
+                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/api/v1/partner/health</code>
+              </div>
+              <h2
+                className="text-[24px] font-bold mb-4"
+                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
+              >
+                Partner Health Check
+              </h2>
+              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
+                Authenticated health check with partner-specific details including rate limits, webhook status, and SDK compatibility info.
+              </p>
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
+              <CodeBlock
+                code={`curl -X GET "https://api.paceful.app/api/v1/partner/health" \\
+  -H "Authorization: Bearer pk_your_api_key"`}
+                language="bash"
+              />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Response</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <StatusCode code={200} />
+                <span className="text-[13px]" style={{ color: '#5C574F' }}>Success</span>
+              </div>
+              <CodeBlock
+                code={`{
+  "status": "operational",
+  "version": "0.1.0",
+  "timestamp": "2026-03-18T15:30:00Z",
+  "services": {
+    "api": { "status": "operational", "responseTimeMs": 12 },
+    "database": { "status": "operational", "responseTimeMs": 45 },
+    "ers_engine": { "status": "operational" }
+  },
+  "partner": {
+    "name": "Soother",
+    "rateLimitRemaining": 87,
+    "rateLimitReset": 1710772800,
+    "activeWebhooks": 2,
+    "totalUsersRegistered": 156,
+    "lastApiCall": "2026-03-18T15:28:00Z"
+  },
+  "sdk": {
+    "latestVersion": "1.1.0",
+    "minimumSupported": "1.0.0"
+  }
+}`}
+                language="json"
+                title="Response Body"
+              />
+
+              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Service Status Values</h3>
+              <ParamTable params={[
+                { name: 'operational', type: 'string', required: false, description: 'Service is functioning normally' },
+                { name: 'degraded', type: 'string', required: false, description: 'Service is experiencing issues but still functional' },
+                { name: 'slow', type: 'string', required: false, description: 'Response times exceed 2000ms' },
+                { name: 'down', type: 'string', required: false, description: 'Service is unavailable' },
+              ]} />
+            </section>
+
             {/* CODE EXAMPLES */}
             <section id="code-examples" className="scroll-mt-24">
               <h2
@@ -826,8 +1265,47 @@ console.log(\`Total predictions: \${data.data.total_predictions}\`);`}
                 </table>
               </div>
 
+              <h3 className="text-[17px] font-semibold mb-3" style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}>
+                Rate Limit Headers
+              </h3>
+              <p className="text-[14px] mb-4" style={{ color: '#5C574F' }}>
+                All API responses include rate limit information in the headers:
+              </p>
+              <div className="overflow-x-auto rounded-2xl mb-6" style={{ border: '1px solid #F0EBE4' }}>
+                <table className="w-full text-[14px]">
+                  <thead>
+                    <tr style={{ background: '#F3EFE9' }}>
+                      <th className="text-left px-4 py-3 font-medium" style={{ color: '#5C574F' }}>Header</th>
+                      <th className="text-left px-4 py-3 font-medium" style={{ color: '#5C574F' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { header: 'X-RateLimit-Limit', desc: 'Total requests allowed per hour' },
+                      { header: 'X-RateLimit-Remaining', desc: 'Requests remaining in current window' },
+                      { header: 'X-RateLimit-Reset', desc: 'Unix timestamp (seconds) when the window resets' },
+                      { header: 'Retry-After', desc: 'Seconds until retry allowed (only on 429 responses)' },
+                    ].map((row, i) => (
+                      <tr key={i} style={{ borderTop: '1px solid #F0EBE4' }}>
+                        <td className="px-4 py-3 font-mono text-[13px]" style={{ color: '#5B8A72' }}>{row.header}</td>
+                        <td className="px-4 py-3" style={{ color: '#5C574F' }}>{row.desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <CodeBlock
+                code={`HTTP/1.1 200 OK
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 87
+X-RateLimit-Reset: 1710763200`}
+                language="http"
+                title="Example Response Headers"
+              />
+
               <div
-                className="p-4 rounded-2xl"
+                className="mt-6 p-4 rounded-2xl"
                 style={{ background: 'rgba(91,138,114,0.08)', border: '1px solid rgba(91,138,114,0.2)' }}
               >
                 <div className="flex items-start gap-3">
@@ -835,7 +1313,7 @@ console.log(\`Total predictions: \${data.data.total_predictions}\`);`}
                   <div>
                     <h4 className="font-semibold text-[14px]" style={{ color: '#5B8A72' }}>Best Practice</h4>
                     <p className="text-[13px] mt-1" style={{ color: '#5C574F' }}>
-                      Cache aggregate responses for 5-15 minutes. Use exponential backoff when rate limited.
+                      Cache aggregate responses for 5-15 minutes. Monitor <code className="px-1 rounded" style={{ background: '#F3EFE9' }}>X-RateLimit-Remaining</code> and use exponential backoff when rate limited.
                     </p>
                   </div>
                 </div>

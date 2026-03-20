@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import ApiPlayground from '@/components/ApiPlayground';
 
 type CodeLang = 'curl' | 'javascript' | 'python';
 
@@ -155,9 +156,15 @@ function ParamsTable({ params }: { params: { name: string; type: string; require
 
 const NAV_SECTIONS = [
   { id: 'getting-started', label: 'Getting Started' },
+  { id: 'sandbox', label: 'Sandbox Mode' },
+  { id: 'playground', label: 'API Playground' },
   { id: 'authentication', label: 'Authentication' },
   { id: 'users', label: 'Users', children: [
     { id: 'register-user', label: 'Register User' },
+  ]},
+  { id: 'bulk-import', label: 'Bulk Import', children: [
+    { id: 'import-users', label: 'Import Users' },
+    { id: 'import-mood', label: 'Import Mood' },
   ]},
   { id: 'mood', label: 'Mood', children: [
     { id: 'log-mood', label: 'Log Mood' },
@@ -169,6 +176,8 @@ const NAV_SECTIONS = [
     { id: 'get-score', label: 'Get Score' },
     { id: 'calculate-score', label: 'Calculate Score' },
     { id: 'batch-scores', label: 'Batch Scores' },
+    { id: 'ers-history', label: 'User History' },
+    { id: 'ers-trends', label: 'Aggregate Trends' },
   ]},
   { id: 'snapshot', label: 'Snapshot Assessment', children: [
     { id: 'snapshot-questions', label: 'Get Questions' },
@@ -180,6 +189,10 @@ const NAV_SECTIONS = [
   ]},
   { id: 'analytics', label: 'Analytics', children: [
     { id: 'summary', label: 'Summary' },
+  ]},
+  { id: 'health-status', label: 'Health & Status', children: [
+    { id: 'public-status', label: 'Public Status' },
+    { id: 'partner-health', label: 'Partner Health' },
   ]},
   { id: 'webhooks', label: 'Webhooks', children: [
     { id: 'register-webhook', label: 'Register Webhook' },
@@ -193,6 +206,7 @@ const NAV_SECTIONS = [
   ]},
   { id: 'error-handling', label: 'Error Handling' },
   { id: 'rate-limits', label: 'Rate Limits' },
+  { id: 'versioning', label: 'Versioning & Changelog' },
 ];
 
 export default function PartnerDocs() {
@@ -325,7 +339,9 @@ export default function PartnerDocs() {
       <nav style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <div style={styles.sidebarTitle}>Paceful API Docs</div>
-          <div style={styles.sidebarVersion}>v1.3</div>
+          <Link href="/partners/changelog" style={{ fontSize: '12px', color: '#5B8A72', textDecoration: 'none' }}>
+            v1.0.0 changelog →
+          </Link>
         </div>
         {NAV_SECTIONS.map((section) => (
           <div key={section.id}>
@@ -411,6 +427,225 @@ console.log(ers.ersScore, ers.stage);`} />
           </p>
         </section>
 
+        {/* Sandbox Mode */}
+        <section id="sandbox" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Sandbox Mode</h2>
+          <p style={styles.paragraph}>
+            Test the Paceful API without affecting production data. Use the sandbox API key to receive
+            realistic mock responses from all endpoints.
+          </p>
+
+          <div style={{
+            backgroundColor: '#E8F5E9',
+            borderRadius: '8px',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            borderLeft: '4px solid #5B8A72',
+          }}>
+            <p style={{ ...styles.paragraph, marginBottom: 0, color: '#2E7D32' }}>
+              <strong>Sandbox API Key:</strong>{' '}
+              <code style={{ backgroundColor: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                pk_sandbox_paceful_demo
+              </code>
+            </p>
+          </div>
+
+          <h3 style={styles.subsectionTitle}>How It Works</h3>
+          <p style={styles.paragraph}>
+            Simply use the sandbox API key in your <code>X-API-Key</code> header. The API will:
+          </p>
+          <ul style={{ ...styles.paragraph, paddingLeft: '24px' }}>
+            <li>Return realistic mock data for all endpoints</li>
+            <li>Generate deterministic responses based on user IDs (same ID = same data)</li>
+            <li>Skip all database operations and rate limiting</li>
+            <li>Work with any external ID you provide</li>
+          </ul>
+
+          <h3 style={styles.subsectionTitle}>Try It Out</h3>
+          <CodeBlock code={{
+            curl: `# Register a test user
+curl -X POST "https://paceful-app.vercel.app/api/v1/partner/users/register" \\
+  -H "X-API-Key: pk_sandbox_paceful_demo" \\
+  -H "Content-Type: application/json" \\
+  -d '{"externalId": "test-user-123"}'
+
+# Get their ERS score
+curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/test-user-123" \\
+  -H "X-API-Key: pk_sandbox_paceful_demo"
+
+# Log a mood
+curl -X POST "https://paceful-app.vercel.app/api/v1/partner/mood/log" \\
+  -H "X-API-Key: pk_sandbox_paceful_demo" \\
+  -H "Content-Type: application/json" \\
+  -d '{"externalId": "test-user-123", "score": 4}'`,
+            javascript: `// Use the sandbox key during development
+const paceful = new PacefulClient({
+  apiKey: 'pk_sandbox_paceful_demo'
+});
+
+// All endpoints return realistic mock data
+const user = await paceful.users.register({ externalId: 'test-user-123' });
+console.log(user.pacefulUserId); // "pf_sandbox_..."
+
+const ers = await paceful.ers.get('test-user-123');
+console.log(ers.ersScore); // e.g., 66
+console.log(ers.stage); // e.g., "rebuilding"
+
+// Same user ID always returns same data
+const ers2 = await paceful.ers.get('test-user-123');
+console.log(ers.ersScore === ers2.ersScore); // true`,
+            python: `# Use the sandbox key during development
+paceful = PacefulClient(api_key='pk_sandbox_paceful_demo')
+
+# All endpoints return realistic mock data
+user = paceful.users.register(external_id='test-user-123')
+print(user.paceful_user_id)  # "pf_sandbox_..."
+
+ers = paceful.ers.get('test-user-123')
+print(ers.ers_score)  # e.g., 66
+print(ers.stage)  # e.g., "rebuilding"`
+          }} />
+
+          <h3 style={styles.subsectionTitle}>Available Sandbox Endpoints</h3>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '14px',
+            marginBottom: '16px',
+          }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560', width: '80px' }}>Method</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Endpoint</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { method: 'POST', path: '/partner/users/register' },
+                { method: 'POST', path: '/partner/mood/log' },
+                { method: 'POST', path: '/partner/journal/entry' },
+                { method: 'GET', path: '/partner/ers/{externalId}' },
+                { method: 'POST', path: '/partner/ers/calculate' },
+                { method: 'POST', path: '/partner/ers/batch' },
+                { method: 'GET', path: '/partner/analytics/summary' },
+                { method: 'POST', path: '/partner/webhooks/register' },
+                { method: 'GET', path: '/partner/webhooks/list' },
+                { method: 'GET', path: '/partner/info' },
+                { method: 'GET', path: '/partner/usage' },
+                { method: 'GET', path: '/partner/config' },
+                { method: 'PUT', path: '/partner/config' },
+                { method: 'GET', path: '/assess/snapshot/questions' },
+                { method: 'POST', path: '/assess/snapshot' },
+              ].map((e, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                  <td style={{ padding: '8px 0' }}><MethodBadge method={e.method as 'GET' | 'POST' | 'PUT' | 'DELETE'} /></td>
+                  <td style={{ padding: '8px 0' }}><code>{e.path}</code></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <h3 style={styles.subsectionTitle}>Sandbox User Data</h3>
+          <p style={styles.paragraph}>
+            The sandbox includes 25 pre-generated users with varying ERS stages and engagement history.
+            You can also use any external ID you want — the sandbox will generate deterministic data
+            based on the ID.
+          </p>
+          <CodeBlock code={`// Pre-defined sandbox users
+"sandbox_user_001" through "sandbox_user_025"
+
+// User distribution:
+// - 5 users in "healing" stage (ERS 25-45)
+// - 12 users in "rebuilding" stage (ERS 50-70)
+// - 8 users in "ready" stage (ERS 75-92)
+
+// Example: Get a healing-stage user
+curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/sandbox_user_001" \\
+  -H "X-API-Key: pk_sandbox_paceful_demo"
+
+// Example: Get a ready-stage user
+curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/sandbox_user_020" \\
+  -H "X-API-Key: pk_sandbox_paceful_demo"`} />
+
+          <h3 style={styles.subsectionTitle}>Testing ERS Explainability</h3>
+          <p style={styles.paragraph}>
+            Sandbox mode supports all ERS configuration options including verbosity, tone, and score format:
+          </p>
+          <CodeBlock code={{
+            curl: `# Test clinical verbosity with motivational tone
+curl -X POST "https://paceful-app.vercel.app/api/v1/assess/snapshot" \\
+  -H "X-API-Key: pk_sandbox_paceful_demo" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "config": {
+      "verbosity": "clinical",
+      "tone": "motivational",
+      "score_format": "traffic_light"
+    },
+    "responses": [
+      {"dimension": "emotional_stability", "question_id": 1, "value": 4},
+      {"dimension": "emotional_stability", "question_id": 2, "value": 3},
+      {"dimension": "self_reflection", "question_id": 3, "value": 4},
+      {"dimension": "self_reflection", "question_id": 4, "value": 4},
+      {"dimension": "coping_capacity", "question_id": 5, "value": 3},
+      {"dimension": "coping_capacity", "question_id": 6, "value": 4},
+      {"dimension": "behavioral_engagement", "question_id": 7, "value": 4},
+      {"dimension": "behavioral_engagement", "question_id": 8, "value": 3},
+      {"dimension": "social_readiness", "question_id": 9, "value": 3},
+      {"dimension": "social_readiness", "question_id": 10, "value": 4}
+    ]
+  }'`,
+            javascript: `// Test with different configurations
+const result = await fetch('https://paceful-app.vercel.app/api/v1/assess/snapshot', {
+  method: 'POST',
+  headers: {
+    'X-API-Key': 'pk_sandbox_paceful_demo',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    config: {
+      verbosity: 'clinical',       // Get full details with recommended_action
+      tone: 'motivational',         // Encouraging language
+      score_format: 'traffic_light' // red/yellow/green output
+    },
+    responses: [
+      { dimension: 'emotional_stability', question_id: 1, value: 4 },
+      // ... all 10 responses
+    ]
+  })
+});`,
+            python: `# Test with different configurations
+result = requests.post(
+    'https://paceful-app.vercel.app/api/v1/assess/snapshot',
+    headers={
+        'X-API-Key': 'pk_sandbox_paceful_demo',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'config': {
+            'verbosity': 'clinical',        # Get full details
+            'tone': 'motivational',          # Encouraging language
+            'score_format': 'traffic_light'  # red/yellow/green
+        },
+        'responses': [
+            {'dimension': 'emotional_stability', 'question_id': 1, 'value': 4},
+            # ... all 10 responses
+        ]
+    }
+)`
+          }} />
+        </section>
+
+        {/* API Playground */}
+        <section id="playground" style={styles.section}>
+          <h2 style={styles.sectionTitle}>API Playground</h2>
+          <p style={styles.paragraph}>
+            Test API endpoints directly in your browser. The playground is pre-loaded with the sandbox API key
+            for safe experimentation — no production data will be affected.
+          </p>
+          <ApiPlayground defaultApiKey="pk_sandbox_paceful_demo" />
+        </section>
+
         {/* Authentication */}
         <section id="authentication" style={styles.section}>
           <h2 style={styles.sectionTitle}>Authentication</h2>
@@ -490,6 +725,233 @@ response = requests.get(
     "status": "active"
   }
 }`} />
+          </div>
+        </section>
+
+        {/* Bulk Import */}
+        <section id="bulk-import" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Bulk Import</h2>
+          <p style={styles.paragraph}>
+            For partners with existing user bases, bulk import endpoints allow you to onboard users and historical
+            data efficiently — up to 500 users or 1000 mood entries per request.
+          </p>
+
+          <div style={{
+            backgroundColor: '#FFF8E1',
+            borderRadius: '8px',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            borderLeft: '4px solid #C4973B',
+          }}>
+            <p style={{ ...styles.paragraph, marginBottom: 0, color: '#8D6E24' }}>
+              <strong>Rate Limiting:</strong> Batch endpoints count as <strong>1 request</strong> against your rate limit,
+              not N requests. Maximum payload size is 5MB.
+            </p>
+          </div>
+
+          <div id="import-users" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /import/users
+            </div>
+            <p style={styles.paragraph}>
+              Import up to 500 users in a single request. Users that already exist are skipped (not errored).
+              Each user is processed independently — failures don't affect other users in the batch.
+            </p>
+            <ParamsTable params={[
+              { name: 'users', type: 'array', required: true, description: 'Array of user objects (max 500)' },
+              { name: 'users[].externalId', type: 'string', required: true, description: 'Your unique identifier for this user' },
+              { name: 'users[].context', type: 'object', required: false, description: 'Optional user context (breakupDate, etc.)' },
+              { name: 'users[].consentGiven', type: 'boolean', required: false, description: 'Whether user consented to data processing' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/import/users" \\
+  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "users": [
+      { "externalId": "user-001", "context": { "breakupDate": "2026-01-15", "relationshipDuration": "2y" }, "consentGiven": true },
+      { "externalId": "user-002", "context": { "breakupDate": "2025-11-01" }, "consentGiven": true },
+      { "externalId": "user-003", "consentGiven": true }
+    ]
+  }'`,
+              javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/import/users', {
+  method: 'POST',
+  headers: {
+    'X-API-Key': 'pk_live_your_api_key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    users: [
+      { externalId: 'user-001', context: { breakupDate: '2026-01-15' }, consentGiven: true },
+      { externalId: 'user-002', context: { breakupDate: '2025-11-01' }, consentGiven: true },
+      // ... up to 500 users
+    ]
+  })
+});
+
+const { created, skipped, failed, results } = await response.json();`,
+              python: `response = requests.post(
+    'https://paceful-app.vercel.app/api/v1/partner/import/users',
+    headers={
+        'X-API-Key': 'pk_live_your_api_key',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'users': [
+            {'externalId': 'user-001', 'context': {'breakupDate': '2026-01-15'}, 'consentGiven': True},
+            {'externalId': 'user-002', 'context': {'breakupDate': '2025-11-01'}, 'consentGiven': True},
+            # ... up to 500 users
+        ]
+    }
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "total": 50,
+    "created": 45,
+    "skipped": 3,
+    "failed": 2,
+    "results": [
+      { "externalId": "user-001", "status": "created", "pacefulUserId": "pf_abc123" },
+      { "externalId": "user-002", "status": "skipped", "reason": "already_exists" },
+      { "externalId": "user-003", "status": "failed", "reason": "invalid_external_id" }
+    ]
+  }
+}`} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Status Values</h4>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { status: 'created', desc: 'User successfully created' },
+                  { status: 'skipped', desc: 'User already exists (not an error)' },
+                  { status: 'failed', desc: 'Could not create user — check reason field' },
+                ].map((s) => (
+                  <tr key={s.status} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}><code>{s.status}</code></td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{s.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div id="import-mood" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /import/mood
+            </div>
+            <p style={styles.paragraph}>
+              Import up to 1000 historical mood entries in a single request. Users must be registered first.
+              Each entry is processed independently.
+            </p>
+            <ParamsTable params={[
+              { name: 'entries', type: 'array', required: true, description: 'Array of mood entries (max 1000)' },
+              { name: 'entries[].externalId', type: 'string', required: true, description: 'Your user identifier' },
+              { name: 'entries[].score', type: 'number', required: true, description: 'Mood score 1-5' },
+              { name: 'entries[].label', type: 'string', required: false, description: 'Mood label (e.g., "good", "okay")' },
+              { name: 'entries[].emotions', type: 'string[]', required: false, description: 'Associated emotions' },
+              { name: 'entries[].timestamp', type: 'string', required: true, description: 'ISO 8601 timestamp of the mood log' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/import/mood" \\
+  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "entries": [
+      { "externalId": "user-001", "score": 3, "label": "okay", "emotions": ["anxious"], "timestamp": "2026-03-01T10:00:00Z" },
+      { "externalId": "user-001", "score": 4, "label": "good", "emotions": ["hopeful"], "timestamp": "2026-03-02T10:00:00Z" },
+      { "externalId": "user-002", "score": 2, "label": "difficult", "emotions": ["sad", "lonely"], "timestamp": "2026-03-01T18:00:00Z" }
+    ]
+  }'`,
+              javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/import/mood', {
+  method: 'POST',
+  headers: {
+    'X-API-Key': 'pk_live_your_api_key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    entries: [
+      { externalId: 'user-001', score: 3, label: 'okay', emotions: ['anxious'], timestamp: '2026-03-01T10:00:00Z' },
+      { externalId: 'user-001', score: 4, label: 'good', emotions: ['hopeful'], timestamp: '2026-03-02T10:00:00Z' },
+      // ... up to 1000 entries
+    ]
+  })
+});
+
+const { created, skipped, failed, results } = await response.json();`,
+              python: `response = requests.post(
+    'https://paceful-app.vercel.app/api/v1/partner/import/mood',
+    headers={
+        'X-API-Key': 'pk_live_your_api_key',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'entries': [
+            {'externalId': 'user-001', 'score': 3, 'label': 'okay', 'emotions': ['anxious'], 'timestamp': '2026-03-01T10:00:00Z'},
+            {'externalId': 'user-001', 'score': 4, 'label': 'good', 'emotions': ['hopeful'], 'timestamp': '2026-03-02T10:00:00Z'},
+            # ... up to 1000 entries
+        ]
+    }
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "total": 100,
+    "created": 95,
+    "skipped": 2,
+    "failed": 3,
+    "results": [
+      { "externalId": "user-001", "timestamp": "2026-03-01T10:00:00Z", "status": "created", "moodId": "mood_xyz789" },
+      { "externalId": "user-002", "timestamp": "2026-03-01T18:00:00Z", "status": "failed", "reason": "user_not_found" },
+      { "externalId": "user-003", "timestamp": "2026-03-01T12:00:00Z", "status": "failed", "reason": "invalid_score" }
+    ]
+  }
+}`} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Failure Reasons</h4>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Reason</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { reason: 'user_not_found', desc: 'No user registered with this externalId' },
+                  { reason: 'invalid_score', desc: 'Score must be 1-5' },
+                  { reason: 'invalid_timestamp', desc: 'Timestamp is not valid ISO 8601' },
+                  { reason: 'missing_timestamp', desc: 'Timestamp is required' },
+                ].map((r) => (
+                  <tr key={r.reason} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}><code>{r.reason}</code></td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{r.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -678,6 +1140,149 @@ response = requests.get(
     ],
     "totalRequested": 2,
     "totalReturned": 2
+  }
+}`} />
+          </div>
+
+          <div id="ers-history" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /ers/{'{externalId}'}/history
+            </div>
+            <p style={styles.paragraph}>
+              Get historical ERS scores for a user over time. Powers dashboards, clinical progress reports,
+              and outcome measurement with trend analysis and milestone detection.
+            </p>
+            <ParamsTable params={[
+              { name: 'period', type: 'string', required: false, description: '"7d", "30d", "90d", or "all" (default: "30d")' },
+              { name: 'granularity', type: 'string', required: false, description: '"daily", "weekly", or "monthly" (default: "daily")' },
+              { name: 'include_dimensions', type: 'boolean', required: false, description: 'Include per-dimension breakdown (default: true)' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/user-123/history?period=30d&granularity=daily" \\
+  -H "X-API-Key: pk_live_your_api_key"`,
+              javascript: `const response = await fetch(
+  'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/history?period=30d',
+  { headers: { 'X-API-Key': 'pk_live_your_api_key' } }
+);
+const { trend, milestones, history } = await response.json();`,
+              python: `response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/history',
+    params={'period': '30d', 'granularity': 'daily'},
+    headers={'X-API-Key': 'pk_live_your_api_key'}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "userId": "user-123",
+    "period": "30d",
+    "granularity": "daily",
+    "currentScore": 62,
+    "currentStage": "rebuilding",
+    "trend": {
+      "direction": "improving",
+      "totalChange": 14,
+      "weeklyRate": 3.5,
+      "dataPointsUsed": 28
+    },
+    "milestones": [
+      {
+        "date": "2026-03-05T00:00:00Z",
+        "type": "stage_transition",
+        "from": "healing",
+        "to": "rebuilding",
+        "scoreAtTransition": 45
+      }
+    ],
+    "history": [
+      {
+        "date": "2026-02-18T00:00:00Z",
+        "score": 48,
+        "stage": "healing",
+        "dimensions": {
+          "emotional_stability": 42,
+          "self_reflection": 55,
+          "coping_capacity": 50,
+          "behavioral_engagement": 44,
+          "social_readiness": 49
+        }
+      }
+      // ... more data points
+    ]
+  }
+}`} />
+          </div>
+
+          <div id="ers-trends" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /ers/trends/aggregate
+            </div>
+            <p style={styles.paragraph}>
+              Get aggregate ERS trends across ALL of your users. Perfect for population-level analytics,
+              outcome reporting, and tracking the effectiveness of your program over time.
+            </p>
+            <ParamsTable params={[
+              { name: 'period', type: 'string', required: false, description: '"7d", "30d", or "90d" (default: "30d")' },
+              { name: 'granularity', type: 'string', required: false, description: '"daily", "weekly", or "monthly" (default: "weekly")' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/trends/aggregate?period=30d&granularity=weekly" \\
+  -H "X-API-Key: pk_live_your_api_key"`,
+              javascript: `const response = await fetch(
+  'https://paceful-app.vercel.app/api/v1/partner/ers/trends/aggregate?period=30d',
+  { headers: { 'X-API-Key': 'pk_live_your_api_key' } }
+);
+const { overallTrend, stageDistributionEnd, transitionsInPeriod } = await response.json();`,
+              python: `response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/partner/ers/trends/aggregate',
+    params={'period': '30d', 'granularity': 'weekly'},
+    headers={'X-API-Key': 'pk_live_your_api_key'}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "period": "30d",
+    "granularity": "weekly",
+    "totalUsers": 487,
+    "averageScoreStart": 41,
+    "averageScoreEnd": 52,
+    "overallTrend": "improving",
+    "stageDistributionStart": {
+      "healing": 0.45,
+      "rebuilding": 0.35,
+      "ready": 0.20
+    },
+    "stageDistributionEnd": {
+      "healing": 0.30,
+      "rebuilding": 0.40,
+      "ready": 0.30
+    },
+    "transitionsInPeriod": {
+      "healing_to_rebuilding": 73,
+      "rebuilding_to_ready": 48,
+      "ready_to_rebuilding": 12,
+      "rebuilding_to_healing": 8
+    },
+    "timeline": [
+      {
+        "date": "2026-02-17",
+        "averageScore": 43,
+        "stageDistribution": {
+          "healing": 0.42,
+          "rebuilding": 0.36,
+          "ready": 0.22
+        },
+        "userCount": 478
+      }
+      // ... more weeks
+    ]
   }
 }`} />
           </div>
@@ -1192,6 +1797,125 @@ const { questions, dimensions } = await response.json();`,
           </div>
         </section>
 
+        {/* Health & Status */}
+        <section id="health-status" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Health & Status</h2>
+          <p style={styles.paragraph}>
+            Monitor service health and availability. Use the public endpoint for monitoring tools
+            and the authenticated endpoint for detailed partner-specific information.
+          </p>
+
+          <div id="public-status" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /status
+            </div>
+            <p style={styles.paragraph}>
+              Public health check endpoint. <strong>No authentication required.</strong> Cached for 30 seconds.
+              Use this for uptime monitoring tools like UptimeRobot, Pingdom, etc.
+            </p>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/status"`,
+              javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/status');
+const status = await response.json();
+console.log(status.status); // "operational"`,
+              python: `response = requests.get('https://paceful-app.vercel.app/api/v1/status')
+status = response.json()
+print(status['status'])  # "operational"`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "status": "operational",
+  "version": "1.0.0",
+  "timestamp": "2026-03-18T15:30:00Z",
+  "services": {
+    "api": { "status": "operational", "responseTimeMs": 12 },
+    "database": { "status": "operational", "responseTimeMs": 45 },
+    "ers_engine": { "status": "operational" }
+  },
+  "uptime": "99.9%"
+}`} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '16px' }}>Status Values</h4>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { status: 'operational', desc: 'All systems functioning normally' },
+                  { status: 'slow', desc: 'Database response time > 2000ms' },
+                  { status: 'degraded', desc: 'Some services experiencing issues' },
+                  { status: 'down', desc: 'Critical services unavailable' },
+                ].map((s) => (
+                  <tr key={s.status} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}><code>{s.status}</code></td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{s.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div id="partner-health" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /partner/health
+            </div>
+            <p style={styles.paragraph}>
+              Authenticated health check with partner-specific details. Returns service status plus
+              your rate limits, webhook counts, registered users, and SDK version information.
+            </p>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/health" \\
+  -H "X-API-Key: pk_live_your_api_key"`,
+              javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/health', {
+  headers: { 'X-API-Key': 'pk_live_your_api_key' }
+});
+const health = await response.json();`,
+              python: `response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/partner/health',
+    headers={'X-API-Key': 'pk_live_your_api_key'}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "status": "operational",
+    "version": "1.0.0",
+    "timestamp": "2026-03-18T15:30:00Z",
+    "services": {
+      "api": { "status": "operational", "responseTimeMs": 12 },
+      "database": { "status": "operational", "responseTimeMs": 45 },
+      "ers_engine": { "status": "operational" }
+    },
+    "partner": {
+      "name": "Your Company",
+      "rateLimitRemaining": 87,
+      "rateLimitReset": 1710772800,
+      "activeWebhooks": 2,
+      "totalUsersRegistered": 156,
+      "lastApiCall": "2026-03-18T15:28:00Z"
+    },
+    "sdk": {
+      "latestVersion": "1.1.0",
+      "minimumSupported": "1.0.0"
+    }
+  }
+}`} />
+          </div>
+        </section>
+
         {/* Webhooks */}
         <section id="webhooks" style={styles.section}>
           <h2 style={styles.sectionTitle}>Webhooks</h2>
@@ -1493,6 +2217,67 @@ try {
           <CodeBlock code={`X-RateLimit-Limit: 100        # Max requests per hour
 X-RateLimit-Remaining: 87    # Requests remaining
 X-RateLimit-Reset: 1708185600 # Unix timestamp when limit resets`} />
+        </section>
+
+        {/* Versioning & Changelog */}
+        <section id="versioning" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Versioning & Changelog</h2>
+          <p style={styles.paragraph}>
+            All API responses include version headers to help you track compatibility and plan for updates.
+          </p>
+
+          <h3 style={styles.subsectionTitle}>Version Headers</h3>
+          <p style={styles.paragraph}>
+            Every response includes these headers:
+          </p>
+          <CodeBlock code={`X-API-Version: 1.0.0       # Current API version
+X-API-Min-Version: 1.0.0  # Minimum supported version`} />
+
+          <h3 style={styles.subsectionTitle}>Deprecation Policy</h3>
+          <p style={styles.paragraph}>
+            Endpoints are supported for a minimum of <strong>12 months</strong> after deprecation notice.
+            Deprecated endpoints return additional headers:
+          </p>
+          <CodeBlock code={`Deprecation: true
+Sunset: Sat, 01 Jan 2028 00:00:00 GMT
+Link: </api/v2/partner/users>; rel="successor-version"`} />
+          <p style={styles.paragraph}>
+            Monitor these headers and subscribe to our changelog to stay informed about upcoming changes.
+          </p>
+
+          <h3 style={styles.subsectionTitle}>Changelog</h3>
+          <p style={styles.paragraph}>
+            View the full changelog at{' '}
+            <Link href="/partners/changelog" style={{ color: '#5B8A72', textDecoration: 'none', fontWeight: 600 }}>
+              /partners/changelog
+            </Link>{' '}
+            or fetch it programmatically:
+          </p>
+          <div style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              <code>/api/v1/partner/changelog</code>
+            </div>
+            <p style={{ ...styles.paragraph, marginBottom: '12px' }}>
+              Returns the API changelog as structured JSON. No authentication required.
+            </p>
+            <CodeBlock code={`{
+  "currentVersion": "1.0.0",
+  "minimumSupportedVersion": "1.0.0",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-03-18",
+      "changes": [
+        { "type": "added", "description": "Sandbox mode — test all endpoints" },
+        { "type": "added", "description": "ERS History API — time series scores" },
+        // ... more changes
+      ]
+    }
+  ],
+  "deprecationPolicy": "Endpoints are supported for minimum 12 months..."
+}`} />
+          </div>
         </section>
 
         {/* Footer */}

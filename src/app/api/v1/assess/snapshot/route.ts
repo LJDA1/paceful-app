@@ -33,6 +33,7 @@ import {
   handlePartnerCors,
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 // Valid dimensions
 const VALID_DIMENSIONS = [
@@ -491,6 +492,13 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('snapshot_submit', body);
+  }
+
   // Validate API key
   const validation = await validatePartnerKey(request);
   if (!validation.valid) {
@@ -508,7 +516,8 @@ export async function POST(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -532,7 +541,9 @@ export async function POST(request: NextRequest) {
       return partnerApiError(
         'responses array is required',
         'BAD_REQUEST',
-        400
+        400,
+        undefined,
+        rateLimit
       );
     }
 
@@ -548,7 +559,9 @@ export async function POST(request: NextRequest) {
       return partnerApiError(
         `Expected exactly 10 responses, received ${responses.length}`,
         'BAD_REQUEST',
-        400
+        400,
+        undefined,
+        rateLimit
       );
     }
 
@@ -578,7 +591,9 @@ export async function POST(request: NextRequest) {
         return partnerApiError(
           `Invalid dimension at index ${i}: "${response.dimension}". Valid dimensions: ${VALID_DIMENSIONS.join(', ')}`,
           'BAD_REQUEST',
-          400
+          400,
+          undefined,
+          rateLimit
         );
       }
 
@@ -595,7 +610,9 @@ export async function POST(request: NextRequest) {
         return partnerApiError(
           `Invalid question_id at index ${i}: "${questionId}". Must be 1-10`,
           'BAD_REQUEST',
-          400
+          400,
+          undefined,
+          rateLimit
         );
       }
 
@@ -613,7 +630,9 @@ export async function POST(request: NextRequest) {
         return partnerApiError(
           `Question ${questionId} does not belong to dimension "${dimension}". Expected questions: ${expectedQuestions.join(', ')}`,
           'BAD_REQUEST',
-          400
+          400,
+          undefined,
+          rateLimit
         );
       }
 
@@ -629,7 +648,9 @@ export async function POST(request: NextRequest) {
         return partnerApiError(
           `Duplicate response for question_id ${questionId}`,
           'BAD_REQUEST',
-          400
+          400,
+          undefined,
+          rateLimit
         );
       }
 
@@ -646,7 +667,9 @@ export async function POST(request: NextRequest) {
         return partnerApiError(
           `Invalid value at index ${i}: "${value}". Must be integer 1-5`,
           'BAD_REQUEST',
-          400
+          400,
+          undefined,
+          rateLimit
         );
       }
 
@@ -670,7 +693,9 @@ export async function POST(request: NextRequest) {
       return partnerApiError(
         `Missing responses for questions: ${missing.join(', ')}`,
         'BAD_REQUEST',
-        400
+        400,
+        undefined,
+        rateLimit
       );
     }
 
@@ -687,7 +712,9 @@ export async function POST(request: NextRequest) {
         return partnerApiError(
           `Dimension "${dim}" requires exactly 2 responses, received ${values.length}`,
           'BAD_REQUEST',
-          400
+          400,
+          undefined,
+          rateLimit
         );
       }
     }
@@ -806,7 +833,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    return partnerApiSuccess(response);
+    return partnerApiSuccess(response, 200, undefined, rateLimit);
   } catch (error) {
     console.error('Snapshot assessment error:', error);
     await logPartnerApiUsage(
@@ -816,6 +843,6 @@ export async function POST(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

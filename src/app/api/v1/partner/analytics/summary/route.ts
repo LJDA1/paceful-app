@@ -15,6 +15,7 @@ import {
   handlePartnerCors,
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 export async function OPTIONS() {
   return handlePartnerCors();
@@ -22,6 +23,13 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const { searchParams } = new URL(request.url);
+    return sandboxResponse('analytics_summary', { period: searchParams.get('period') });
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -40,7 +48,8 @@ export async function GET(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -64,7 +73,9 @@ export async function GET(request: NextRequest) {
       return partnerApiError(
         'Invalid period. Use: 7d, 30d, 90d, or all',
         'BAD_REQUEST',
-        400
+        400,
+        undefined,
+        rateLimit
       );
     }
 
@@ -114,7 +125,7 @@ export async function GET(request: NextRequest) {
           avgJournalEntriesPerWeek: 0,
         },
         period: periodParam,
-      });
+      }, 200, undefined, rateLimit);
     }
 
     const partnerUserIds = partnerUsers.map(u => u.id);
@@ -225,7 +236,7 @@ export async function GET(request: NextRequest) {
         avgJournalEntriesPerWeek,
       },
       period: periodParam,
-    });
+    }, 200, undefined, rateLimit);
   } catch (error) {
     console.error('Analytics summary error:', error);
     await logPartnerApiUsage(
@@ -235,6 +246,6 @@ export async function GET(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

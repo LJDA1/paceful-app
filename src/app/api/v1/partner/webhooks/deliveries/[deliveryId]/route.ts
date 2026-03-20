@@ -1,8 +1,7 @@
 /**
- * GET /api/v1/partner/info
+ * GET /api/v1/partner/webhooks/deliveries/:deliveryId
  *
- * Get partner account information.
- * Returns partner name, masked API key, permissions, and usage stats.
+ * Get full details of a specific webhook delivery including payload.
  */
 
 import { NextRequest } from 'next/server';
@@ -17,17 +16,22 @@ import {
 } from '@/lib/partner-auth';
 import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
+interface RouteParams {
+  params: Promise<{ deliveryId: string }>;
+}
+
 export async function OPTIONS() {
   return handlePartnerCors();
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const startTime = Date.now();
+  const { deliveryId } = await params;
 
   // Check for sandbox mode first
   const apiKey = extractApiKey(request.headers);
   if (apiKey && isSandboxRequest(apiKey)) {
-    return sandboxResponse('partner_info', {});
+    return sandboxResponse('webhook_delivery_detail', { deliveryId });
   }
 
   // Validate API key
@@ -56,62 +60,55 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     const partnerId = validation.partnerId!;
 
-    // Get partner details
-    const { data: partner, error: partnerError } = await supabase
-      .from('partners')
-      .select('id, name, api_key, permissions, rate_limit, created_at')
-      .eq('id', partnerId)
+    // Fetch the delivery - MUST belong to this partner
+    const { data: delivery, error } = await supabase
+      .from('webhook_deliveries')
+      .select('*')
+      .eq('id', deliveryId)
+      .eq('partner_id', partnerId)
       .single();
 
-    if (partnerError || !partner) {
-      console.error('Error fetching partner:', partnerError);
+    if (error || !delivery) {
       await logPartnerApiUsage(
         partnerId,
-        '/api/v1/partner/info',
+        `/api/v1/partner/webhooks/deliveries/${deliveryId}`,
         'GET',
-        500,
+        404,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to fetch partner info', 'INTERNAL_ERROR', 500, undefined, rateLimit);
+      return partnerApiError('Delivery not found', 'NOT_FOUND', 404, undefined, rateLimit);
     }
-
-    // Get total users count
-    const { count: totalUsers, error: usersError } = await supabase
-      .from('partner_users')
-      .select('*', { count: 'exact', head: true })
-      .eq('partner_id', partnerId);
-
-    if (usersError) {
-      console.error('Error counting users:', usersError);
-    }
-
-    // Mask API key (show first 8 and last 4 characters)
-    const apiKey = partner.api_key || '';
-    const maskedApiKey = apiKey.length > 12
-      ? `${apiKey.slice(0, 8)}${'•'.repeat(Math.max(0, apiKey.length - 12))}${apiKey.slice(-4)}`
-      : '•'.repeat(apiKey.length);
 
     await logPartnerApiUsage(
       partnerId,
-      '/api/v1/partner/info',
+      `/api/v1/partner/webhooks/deliveries/${deliveryId}`,
       'GET',
       200,
       Date.now() - startTime
     );
 
+    // Return full delivery record including payload
     return partnerApiSuccess({
-      partnerName: partner.name,
-      apiKey: maskedApiKey,
-      permissions: partner.permissions || ['read', 'write'],
-      rateLimit: partner.rate_limit || 100,
-      createdAt: partner.created_at,
-      totalUsers: totalUsers || 0,
+      id: delivery.id,
+      webhookId: delivery.webhook_id,
+      eventType: delivery.event_type,
+      payload: delivery.payload,
+      status: delivery.status,
+      httpStatusCode: delivery.http_status_code,
+      responseBody: delivery.response_body,
+      attemptCount: delivery.attempt_count,
+      maxAttempts: delivery.max_attempts,
+      nextRetryAt: delivery.next_retry_at,
+      deliveredAt: delivery.delivered_at,
+      failedAt: delivery.failed_at,
+      createdAt: delivery.created_at,
+      durationMs: delivery.duration_ms,
     }, 200, undefined, rateLimit);
   } catch (error) {
-    console.error('Partner info error:', error);
+    console.error('Webhook delivery detail error:', error);
     await logPartnerApiUsage(
       validation.partnerId!,
-      '/api/v1/partner/info',
+      `/api/v1/partner/webhooks/deliveries/${deliveryId}`,
       'GET',
       500,
       Date.now() - startTime

@@ -21,6 +21,7 @@ import {
   getLatestPartnerERS,
 } from '@/lib/partner-ers-calculator';
 import { sendUserWebhook } from '@/lib/webhook-sender';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 export async function OPTIONS() {
   return handlePartnerCors();
@@ -28,6 +29,13 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('ers_calculate', body);
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -46,7 +54,8 @@ export async function POST(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -63,7 +72,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('externalId is required', 'BAD_REQUEST', 400);
+      return partnerApiError('externalId is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const supabase = getSupabaseAdmin();
@@ -85,7 +94,7 @@ export async function POST(request: NextRequest) {
         404,
         Date.now() - startTime
       );
-      return partnerApiError('User not found', 'NOT_FOUND', 404);
+      return partnerApiError('User not found', 'NOT_FOUND', 404, undefined, rateLimit);
     }
 
     // Get previous score for comparison
@@ -130,7 +139,7 @@ export async function POST(request: NextRequest) {
       previousScore,
       change,
       dataPointsUsed: calculationResult.dataPointsUsed,
-    });
+    }, 200, undefined, rateLimit);
   } catch (error) {
     console.error('ERS calculation error:', error);
     await logPartnerApiUsage(
@@ -140,6 +149,6 @@ export async function POST(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

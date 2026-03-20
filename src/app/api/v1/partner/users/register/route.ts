@@ -17,6 +17,7 @@ import {
   handlePartnerCors,
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 export async function OPTIONS() {
   return handlePartnerCors();
@@ -24,6 +25,13 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('users_register', body);
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -42,7 +50,8 @@ export async function POST(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -59,7 +68,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('externalId is required', 'BAD_REQUEST', 400);
+      return partnerApiError('externalId is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const VALID_DISRUPTION_TYPES = ['breakup', 'grief', 'burnout', 'addiction_recovery', 'divorce', 'layoff', 'trauma', 'life_transition', 'other'];
@@ -69,7 +78,9 @@ export async function POST(request: NextRequest) {
       return partnerApiError(
         `Invalid disruptionType. Must be one of: ${VALID_DISRUPTION_TYPES.join(', ')}`,
         'BAD_REQUEST',
-        400
+        400,
+        undefined,
+        rateLimit
       );
     }
 
@@ -100,7 +111,7 @@ export async function POST(request: NextRequest) {
         externalId: existingUser.external_id,
         disruptionType: existingUser.disruption_type || null,
         status: 'existing',
-      });
+      }, 200, undefined, rateLimit);
     }
 
     // Create a shadow user in the auth system
@@ -141,7 +152,7 @@ export async function POST(request: NextRequest) {
           500,
           Date.now() - startTime
         );
-        return partnerApiError('Failed to create user', 'INTERNAL_ERROR', 500);
+        return partnerApiError('Failed to create user', 'INTERNAL_ERROR', 500, undefined, rateLimit);
       }
 
       pacefulUserId = authData.user.id;
@@ -172,7 +183,7 @@ export async function POST(request: NextRequest) {
         500,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to register user', 'INTERNAL_ERROR', 500);
+      return partnerApiError('Failed to register user', 'INTERNAL_ERROR', 500, undefined, rateLimit);
     }
 
     await logPartnerApiUsage(
@@ -188,7 +199,7 @@ export async function POST(request: NextRequest) {
       externalId: partnerUser.external_id,
       disruptionType: disruptionType || null,
       status: 'registered',
-    }, 201);
+    }, 201, undefined, rateLimit);
   } catch (error) {
     console.error('User registration error:', error);
     await logPartnerApiUsage(
@@ -198,6 +209,6 @@ export async function POST(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

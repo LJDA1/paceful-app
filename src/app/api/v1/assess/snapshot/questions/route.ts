@@ -14,6 +14,7 @@ import {
   partnerApiSuccess,
   handlePartnerCors,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 // Clinically-informed questions for emotional readiness assessment
 // Each dimension has 2 questions, scored on a 1-5 Likert scale
@@ -189,6 +190,12 @@ export async function OPTIONS() {
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    return sandboxResponse('snapshot_questions', {});
+  }
+
   // Validate API key
   const validation = await validatePartnerKey(request);
   if (!validation.valid) {
@@ -206,7 +213,8 @@ export async function GET(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -229,5 +237,5 @@ export async function GET(request: NextRequest) {
       scaleRange: { min: 1, max: 5 },
       scoringNote: 'Higher values indicate greater emotional readiness',
     },
-  });
+  }, 200, undefined, rateLimit);
 }

@@ -16,6 +16,7 @@ import {
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
 import { sendUserWebhook } from '@/lib/webhook-sender';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 // ============================================================================
 // Sentiment Analysis
@@ -165,6 +166,13 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('journal_entry', body);
+  }
+
   // Validate API key
   const validation = await validatePartnerKey(request);
   if (!validation.valid) {
@@ -182,7 +190,8 @@ export async function POST(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -199,7 +208,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('externalId is required', 'BAD_REQUEST', 400);
+      return partnerApiError('externalId is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     if (!content || typeof content !== 'string' || content.trim() === '') {
@@ -210,7 +219,7 @@ export async function POST(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('content is required and cannot be empty', 'BAD_REQUEST', 400);
+      return partnerApiError('content is required and cannot be empty', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const supabase = getSupabaseAdmin();
@@ -233,7 +242,7 @@ export async function POST(request: NextRequest) {
         404,
         Date.now() - startTime
       );
-      return partnerApiError('User not found', 'NOT_FOUND', 404);
+      return partnerApiError('User not found', 'NOT_FOUND', 404, undefined, rateLimit);
     }
 
     // Calculate word count
@@ -270,7 +279,7 @@ export async function POST(request: NextRequest) {
         500,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to create journal entry', 'INTERNAL_ERROR', 500);
+      return partnerApiError('Failed to create journal entry', 'INTERNAL_ERROR', 500, undefined, rateLimit);
     }
 
     // Fire journal.created webhook
@@ -298,7 +307,9 @@ export async function POST(request: NextRequest) {
         aiReflection,
         wordCount,
       },
-      201
+      201,
+      undefined,
+      rateLimit
     );
   } catch (error) {
     console.error('Journal entry error:', error);
@@ -309,6 +320,6 @@ export async function POST(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }

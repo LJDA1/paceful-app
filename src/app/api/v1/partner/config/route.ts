@@ -25,6 +25,7 @@ import {
   handlePartnerCors,
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
 
 // Valid options for each config field
 const VALID_VERBOSITY = ['minimal', 'standard', 'clinical'] as const;
@@ -61,6 +62,12 @@ export async function OPTIONS() {
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    return sandboxResponse('partner_config_get', {});
+  }
+
   // Validate API key
   const validation = await validatePartnerKey(request);
   if (!validation.valid) {
@@ -78,7 +85,8 @@ export async function GET(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -107,7 +115,7 @@ export async function GET(request: NextRequest) {
         config: DEFAULT_CONFIG,
         is_default: true,
         partner_id: validation.partnerId,
-      });
+      }, 200, undefined, rateLimit);
     }
 
     // Return partner's config
@@ -123,7 +131,7 @@ export async function GET(request: NextRequest) {
       is_default: false,
       partner_id: validation.partnerId,
       updated_at: configData.updated_at,
-    });
+    }, 200, undefined, rateLimit);
   } catch (error) {
     console.error('Error fetching partner config:', error);
     await logPartnerApiUsage(
@@ -133,7 +141,7 @@ export async function GET(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }
 
@@ -143,6 +151,13 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('partner_config_put', body);
+  }
 
   // Validate API key
   const validation = await validatePartnerKey(request);
@@ -161,7 +176,8 @@ export async function PUT(request: NextRequest) {
       'Rate limit exceeded',
       'RATE_LIMITED',
       429,
-      { 'Retry-After': String(rateLimit.retryAfter || 3600) }
+      undefined,
+      rateLimit
     );
   }
 
@@ -177,7 +193,7 @@ export async function PUT(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError('config object is required', 'BAD_REQUEST', 400);
+      return partnerApiError('config object is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     // Validate each field if provided
@@ -235,7 +251,7 @@ export async function PUT(request: NextRequest) {
         400,
         Date.now() - startTime
       );
-      return partnerApiError(validationErrors.join('; '), 'BAD_REQUEST', 400);
+      return partnerApiError(validationErrors.join('; '), 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const supabase = getSupabaseAdmin();
@@ -268,7 +284,7 @@ export async function PUT(request: NextRequest) {
         500,
         Date.now() - startTime
       );
-      return partnerApiError('Failed to update configuration', 'INTERNAL_ERROR', 500);
+      return partnerApiError('Failed to update configuration', 'INTERNAL_ERROR', 500, undefined, rateLimit);
     }
 
     // Log API usage
@@ -291,7 +307,7 @@ export async function PUT(request: NextRequest) {
       },
       partner_id: validation.partnerId,
       updated_at: updatedConfig.updated_at,
-    });
+    }, 200, undefined, rateLimit);
   } catch (error) {
     console.error('Error updating partner config:', error);
     await logPartnerApiUsage(
@@ -301,6 +317,6 @@ export async function PUT(request: NextRequest) {
       500,
       Date.now() - startTime
     );
-    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
   }
 }
