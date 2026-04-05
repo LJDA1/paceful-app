@@ -495,6 +495,8 @@ export function getSandboxResponse(
       return getSandboxErsRecommendationsResponse(params);
     case 'text_analyze':
       return getSandboxTextAnalyzeResponse(params);
+    case 'text_analyze_batch':
+      return getSandboxTextAnalyzeBatchResponse(params);
     default:
       return { error: 'Unknown sandbox endpoint' };
   }
@@ -1885,6 +1887,149 @@ function getSandboxTextAnalyzeResponse(params: Record<string, unknown>) {
   return response;
 }
 
+function getSandboxTextAnalyzeBatchResponse(params: Record<string, unknown>) {
+  const userId = params.user_id as string || 'sandbox_user_001';
+  const entries = params.entries as Array<{ text?: string; source_type?: string; timestamp?: string }> || [];
+  const config = params.config as Record<string, unknown> || {};
+
+  const entryCount = Math.min(entries.length || 3, 20);
+  const rng = new SeededRandom(hashString(userId + entryCount.toString()));
+
+  // Generate per-entry results with a trend
+  const baseScore = 50 + rng.nextInt(-10, 15);
+  const trendDirection = rng.next() > 0.3 ? 'improving' : rng.next() > 0.5 ? 'stable' : 'declining';
+  const trendMultiplier = trendDirection === 'improving' ? 1 : trendDirection === 'declining' ? -1 : 0;
+
+  const now = Date.now();
+  const perEntryResults: Array<{
+    index: number;
+    timestamp: string;
+    source_type: string;
+    text_length: number;
+    ers_score: number;
+    confidence: string;
+  }> = [];
+
+  const dimensionScores: Record<string, number[]> = {
+    emotional_stability: [],
+    self_reflection: [],
+    coping_capacity: [],
+    behavioral_engagement: [],
+    social_readiness: [],
+  };
+
+  for (let i = 0; i < entryCount; i++) {
+    const entry = entries[i] || {};
+    const progress = i / Math.max(1, entryCount - 1);
+    const trendBonus = trendMultiplier * progress * 12;
+    const entryScore = Math.max(20, Math.min(90, Math.round(baseScore + trendBonus + rng.nextInt(-5, 5))));
+
+    const timestamp = entry.timestamp || new Date(now - (entryCount - i) * 24 * 60 * 60 * 1000).toISOString();
+
+    perEntryResults.push({
+      index: i,
+      timestamp,
+      source_type: entry.source_type || 'journal',
+      text_length: (entry.text?.length) || rng.nextInt(100, 500),
+      ers_score: entryScore,
+      confidence: rng.next() > 0.3 ? 'medium' : rng.next() > 0.5 ? 'high' : 'low',
+    });
+
+    // Track dimension scores for this entry
+    for (const dim of Object.keys(dimensionScores)) {
+      const dimScore = Math.max(20, Math.min(90, entryScore + rng.nextInt(-10, 10)));
+      dimensionScores[dim].push(dimScore);
+    }
+  }
+
+  // Calculate composite weighted ERS (simple average for sandbox)
+  const compositeErs = Math.round(perEntryResults.reduce((sum, r) => sum + r.ers_score, 0) / entryCount);
+  const readinessLabel = compositeErs < 40 ? 'Not Ready' : compositeErs < 60 ? 'Healing' : compositeErs < 75 ? 'Rebuilding' : 'Ready';
+
+  // Calculate trend delta
+  const firstHalf = perEntryResults.slice(0, Math.ceil(entryCount / 2));
+  const secondHalf = perEntryResults.slice(Math.floor(entryCount / 2));
+  const firstAvg = firstHalf.reduce((sum, r) => sum + r.ers_score, 0) / firstHalf.length;
+  const secondAvg = secondHalf.reduce((sum, r) => sum + r.ers_score, 0) / secondHalf.length;
+  const trendDelta = Math.round((secondAvg - firstAvg) * 10) / 10;
+
+  // Build dimension trends
+  const compositeDimensions: Record<string, unknown> = {};
+  const verbosity = (config.verbosity as string) || 'minimal';
+
+  for (const [dim, scores] of Object.entries(dimensionScores)) {
+    const firstHalfDim = scores.slice(0, Math.ceil(scores.length / 2));
+    const secondHalfDim = scores.slice(Math.floor(scores.length / 2));
+    const startScore = Math.round(firstHalfDim.reduce((a, b) => a + b, 0) / firstHalfDim.length);
+    const endScore = Math.round(secondHalfDim.reduce((a, b) => a + b, 0) / secondHalfDim.length);
+    const dimDelta = Math.round((endScore - startScore) * 10) / 10;
+    const dimTrend = dimDelta > 3 ? 'improving' : dimDelta < -3 ? 'declining' : 'stable';
+    const label = endScore < 25 ? 'very_low' : endScore < 40 ? 'low' : endScore < 60 ? 'moderate' : endScore < 80 ? 'high' : 'very_high';
+
+    if (verbosity === 'minimal') {
+      compositeDimensions[dim] = {
+        score: endScore,
+        label,
+        confidence: 'medium',
+        trend: dimTrend,
+        trend_delta: dimDelta,
+      };
+    } else {
+      const dimLabel = dim.replace(/_/g, ' ');
+      compositeDimensions[dim] = {
+        score: endScore,
+        label,
+        confidence: 'medium',
+        trend: dimTrend,
+        trend_delta: dimDelta,
+        reasoning: `${dimLabel} shows ${dimTrend} trend across batch entries.`,
+        top_signals: ['batch_analysis', 'trend_detection'],
+        ...(verbosity === 'clinical' && {
+          recommended_action: endScore < 40
+            ? `Focus on building ${dimLabel.toLowerCase()} with targeted exercises.`
+            : endScore < 70
+            ? `Continue developing ${dimLabel.toLowerCase()}.`
+            : `${dimLabel} is strong. Maintain practices.`,
+        }),
+      };
+    }
+  }
+
+  const response: Record<string, unknown> = {
+    composite: {
+      ers_score: compositeErs,
+      readiness_label: readinessLabel,
+      confidence: 'medium',
+      dimensions: compositeDimensions,
+    },
+    trend: {
+      direction: trendDirection,
+      delta: trendDelta,
+      entries_analyzed: entryCount,
+      time_span: {
+        earliest: perEntryResults[0].timestamp,
+        latest: perEntryResults[perEntryResults.length - 1].timestamp,
+      },
+    },
+    entries: perEntryResults,
+    assessment_id: `batch_sandbox_${rng.nextInt(100000, 999999)}`,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (verbosity !== 'minimal') {
+    response.meta = {
+      verbosity,
+      tone: (config.tone as string) || 'clinical',
+      score_format: (config.score_format as string) || 'numerical',
+      api_version: '1.3.0',
+      model_version: 'ers-text-batch-v1',
+      weighting_method: 'time_exponential',
+    };
+  }
+
+  return response;
+}
+
 // ============================================================================
 // List of available sandbox endpoints
 // ============================================================================
@@ -1917,4 +2062,5 @@ export const SANDBOX_ENDPOINTS = [
   { method: 'GET', path: '/api/v1/partner/ers/benchmarks', description: 'Get cohort benchmarks' },
   { method: 'GET', path: '/api/v1/partner/ers/{externalId}/recommendations', description: 'Get improvement recommendations' },
   { method: 'POST', path: '/api/v1/assess/analyze', description: 'Analyze text for ERS signals' },
+  { method: 'POST', path: '/api/v1/assess/analyze/batch', description: 'Batch analyze multiple text entries' },
 ];
