@@ -179,6 +179,11 @@ const NAV_SECTIONS = [
     { id: 'ers-history', label: 'User History' },
     { id: 'ers-trends', label: 'Aggregate Trends' },
   ]},
+  { id: 'benchmarking', label: 'Benchmarking', children: [
+    { id: 'compare-user', label: 'Compare User' },
+    { id: 'cohort-benchmarks', label: 'Cohort Benchmarks' },
+    { id: 'recommendations', label: 'Recommendations' },
+  ]},
   { id: 'snapshot', label: 'Snapshot Assessment', children: [
     { id: 'snapshot-questions', label: 'Get Questions' },
     { id: 'snapshot-submit', label: 'Submit Assessment' },
@@ -1282,6 +1287,234 @@ const { overallTrend, stageDistributionEnd, transitionsInPeriod } = await respon
         "userCount": 478
       }
       // ... more weeks
+    ]
+  }
+}`} />
+          </div>
+        </section>
+
+        {/* Benchmarking & Comparison */}
+        <section id="benchmarking" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Benchmarking &amp; Comparison</h2>
+          <p style={styles.paragraph}>
+            Compare individual users against cohort averages and generate targeted improvement recommendations.
+            These endpoints power clinical dashboards, personalized coaching suggestions, and outcome reporting.
+          </p>
+
+          <div id="compare-user" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /ers/{'{externalId}'}/compare
+            </div>
+            <p style={styles.paragraph}>
+              Compare a user&apos;s ERS scores against cohort averages. Returns percentile rankings, dimensional
+              comparisons, and insights about strengths and weaknesses.
+            </p>
+            <ParamsTable params={[
+              { name: 'cohort', type: 'string', required: false, description: '"all", "same_stage", "same_partner", or "global" (default: "same_stage")' },
+              { name: 'period', type: 'string', required: false, description: '"7d", "30d", "90d", or "all" (default: "30d")' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/user-123/compare?cohort=same_stage" \\
+  -H "Authorization: Bearer pk_live_your_api_key"`,
+              javascript: `const response = await fetch(
+  'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/compare?cohort=same_stage',
+  { headers: { 'Authorization': 'Bearer pk_live_your_api_key' } }
+);
+const { comparison, insights } = await response.json();`,
+              python: `response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/compare',
+    params={'cohort': 'same_stage'},
+    headers={'Authorization': 'Bearer pk_live_your_api_key'}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "userId": "user-123",
+    "currentScore": 62,
+    "currentStage": "rebuilding",
+    "cohort": "same_stage",
+    "cohortSize": 1523,
+    "comparison": {
+      "overall": {
+        "userScore": 62,
+        "cohortMean": 58,
+        "cohortMedian": 57,
+        "cohortStdDev": 12.3,
+        "percentileRank": 72,
+        "percentiles": { "p25": 48, "p50": 57, "p75": 66, "p90": 74 },
+        "relativePosition": "above_average"
+      },
+      "dimensions": {
+        "emotional_stability": {
+          "userScore": 65,
+          "cohortMean": 60,
+          "percentileRank": 68,
+          "gap": 5,
+          "relativePosition": "above_average"
+        },
+        "social_readiness": {
+          "userScore": 52,
+          "cohortMean": 58,
+          "percentileRank": 38,
+          "gap": -6,
+          "relativePosition": "below_average"
+        }
+        // ... other dimensions
+      },
+      "insights": {
+        "strongestDimension": {
+          "dimension": "self_reflection",
+          "gap": 12,
+          "percentileRank": 85
+        },
+        "weakestDimension": {
+          "dimension": "social_readiness",
+          "gap": -6,
+          "percentileRank": 38
+        },
+        "summary": "This user's self-reflection is significantly above the cohort average..."
+      }
+    }
+  }
+}`} />
+          </div>
+
+          <div id="cohort-benchmarks" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /ers/benchmarks
+            </div>
+            <p style={styles.paragraph}>
+              Get cohort benchmarks without a specific user. Returns population statistics including
+              percentile distributions, stage breakdowns, and dimensional averages.
+            </p>
+            <ParamsTable params={[
+              { name: 'cohort', type: 'string', required: false, description: '"same_partner" or "global" (default: "same_partner")' },
+              { name: 'period', type: 'string', required: false, description: '"7d", "30d", "90d", or "all" (default: "30d")' },
+              { name: 'stage', type: 'string', required: false, description: '"healing", "rebuilding", "ready", or "all" (default: "all")' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/benchmarks?period=30d&stage=all" \\
+  -H "Authorization: Bearer pk_live_your_api_key"`,
+              javascript: `const response = await fetch(
+  'https://paceful-app.vercel.app/api/v1/partner/ers/benchmarks?period=30d',
+  { headers: { 'Authorization': 'Bearer pk_live_your_api_key' } }
+);
+const { benchmarks } = await response.json();`,
+              python: `response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/partner/ers/benchmarks',
+    params={'period': '30d', 'stage': 'all'},
+    headers={'Authorization': 'Bearer pk_live_your_api_key'}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "cohort": "same_partner",
+    "cohortSize": 487,
+    "period": "30d",
+    "stage": "all",
+    "benchmarks": {
+      "overall": {
+        "mean": 56,
+        "median": 55,
+        "stdDev": 15.2,
+        "percentiles": { "p25": 43, "p50": 55, "p75": 68, "p90": 78 },
+        "distribution": {
+          "0-20": 0.03,
+          "21-40": 0.15,
+          "41-60": 0.42,
+          "61-80": 0.32,
+          "81-100": 0.08
+        }
+      },
+      "dimensions": {
+        "emotional_stability": { "mean": 54, "median": 53, "stdDev": 14.1 },
+        "self_reflection": { "mean": 58, "median": 57, "stdDev": 12.8 },
+        "coping_capacity": { "mean": 55, "median": 54, "stdDev": 13.5 },
+        "behavioral_engagement": { "mean": 56, "median": 55, "stdDev": 14.2 },
+        "social_readiness": { "mean": 57, "median": 56, "stdDev": 15.0 }
+      },
+      "byStage": {
+        "healing": { "count": 88, "meanScore": 35, "avgDaysInStage": 21 },
+        "rebuilding": { "count": 253, "meanScore": 58, "avgDaysInStage": 34 },
+        "ready": { "count": 146, "meanScore": 82, "avgDaysInStage": 18 }
+      }
+    }
+  }
+}`} />
+          </div>
+
+          <div id="recommendations" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /ers/{'{externalId}'}/recommendations
+            </div>
+            <p style={styles.paragraph}>
+              Generate targeted improvement recommendations based on comparison data. Identifies the user&apos;s
+              weakest dimensions relative to cohort and suggests specific actions to improve.
+            </p>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
+            <CodeBlock code={{
+              curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/user-123/recommendations" \\
+  -H "Authorization: Bearer pk_live_your_api_key"`,
+              javascript: `const response = await fetch(
+  'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/recommendations',
+  { headers: { 'Authorization': 'Bearer pk_live_your_api_key' } }
+);
+const { recommendations, strengths } = await response.json();`,
+              python: `response = requests.get(
+    'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/recommendations',
+    headers={'Authorization': 'Bearer pk_live_your_api_key'}
+)`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "userId": "user-123",
+    "currentScore": 62,
+    "currentStage": "rebuilding",
+    "recommendations": [
+      {
+        "dimension": "social_readiness",
+        "currentScore": 52,
+        "cohortAverage": 58,
+        "percentileRank": 38,
+        "priority": "primary",
+        "insight": "Social Readiness is below average compared to peers. Focused attention here could yield meaningful improvements.",
+        "suggestedActions": [
+          "Gradually introduce low-pressure social activities",
+          "Encourage reflection on positive social experiences",
+          "Suggest starting with familiar, supportive connections"
+        ]
+      },
+      {
+        "dimension": "behavioral_engagement",
+        "currentScore": 58,
+        "cohortAverage": 62,
+        "percentileRank": 45,
+        "priority": "secondary",
+        "insight": "Behavioral Engagement shows room for improvement. Moderate attention here could help accelerate overall recovery.",
+        "suggestedActions": [
+          "Set achievable daily micro-goals for engagement",
+          "Celebrate small wins and consistent behaviors",
+          "Create accountability through gentle reminders"
+        ]
+      }
+    ],
+    "strengths": [
+      {
+        "dimension": "self_reflection",
+        "percentileRank": 85,
+        "note": "Self-Reflection shows strong development, ranking in the 85th percentile. This strength can support growth in other areas."
+      }
     ]
   }
 }`} />

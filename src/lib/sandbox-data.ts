@@ -53,6 +53,14 @@ function hashString(str: string): number {
 
 type Dimension = 'emotional_stability' | 'self_reflection' | 'coping_capacity' | 'behavioral_engagement' | 'social_readiness';
 type Stage = 'healing' | 'rebuilding' | 'ready';
+
+const DIMENSIONS: Dimension[] = [
+  'emotional_stability',
+  'self_reflection',
+  'coping_capacity',
+  'behavioral_engagement',
+  'social_readiness',
+];
 type Verbosity = 'minimal' | 'standard' | 'clinical';
 type Tone = 'clinical' | 'casual' | 'motivational';
 
@@ -479,6 +487,14 @@ export function getSandboxResponse(
       return getSandboxImportUsersResponse(params);
     case 'import_mood':
       return getSandboxImportMoodResponse(params);
+    case 'ers_compare':
+      return getSandboxErsCompareResponse(params);
+    case 'ers_benchmarks':
+      return getSandboxErsBenchmarksResponse(params);
+    case 'ers_recommendations':
+      return getSandboxErsRecommendationsResponse(params);
+    case 'text_analyze':
+      return getSandboxTextAnalyzeResponse(params);
     default:
       return { error: 'Unknown sandbox endpoint' };
   }
@@ -1313,6 +1329,563 @@ function getSandboxImportMoodResponse(params: Record<string, unknown>) {
 }
 
 // ============================================================================
+// ERS Comparison and Benchmarking Sandbox Responses
+// ============================================================================
+
+type RelativePosition = 'well_below_average' | 'below_average' | 'average' | 'above_average' | 'well_above_average';
+
+function getRelativePosition(percentile: number): RelativePosition {
+  if (percentile < 25) return 'well_below_average';
+  if (percentile < 40) return 'below_average';
+  if (percentile < 60) return 'average';
+  if (percentile < 75) return 'above_average';
+  return 'well_above_average';
+}
+
+// User profiles with different strengths/weaknesses for realistic sandbox data
+const USER_PROFILES: Record<string, {
+  strong: Dimension[];
+  weak: Dimension[];
+  percentileBase: number;
+}> = {
+  'sandbox_user_001': { strong: ['self_reflection', 'coping_capacity'], weak: ['social_readiness'], percentileBase: 72 },
+  'sandbox_user_002': { strong: ['emotional_stability'], weak: ['behavioral_engagement', 'self_reflection'], percentileBase: 45 },
+  'sandbox_user_003': { strong: ['behavioral_engagement', 'social_readiness'], weak: ['emotional_stability'], percentileBase: 58 },
+  'sandbox_user_004': { strong: ['coping_capacity', 'social_readiness'], weak: ['self_reflection'], percentileBase: 81 },
+  'sandbox_user_005': { strong: [], weak: ['emotional_stability', 'coping_capacity', 'social_readiness'], percentileBase: 22 },
+  'sandbox_user_006': { strong: ['emotional_stability', 'self_reflection', 'behavioral_engagement'], weak: [], percentileBase: 88 },
+};
+
+function getSandboxErsCompareResponse(params: Record<string, unknown>) {
+  const externalId = params.externalId as string || 'sandbox_user_001';
+  const cohort = (params.cohort as string) || 'same_stage';
+  const period = (params.period as string) || '30d';
+
+  const user = getSandboxUser(externalId);
+  if (!user) {
+    return { error: 'User not found', code: 'NOT_FOUND' };
+  }
+
+  const profile = USER_PROFILES[externalId] || {
+    strong: ['self_reflection'],
+    weak: ['social_readiness'],
+    percentileBase: 55,
+  };
+
+  const rng = new SeededRandom(hashString(externalId + cohort + period));
+
+  // Calculate cohort stats (simulated)
+  const cohortSize = cohort === 'same_partner' ? 487 : cohort === 'same_stage' ? 1523 : 8934;
+  const cohortMean = user.stage === 'healing' ? 38 : user.stage === 'rebuilding' ? 58 : 78;
+  const cohortMedian = cohortMean + rng.nextInt(-3, 3);
+  const cohortStdDev = rng.nextInt(10, 15);
+
+  // Calculate user percentile
+  const userPercentile = Math.min(99, Math.max(1, profile.percentileBase + rng.nextInt(-5, 5)));
+
+  // Build dimension comparisons with realistic profiles
+  const dimensionComparisons: Record<string, {
+    userScore: number;
+    cohortMean: number;
+    percentileRank: number;
+    gap: number;
+    relativePosition: RelativePosition;
+  }> = {};
+
+  let strongestDim = { dimension: '', gap: -Infinity, percentileRank: 0 };
+  let weakestDim = { dimension: '', gap: Infinity, percentileRank: 100 };
+
+  for (const dim of DIMENSIONS) {
+    const dimCohortMean = cohortMean + rng.nextInt(-8, 8);
+    const userDimScore = user.dimensions[dim];
+
+    // Adjust percentile based on user profile
+    let dimPercentile: number;
+    if (profile.strong.includes(dim)) {
+      dimPercentile = Math.min(99, profile.percentileBase + rng.nextInt(10, 25));
+    } else if (profile.weak.includes(dim)) {
+      dimPercentile = Math.max(1, profile.percentileBase - rng.nextInt(15, 35));
+    } else {
+      dimPercentile = Math.min(99, Math.max(1, profile.percentileBase + rng.nextInt(-10, 10)));
+    }
+
+    const gap = userDimScore - dimCohortMean;
+
+    dimensionComparisons[dim] = {
+      userScore: userDimScore,
+      cohortMean: dimCohortMean,
+      percentileRank: dimPercentile,
+      gap,
+      relativePosition: getRelativePosition(dimPercentile),
+    };
+
+    if (gap > strongestDim.gap) {
+      strongestDim = { dimension: dim, gap, percentileRank: dimPercentile };
+    }
+    if (gap < weakestDim.gap) {
+      weakestDim = { dimension: dim, gap, percentileRank: dimPercentile };
+    }
+  }
+
+  const cohortLabel = cohort === 'same_stage' ? 'users at the same stage' :
+    cohort === 'same_partner' ? 'users in your platform' : 'all users globally';
+
+  const dimLabel = strongestDim.dimension.replace(/_/g, ' ');
+  let progress = '';
+  if (userPercentile >= 75) {
+    progress = `progressing faster than ${userPercentile}% of ${cohortLabel}`;
+  } else if (userPercentile >= 50) {
+    progress = `performing better than ${userPercentile}% of ${cohortLabel}`;
+  } else if (userPercentile >= 25) {
+    progress = `on par with most ${cohortLabel}, with room for growth`;
+  } else {
+    progress = `in the early stages compared to ${cohortLabel}, with significant growth potential`;
+  }
+
+  const summary = `This user's ${dimLabel} is significantly above the cohort average, ranking in the ${strongestDim.percentileRank}th percentile. Overall, they are ${progress}.`;
+
+  const response: Record<string, unknown> = {
+    userId: externalId,
+    currentScore: user.ersScore,
+    currentStage: user.stage,
+    cohort,
+    cohortSize,
+    comparison: {
+      overall: {
+        userScore: user.ersScore,
+        cohortMean,
+        cohortMedian,
+        cohortStdDev,
+        percentileRank: userPercentile,
+        percentiles: {
+          p25: cohortMean - cohortStdDev,
+          p50: cohortMedian,
+          p75: cohortMean + Math.round(cohortStdDev * 0.7),
+          p90: cohortMean + Math.round(cohortStdDev * 1.3),
+        },
+        relativePosition: getRelativePosition(userPercentile),
+      },
+      dimensions: dimensionComparisons,
+      insights: {
+        strongestDimension: strongestDim,
+        weakestDimension: weakestDim,
+        summary,
+      },
+    },
+  };
+
+  if (cohortSize < 10) {
+    response.warning = 'Cohort size is less than 10. Benchmarks may not be statistically significant.';
+  }
+
+  return response;
+}
+
+function getSandboxErsBenchmarksResponse(params: Record<string, unknown>) {
+  const cohort = (params.cohort as string) || 'same_partner';
+  const period = (params.period as string) || '30d';
+  const stage = (params.stage as string) || 'all';
+
+  const rng = new SeededRandom(hashString(cohort + period + stage));
+
+  const cohortSize = cohort === 'same_partner' ? 487 : 8934;
+
+  // Adjust stats based on stage filter
+  let mean: number, median: number, stdDev: number;
+  if (stage === 'healing') {
+    mean = 35 + rng.nextInt(-3, 3);
+    median = mean + rng.nextInt(-2, 2);
+    stdDev = 8 + rng.next() * 3;
+  } else if (stage === 'rebuilding') {
+    mean = 58 + rng.nextInt(-3, 3);
+    median = mean + rng.nextInt(-2, 2);
+    stdDev = 10 + rng.next() * 3;
+  } else if (stage === 'ready') {
+    mean = 82 + rng.nextInt(-3, 3);
+    median = mean + rng.nextInt(-2, 2);
+    stdDev = 7 + rng.next() * 2;
+  } else {
+    mean = 56 + rng.nextInt(-3, 3);
+    median = mean + rng.nextInt(-2, 2);
+    stdDev = 15 + rng.next() * 3;
+  }
+
+  const percentiles = {
+    p25: Math.round(mean - stdDev * 0.67),
+    p50: Math.round(median),
+    p75: Math.round(mean + stdDev * 0.67),
+    p90: Math.round(mean + stdDev * 1.28),
+  };
+
+  // Distribution across score ranges
+  const distribution = {
+    '0-20': stage === 'healing' ? 0.12 : 0.03,
+    '21-40': stage === 'healing' ? 0.48 : stage === 'rebuilding' ? 0.08 : 0.02,
+    '41-60': stage === 'rebuilding' ? 0.52 : stage === 'healing' ? 0.32 : 0.05,
+    '61-80': stage === 'rebuilding' ? 0.28 : stage === 'ready' ? 0.45 : 0.25,
+    '81-100': stage === 'ready' ? 0.48 : 0.12,
+  };
+
+  // Dimension stats
+  const dimensionStats: Record<string, { mean: number; median: number; stdDev: number }> = {};
+  for (const dim of DIMENSIONS) {
+    const dimMean = mean + rng.nextInt(-8, 8);
+    dimensionStats[dim] = {
+      mean: dimMean,
+      median: dimMean + rng.nextInt(-3, 3),
+      stdDev: Math.round((stdDev + rng.nextInt(-2, 2)) * 10) / 10,
+    };
+  }
+
+  // By-stage stats (only if stage filter is 'all')
+  let byStage: Record<string, { count: number; meanScore: number; avgDaysInStage: number }> | null = null;
+  if (stage === 'all') {
+    const totalCount = cohortSize;
+    byStage = {
+      healing: {
+        count: Math.round(totalCount * 0.18),
+        meanScore: 35 + rng.nextInt(-3, 3),
+        avgDaysInStage: 21 + rng.nextInt(-5, 10),
+      },
+      rebuilding: {
+        count: Math.round(totalCount * 0.52),
+        meanScore: 58 + rng.nextInt(-3, 3),
+        avgDaysInStage: 34 + rng.nextInt(-8, 15),
+      },
+      ready: {
+        count: Math.round(totalCount * 0.30),
+        meanScore: 82 + rng.nextInt(-3, 3),
+        avgDaysInStage: 18 + rng.nextInt(-5, 12),
+      },
+    };
+  }
+
+  const response: Record<string, unknown> = {
+    cohort,
+    cohortSize,
+    period,
+    stage,
+    benchmarks: {
+      overall: {
+        mean: Math.round(mean),
+        median: Math.round(median),
+        stdDev: Math.round(stdDev * 10) / 10,
+        percentiles,
+        distribution,
+      },
+      dimensions: dimensionStats,
+      ...(byStage && { byStage }),
+    },
+  };
+
+  if (cohortSize < 10) {
+    response.warning = 'Cohort size is less than 10. Benchmarks may not be statistically significant.';
+  }
+
+  return response;
+}
+
+const DIMENSION_LABELS: Record<Dimension, string> = {
+  emotional_stability: 'Emotional Stability',
+  self_reflection: 'Self-Reflection',
+  coping_capacity: 'Coping Capacity',
+  behavioral_engagement: 'Behavioral Engagement',
+  social_readiness: 'Social Readiness',
+};
+
+const DIMENSION_ACTIONS: Record<Dimension, string[]> = {
+  emotional_stability: [
+    'Encourage daily mood logging at consistent times',
+    'Identify and flag emotional triggers through pattern analysis',
+    'Suggest grounding exercises during high-variance periods',
+    'Implement gentle check-ins after mood dips',
+  ],
+  self_reflection: [
+    'Introduce guided journaling prompts focused on self-awareness',
+    'Encourage reflection on recent positive experiences',
+    'Suggest weekly review sessions to identify patterns',
+    'Provide feedback on journal depth and consistency',
+  ],
+  coping_capacity: [
+    'Introduce structured coping exercises (breathing, mindfulness)',
+    'Increase check-in frequency to build consistency',
+    'Track specific coping triggers and responses',
+    'Suggest progressive skill-building exercises',
+  ],
+  behavioral_engagement: [
+    'Set achievable daily micro-goals for engagement',
+    'Celebrate small wins and consistent behaviors',
+    'Create accountability through gentle reminders',
+    'Track and visualize engagement streaks',
+  ],
+  social_readiness: [
+    'Gradually introduce low-pressure social activities',
+    'Encourage reflection on positive social experiences',
+    'Suggest starting with familiar, supportive connections',
+    'Build confidence through small social wins',
+  ],
+};
+
+function getSandboxErsRecommendationsResponse(params: Record<string, unknown>) {
+  const externalId = params.externalId as string || 'sandbox_user_001';
+
+  const user = getSandboxUser(externalId);
+  if (!user) {
+    return { error: 'User not found', code: 'NOT_FOUND' };
+  }
+
+  const profile = USER_PROFILES[externalId] || {
+    strong: ['self_reflection'],
+    weak: ['social_readiness'],
+    percentileBase: 55,
+  };
+
+  const rng = new SeededRandom(hashString(externalId + 'recommendations'));
+
+  // Calculate cohort mean based on stage
+  const cohortMean = user.stage === 'healing' ? 38 : user.stage === 'rebuilding' ? 58 : 78;
+
+  // Analyze each dimension
+  interface DimAnalysis {
+    dimension: Dimension;
+    userScore: number;
+    cohortMean: number;
+    percentileRank: number;
+    gap: number;
+  }
+
+  const dimensionAnalyses: DimAnalysis[] = [];
+
+  for (const dim of DIMENSIONS) {
+    const dimCohortMean = cohortMean + rng.nextInt(-8, 8);
+    const userDimScore = user.dimensions[dim];
+
+    let dimPercentile: number;
+    if (profile.strong.includes(dim)) {
+      dimPercentile = Math.min(99, profile.percentileBase + rng.nextInt(10, 25));
+    } else if (profile.weak.includes(dim)) {
+      dimPercentile = Math.max(1, profile.percentileBase - rng.nextInt(15, 35));
+    } else {
+      dimPercentile = Math.min(99, Math.max(1, profile.percentileBase + rng.nextInt(-10, 10)));
+    }
+
+    const gap = userDimScore - dimCohortMean;
+
+    dimensionAnalyses.push({
+      dimension: dim,
+      userScore: userDimScore,
+      cohortMean: dimCohortMean,
+      percentileRank: dimPercentile,
+      gap,
+    });
+  }
+
+  // Sort by gap (ascending) to find weakest dimensions
+  const sortedByGap = [...dimensionAnalyses].sort((a, b) => a.gap - b.gap);
+
+  // Get 2 weakest dimensions for recommendations
+  const weakestTwo = sortedByGap.slice(0, 2);
+
+  // Get strongest dimensions (top 2 by gap)
+  const strongestTwo = sortedByGap.slice(-2).reverse();
+
+  // Helper function to generate insight
+  function generateInsight(
+    dimension: Dimension,
+    analysis: DimAnalysis,
+    priority: 'primary' | 'secondary',
+    isStrength: boolean = false
+  ): string {
+    const label = DIMENSION_LABELS[dimension];
+
+    if (isStrength) {
+      if (analysis.percentileRank >= 90) {
+        return `${label} is exceptional, placing in the top 10% of users. This is a significant strength to leverage.`;
+      }
+      return `${label} shows strong development, ranking in the ${analysis.percentileRank}th percentile. This strength can support growth in other areas.`;
+    }
+
+    if (analysis.percentileRank < 25) {
+      return `${label} is significantly below the cohort average, ranking in the ${analysis.percentileRank}th percentile. This represents a key opportunity for targeted intervention.`;
+    }
+
+    if (analysis.percentileRank < 50) {
+      return `${label} is below average compared to peers. Focused attention here could yield meaningful improvements.`;
+    }
+
+    if (priority === 'primary') {
+      return `${label} is this user's least developed dimension relative to peers. While not below average, it represents the biggest opportunity for growth.`;
+    }
+
+    return `${label} shows room for improvement. Moderate attention here could help accelerate overall recovery.`;
+  }
+
+  // Build recommendations
+  const recommendations = weakestTwo.map((analysis, index) => {
+    const priority = index === 0 ? 'primary' : 'secondary';
+    const actions = DIMENSION_ACTIONS[analysis.dimension];
+    const selectedActions = actions.slice(0, 3);
+
+    return {
+      dimension: analysis.dimension,
+      currentScore: analysis.userScore,
+      cohortAverage: analysis.cohortMean,
+      percentileRank: analysis.percentileRank,
+      priority,
+      insight: generateInsight(analysis.dimension, analysis, priority as 'primary' | 'secondary'),
+      suggestedActions: selectedActions,
+    };
+  });
+
+  // Build strengths
+  const strengths = strongestTwo
+    .filter(a => a.percentileRank >= 60)
+    .map(analysis => ({
+      dimension: analysis.dimension,
+      percentileRank: analysis.percentileRank,
+      note: generateInsight(analysis.dimension, analysis, 'primary', true),
+    }));
+
+  return {
+    userId: externalId,
+    currentScore: user.ersScore,
+    currentStage: user.stage,
+    recommendations,
+    strengths,
+  };
+}
+
+// ============================================================================
+// Text Analysis Sandbox Response
+// ============================================================================
+
+function getSandboxTextAnalyzeResponse(params: Record<string, unknown>) {
+  const userId = params.user_id as string || 'sandbox_user_001';
+  const sourceType = params.source_type as string || 'free_text';
+  const text = params.text as string || '';
+  const textLength = text.length || 250;
+  const config = params.config as Record<string, unknown> || {};
+
+  const rng = new SeededRandom(hashString(userId + sourceType + textLength.toString()));
+
+  // Generate realistic scores based on text length (more text = higher confidence)
+  const confidence = textLength > 500 ? 'high' : textLength > 200 ? 'medium' : 'low';
+
+  // Generate dimension scores with some variance
+  const baseScore = 55 + rng.nextInt(-15, 20);
+  const dimensionData: Record<string, { score: number; top_signals: string[]; confidence: string }> = {
+    emotional_stability: {
+      score: Math.max(20, Math.min(90, baseScore + rng.nextInt(-12, 12))),
+      top_signals: ['mood consistency', 'emotional regulation language'],
+      confidence: confidence,
+    },
+    self_reflection: {
+      score: Math.max(20, Math.min(90, baseScore + rng.nextInt(-12, 12))),
+      top_signals: ['self-awareness statements', 'pattern recognition'],
+      confidence: confidence,
+    },
+    coping_capacity: {
+      score: Math.max(20, Math.min(90, baseScore + rng.nextInt(-12, 12))),
+      top_signals: ['coping strategy mentions', 'problem-solving approach'],
+      confidence: confidence,
+    },
+    behavioral_engagement: {
+      score: Math.max(20, Math.min(90, baseScore + rng.nextInt(-12, 12))),
+      top_signals: ['activity descriptions', 'routine consistency'],
+      confidence: confidence,
+    },
+    social_readiness: {
+      score: Math.max(20, Math.min(90, baseScore + rng.nextInt(-12, 12))),
+      top_signals: ['social interaction mentions', 'connection quality'],
+      confidence: confidence,
+    },
+  };
+
+  // Calculate weighted ERS score
+  const weights: Record<string, number> = {
+    emotional_stability: 0.25,
+    self_reflection: 0.15,
+    coping_capacity: 0.20,
+    behavioral_engagement: 0.15,
+    social_readiness: 0.25,
+  };
+
+  let ersScore = 0;
+  for (const [dim, weight] of Object.entries(weights)) {
+    ersScore += dimensionData[dim].score * weight;
+  }
+  ersScore = Math.round(ersScore);
+
+  const readinessLabel = ersScore < 40 ? 'Not Ready' : ersScore < 60 ? 'Healing' : ersScore < 75 ? 'Rebuilding' : 'Ready';
+
+  const verbosity = (config.verbosity as string) || 'minimal';
+
+  // Build dimensions response based on verbosity
+  const dimensions: Record<string, unknown> = {};
+  for (const [dim, data] of Object.entries(dimensionData)) {
+    const label = data.score < 25 ? 'very_low' : data.score < 40 ? 'low' : data.score < 60 ? 'moderate' : data.score < 80 ? 'high' : 'very_high';
+
+    if (verbosity === 'minimal') {
+      dimensions[dim] = {
+        score: data.score,
+        label,
+        confidence: data.confidence,
+      };
+    } else {
+      const dimLabel = dim.replace(/_/g, ' ');
+      const reasoning = data.score >= 70
+        ? `${dimLabel} indicators are strong. Key signals: ${data.top_signals.join(' and ')}.`
+        : data.score >= 40
+        ? `${dimLabel} indicators are moderate. Key signals: ${data.top_signals.join(' and ')}.`
+        : `${dimLabel} indicators suggest need for support. Key signals: ${data.top_signals.join(' and ')}.`;
+
+      const result: Record<string, unknown> = {
+        score: data.score,
+        label,
+        confidence: data.confidence,
+        reasoning,
+        top_signals: data.top_signals,
+      };
+
+      if (verbosity === 'clinical') {
+        result.recommended_action = data.score < 40
+          ? `Consider targeted intervention for ${dimLabel.toLowerCase()}.`
+          : data.score < 70
+          ? `Continue building ${dimLabel.toLowerCase()} with structured exercises.`
+          : `${dimLabel} is strong. Maintain current practices.`;
+      }
+
+      dimensions[dim] = result;
+    }
+  }
+
+  const response: Record<string, unknown> = {
+    ers_snapshot: ersScore,
+    dimensions,
+    readiness_label: readinessLabel,
+    confidence,
+    assessment_id: `anlz_sandbox_${rng.nextInt(100000, 999999)}`,
+    timestamp: new Date().toISOString(),
+    source_type: sourceType,
+    text_length: textLength,
+    extraction_confidence: confidence,
+  };
+
+  if (verbosity !== 'minimal') {
+    response.meta = {
+      verbosity,
+      tone: (config.tone as string) || 'clinical',
+      score_format: (config.score_format as string) || 'numerical',
+      api_version: '1.3.0',
+      model_version: 'ers-text-v1',
+      extraction_notes: 'Sandbox mode - generated realistic scores based on text characteristics.',
+    };
+  }
+
+  return response;
+}
+
+// ============================================================================
 // List of available sandbox endpoints
 // ============================================================================
 
@@ -1340,4 +1913,8 @@ export const SANDBOX_ENDPOINTS = [
   { method: 'POST', path: '/api/v1/assess/snapshot', description: 'Submit snapshot assessment' },
   { method: 'POST', path: '/api/v1/partner/import/users', description: 'Bulk import users' },
   { method: 'POST', path: '/api/v1/partner/import/mood', description: 'Bulk import mood entries' },
+  { method: 'GET', path: '/api/v1/partner/ers/{externalId}/compare', description: 'Compare user ERS against cohort' },
+  { method: 'GET', path: '/api/v1/partner/ers/benchmarks', description: 'Get cohort benchmarks' },
+  { method: 'GET', path: '/api/v1/partner/ers/{externalId}/recommendations', description: 'Get improvement recommendations' },
+  { method: 'POST', path: '/api/v1/assess/analyze', description: 'Analyze text for ERS signals' },
 ];

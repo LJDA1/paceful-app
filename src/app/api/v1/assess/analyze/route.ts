@@ -1,0 +1,559 @@
+/**
+ * POST /api/v1/assess/analyze
+ *
+ * Analyze unstructured text and return an ERS score.
+ * Uses Claude AI to extract emotional readiness signals from text.
+ *
+ * Supports the same ERS Explainability Layer as /assess/snapshot:
+ * - verbosity: minimal, standard, clinical
+ * - tone: clinical, casual, motivational
+ * - score_format: numerical, percentage, tier_label, traffic_light
+ */
+
+import { NextRequest } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
+import { createHash } from 'crypto';
+import {
+  validatePartnerKey,
+  checkPartnerRateLimit,
+  logPartnerApiUsage,
+  partnerApiError,
+  partnerApiSuccess,
+  handlePartnerCors,
+  getSupabaseAdmin,
+} from '@/lib/partner-auth';
+import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
+
+// Types
+type Dimension = 'emotional_stability' | 'self_reflection' | 'coping_capacity' | 'behavioral_engagement' | 'social_readiness';
+type Verbosity = 'minimal' | 'standard' | 'clinical';
+type Tone = 'clinical' | 'casual' | 'motivational';
+type ScoreFormat = 'numerical' | 'percentage' | 'tier_label' | 'traffic_light';
+type SourceType = 'journal' | 'session_notes' | 'chat_transcript' | 'free_text';
+type Confidence = 'low' | 'medium' | 'high';
+
+interface TrafficLightThresholds {
+  red_max: number;
+  yellow_max: number;
+}
+
+interface PartnerConfig {
+  verbosity: Verbosity;
+  tone: Tone;
+  score_format: ScoreFormat;
+  traffic_light_thresholds: TrafficLightThresholds;
+  include_signals: boolean;
+  include_trend: boolean;
+}
+
+const DEFAULT_CONFIG: PartnerConfig = {
+  verbosity: 'minimal',
+  tone: 'clinical',
+  score_format: 'numerical',
+  traffic_light_thresholds: { red_max: 33, yellow_max: 66 },
+  include_signals: true,
+  include_trend: true,
+};
+
+// ERS dimension weights (matching ers-calculator.ts)
+const DIMENSION_WEIGHTS: Record<Dimension, number> = {
+  emotional_stability: 0.25,
+  self_reflection: 0.15,
+  coping_capacity: 0.20,
+  behavioral_engagement: 0.15,
+  social_readiness: 0.25,
+};
+
+const VALID_DIMENSIONS: Dimension[] = [
+  'emotional_stability',
+  'self_reflection',
+  'coping_capacity',
+  'behavioral_engagement',
+  'social_readiness',
+];
+
+// Claude analysis result structure
+interface ClaudeAnalysisResult {
+  dimensions: {
+    emotional_stability: { score: number; top_signals: string[]; confidence: Confidence };
+    self_reflection: { score: number; top_signals: string[]; confidence: Confidence };
+    coping_capacity: { score: number; top_signals: string[]; confidence: Confidence };
+    behavioral_engagement: { score: number; top_signals: string[]; confidence: Confidence };
+    social_readiness: { score: number; top_signals: string[]; confidence: Confidence };
+  };
+  overall_confidence: Confidence;
+  extraction_notes: string;
+}
+
+// ============================================================================
+// Partner Config Loading
+// ============================================================================
+
+async function loadPartnerConfig(partnerId: string): Promise<PartnerConfig> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('partner_configs')
+      .select('*')
+      .eq('partner_id', partnerId)
+      .single();
+
+    if (error || !data) {
+      return DEFAULT_CONFIG;
+    }
+
+    return {
+      verbosity: data.verbosity || DEFAULT_CONFIG.verbosity,
+      tone: data.tone || DEFAULT_CONFIG.tone,
+      score_format: data.score_format || DEFAULT_CONFIG.score_format,
+      traffic_light_thresholds: data.traffic_light_thresholds || DEFAULT_CONFIG.traffic_light_thresholds,
+      include_signals: data.include_signals ?? DEFAULT_CONFIG.include_signals,
+      include_trend: data.include_trend ?? DEFAULT_CONFIG.include_trend,
+    };
+  } catch {
+    return DEFAULT_CONFIG;
+  }
+}
+
+function mergeConfig(partnerConfig: PartnerConfig, requestConfig: Record<string, unknown> | undefined): PartnerConfig {
+  if (!requestConfig) return partnerConfig;
+
+  return {
+    verbosity: (['minimal', 'standard', 'clinical'].includes(requestConfig.verbosity as string)
+      ? requestConfig.verbosity as Verbosity
+      : partnerConfig.verbosity),
+    tone: (['clinical', 'casual', 'motivational'].includes(requestConfig.tone as string)
+      ? requestConfig.tone as Tone
+      : partnerConfig.tone),
+    score_format: (['numerical', 'percentage', 'tier_label', 'traffic_light'].includes(requestConfig.score_format as string)
+      ? requestConfig.score_format as ScoreFormat
+      : partnerConfig.score_format),
+    traffic_light_thresholds: (requestConfig.traffic_light_thresholds && typeof requestConfig.traffic_light_thresholds === 'object')
+      ? requestConfig.traffic_light_thresholds as TrafficLightThresholds
+      : partnerConfig.traffic_light_thresholds,
+    include_signals: typeof requestConfig.include_signals === 'boolean'
+      ? requestConfig.include_signals
+      : partnerConfig.include_signals,
+    include_trend: typeof requestConfig.include_trend === 'boolean'
+      ? requestConfig.include_trend
+      : partnerConfig.include_trend,
+  };
+}
+
+// ============================================================================
+// Score Formatting
+// ============================================================================
+
+function getScoreLabel(score: number): string {
+  if (score < 25) return 'very_low';
+  if (score < 40) return 'low';
+  if (score < 60) return 'moderate';
+  if (score < 80) return 'high';
+  return 'very_high';
+}
+
+function getTrafficLight(score: number, thresholds: TrafficLightThresholds): 'red' | 'yellow' | 'green' {
+  if (score <= thresholds.red_max) return 'red';
+  if (score <= thresholds.yellow_max) return 'yellow';
+  return 'green';
+}
+
+function formatScore(
+  score: number,
+  format: ScoreFormat,
+  thresholds: TrafficLightThresholds
+): number | string {
+  switch (format) {
+    case 'numerical':
+      return score;
+    case 'percentage':
+      return `${score}%`;
+    case 'tier_label':
+      return getScoreLabel(score);
+    case 'traffic_light':
+      return getTrafficLight(score, thresholds);
+    default:
+      return score;
+  }
+}
+
+function getReadinessLabel(score: number): string {
+  if (score < 40) return 'Not Ready';
+  if (score < 60) return 'Healing';
+  if (score < 75) return 'Rebuilding';
+  return 'Ready';
+}
+
+// ============================================================================
+// Claude Analysis
+// ============================================================================
+
+const ANALYSIS_SYSTEM_PROMPT = `You are an expert clinical psychologist analyzing text for emotional readiness signals.
+
+Analyze the provided text and extract signals for each of these 5 ERS (Emotional Readiness Score) dimensions:
+
+1. emotional_stability: Look for mood variance indicators, emotional regulation patterns, reaction proportionality, recovery from emotional events
+2. self_reflection: Look for self-awareness indicators, pattern recognition, insight depth, ability to examine one's own thoughts/feelings
+3. coping_capacity: Look for healthy coping mentions, resource awareness, adaptive strategies, problem-solving approaches
+4. behavioral_engagement: Look for activity levels, routine consistency, goal-directed behavior, follow-through on intentions
+5. social_readiness: Look for social mention frequency, connection quality indicators, openness to relationships, trust signals
+
+For each dimension, provide:
+- score: 0-100 (based on evidence in the text)
+- top_signals: Array of 2-3 specific phrases or indicators from the text that support your score
+- confidence: "low" (minimal text evidence), "medium" (some evidence), or "high" (strong evidence)
+
+Also provide an overall_confidence based on the total amount of analyzable content.
+
+IMPORTANT: Be conservative with scores when evidence is limited. Default toward moderate scores (40-60) unless clear positive or negative signals exist.
+
+Respond with ONLY a valid JSON object in this exact format:
+{
+  "dimensions": {
+    "emotional_stability": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
+    "self_reflection": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
+    "coping_capacity": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
+    "behavioral_engagement": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
+    "social_readiness": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" }
+  },
+  "overall_confidence": "low"|"medium"|"high",
+  "extraction_notes": "Brief note about the analysis quality and any limitations"
+}`;
+
+async function analyzeTextWithClaude(text: string, sourceType: SourceType): Promise<ClaudeAnalysisResult> {
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+
+  const contextHint = sourceType === 'journal' ? 'This is a personal journal entry.'
+    : sourceType === 'session_notes' ? 'These are clinical session notes.'
+    : sourceType === 'chat_transcript' ? 'This is a chat/conversation transcript.'
+    : 'This is free-form text for analysis.';
+
+  // Truncate text to reasonable length (8k chars ~ 2k tokens)
+  const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...[truncated]' : text;
+
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1024,
+    system: ANALYSIS_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: 'user',
+        content: `${contextHint}\n\nText to analyze:\n\n${truncatedText}`,
+      },
+    ],
+  });
+
+  // Extract text from response
+  const textBlock = message.content.find(block => block.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error('No text response from Claude');
+  }
+
+  // Parse JSON from response
+  try {
+    const cleanedText = textBlock.text.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    const result = JSON.parse(cleanedText) as ClaudeAnalysisResult;
+
+    // Validate and clamp scores
+    for (const dim of VALID_DIMENSIONS) {
+      if (result.dimensions[dim]) {
+        result.dimensions[dim].score = Math.max(0, Math.min(100, Math.round(result.dimensions[dim].score)));
+        if (!['low', 'medium', 'high'].includes(result.dimensions[dim].confidence)) {
+          result.dimensions[dim].confidence = 'medium';
+        }
+      }
+    }
+
+    return result;
+  } catch (parseError) {
+    console.error('Failed to parse Claude response:', textBlock.text);
+    // Return fallback moderate scores
+    return {
+      dimensions: {
+        emotional_stability: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
+        self_reflection: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
+        coping_capacity: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
+        behavioral_engagement: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
+        social_readiness: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
+      },
+      overall_confidence: 'low',
+      extraction_notes: 'Failed to parse analysis response - using fallback scores',
+    };
+  }
+}
+
+// ============================================================================
+// Reasoning Generation (tone-adapted, matching snapshot endpoint)
+// ============================================================================
+
+function generateReasoning(
+  dimension: Dimension,
+  score: number,
+  signals: string[],
+  confidence: Confidence,
+  tone: Tone
+): string {
+  const signalStr = signals.slice(0, 2).join(' and ') || 'text analysis';
+  const tier = score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low';
+  const confNote = confidence === 'low' ? ' (limited text evidence)' : confidence === 'high' ? ' (strong text evidence)' : '';
+
+  const dimensionLabels: Record<Dimension, string> = {
+    emotional_stability: 'Emotional stability',
+    self_reflection: 'Self-reflection capacity',
+    coping_capacity: 'Coping capacity',
+    behavioral_engagement: 'Behavioral engagement',
+    social_readiness: 'Social readiness',
+  };
+
+  const label = dimensionLabels[dimension];
+
+  if (tone === 'casual') {
+    if (tier === 'high') return `${label} looks solid! Based on: ${signalStr}${confNote}.`;
+    if (tier === 'mid') return `${label} is developing. Based on: ${signalStr}${confNote}.`;
+    return `${label} could use some attention. Based on: ${signalStr}${confNote}.`;
+  }
+
+  if (tone === 'motivational') {
+    if (tier === 'high') return `${label} is a real strength here! Based on: ${signalStr}${confNote}.`;
+    if (tier === 'mid') return `${label} is building nicely - keep going! Based on: ${signalStr}${confNote}.`;
+    return `${label} is an opportunity for growth! Based on: ${signalStr}${confNote}.`;
+  }
+
+  // Clinical (default)
+  if (tier === 'high') return `${label} indicators are strong. Key signals: ${signalStr}${confNote}.`;
+  if (tier === 'mid') return `${label} indicators are moderate. Key signals: ${signalStr}${confNote}.`;
+  return `${label} indicators suggest need for support. Key signals: ${signalStr}${confNote}.`;
+}
+
+function generateRecommendedAction(dimension: Dimension, score: number): string {
+  const isLow = score < 40;
+  const isMid = score >= 40 && score < 70;
+
+  const actions: Record<Dimension, { low: string; mid: string; high: string }> = {
+    emotional_stability: {
+      low: 'Consider exploring emotional regulation techniques and identifying stress triggers.',
+      mid: 'Continue building emotional awareness. Mindfulness practices may help stabilize mood patterns.',
+      high: 'Emotional stability is strong. Maintain current practices and consider supporting others.',
+    },
+    self_reflection: {
+      low: 'Introduce structured journaling or guided reflection exercises to build self-awareness.',
+      mid: 'Deepen reflection practice with more complex prompts exploring emotional patterns.',
+      high: 'Self-reflection is well-developed. Consider exploring more nuanced emotional territories.',
+    },
+    coping_capacity: {
+      low: 'Priority: build a basic coping toolkit with breathing exercises and grounding techniques.',
+      mid: 'Expand coping repertoire with new strategies for different stress types.',
+      high: 'Strong coping skills evident. Consider stress-testing with more challenging scenarios.',
+    },
+    behavioral_engagement: {
+      low: 'Focus on establishing small, consistent daily routines to rebuild engagement.',
+      mid: 'Build on existing routines with habit stacking or accountability structures.',
+      high: 'Strong engagement patterns. Consider expanding to new growth areas.',
+    },
+    social_readiness: {
+      low: 'Individual healing should progress before social re-engagement. Low-pressure connections first.',
+      mid: 'Ready for gradual social exposure. Consider peer support or small group activities.',
+      high: 'Social readiness is strong. May be ready for deeper connections or group activities.',
+    },
+  };
+
+  return isLow ? actions[dimension].low : isMid ? actions[dimension].mid : actions[dimension].high;
+}
+
+// ============================================================================
+// Hashing (never store raw partner text)
+// ============================================================================
+
+function hashText(text: string): string {
+  return createHash('sha256').update(text).digest('hex');
+}
+
+// ============================================================================
+// Main Handler
+// ============================================================================
+
+export async function OPTIONS() {
+  return handlePartnerCors();
+}
+
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+
+  // Check for sandbox mode first
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey && isSandboxRequest(apiKey)) {
+    const body = await request.clone().json().catch(() => ({}));
+    return sandboxResponse('text_analyze', body);
+  }
+
+  // Validate API key
+  const validation = await validatePartnerKey(request);
+  if (!validation.valid) {
+    return partnerApiError(
+      validation.error || 'Invalid API key',
+      'UNAUTHORIZED',
+      401
+    );
+  }
+
+  // Check rate limit
+  const rateLimit = await checkPartnerRateLimit(validation.partnerId!, validation.rateLimit);
+  if (!rateLimit.allowed) {
+    return partnerApiError(
+      'Rate limit exceeded',
+      'RATE_LIMITED',
+      429,
+      undefined,
+      rateLimit
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { user_id, text, source_type, config: requestConfig } = body;
+
+    // Validate required fields
+    if (!user_id || typeof user_id !== 'string') {
+      await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime);
+      return partnerApiError('user_id is required', 'BAD_REQUEST', 400, undefined, rateLimit);
+    }
+
+    if (!text || typeof text !== 'string') {
+      await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime);
+      return partnerApiError('text is required', 'BAD_REQUEST', 400, undefined, rateLimit);
+    }
+
+    if (text.length < 20) {
+      await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime);
+      return partnerApiError('text must be at least 20 characters', 'BAD_REQUEST', 400, undefined, rateLimit);
+    }
+
+    const validSourceTypes: SourceType[] = ['journal', 'session_notes', 'chat_transcript', 'free_text'];
+    const sourceType: SourceType = validSourceTypes.includes(source_type) ? source_type : 'free_text';
+
+    // Load partner config and merge with request config
+    const partnerConfig = await loadPartnerConfig(validation.partnerId!);
+    const config = mergeConfig(partnerConfig, requestConfig);
+
+    // Analyze text with Claude
+    const analysis = await analyzeTextWithClaude(text, sourceType);
+
+    // Calculate weighted ERS score
+    let weightedSum = 0;
+    for (const [dim, weight] of Object.entries(DIMENSION_WEIGHTS)) {
+      const dimScore = analysis.dimensions[dim as Dimension]?.score ?? 50;
+      weightedSum += dimScore * weight;
+    }
+    const ersScore = Math.round(weightedSum);
+    const readinessLabel = getReadinessLabel(ersScore);
+
+    // Generate assessment ID
+    const assessmentId = `anlz_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
+    const timestamp = new Date().toISOString();
+    const textHash = hashText(text);
+
+    // Store in database
+    const supabase = getSupabaseAdmin();
+    const { error: insertError } = await supabase
+      .from('text_assessments')
+      .insert({
+        id: assessmentId.replace('anlz_', '').padEnd(36, '0').substring(0, 36).replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5'),
+        partner_id: validation.partnerId,
+        external_user_id: user_id,
+        source_type: sourceType,
+        text_hash: textHash,
+        text_length: text.length,
+        ers_score: ersScore,
+        readiness_label: readinessLabel,
+        extraction_confidence: analysis.overall_confidence,
+        dim_emotional_stability: analysis.dimensions.emotional_stability.score,
+        dim_self_reflection: analysis.dimensions.self_reflection.score,
+        dim_coping_capacity: analysis.dimensions.coping_capacity.score,
+        dim_behavioral_engagement: analysis.dimensions.behavioral_engagement.score,
+        dim_social_readiness: analysis.dimensions.social_readiness.score,
+        dim_es_confidence: analysis.dimensions.emotional_stability.confidence,
+        dim_sr_confidence: analysis.dimensions.self_reflection.confidence,
+        dim_cc_confidence: analysis.dimensions.coping_capacity.confidence,
+        dim_be_confidence: analysis.dimensions.behavioral_engagement.confidence,
+        dim_srd_confidence: analysis.dimensions.social_readiness.confidence,
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null,
+        user_agent: request.headers.get('user-agent') || null,
+      });
+
+    if (insertError) {
+      console.error('Error storing text assessment:', insertError);
+      // Continue anyway - we still return the result even if storage fails
+    }
+
+    // Log API usage
+    await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 200, Date.now() - startTime);
+
+    // Build dimension results based on config
+    const dimensionResults: Record<Dimension, Record<string, unknown>> = {} as Record<Dimension, Record<string, unknown>>;
+
+    for (const dim of VALID_DIMENSIONS) {
+      const dimData = analysis.dimensions[dim];
+      const formattedScore = formatScore(dimData.score, config.score_format, config.traffic_light_thresholds);
+      const label = getScoreLabel(dimData.score);
+
+      if (config.verbosity === 'minimal') {
+        dimensionResults[dim] = {
+          score: formattedScore,
+          label,
+          confidence: dimData.confidence,
+        };
+      } else {
+        const result: Record<string, unknown> = {
+          score: formattedScore,
+          label,
+          confidence: dimData.confidence,
+          reasoning: generateReasoning(dim, dimData.score, dimData.top_signals, dimData.confidence, config.tone),
+          top_signals: config.include_signals ? dimData.top_signals : undefined,
+        };
+
+        if (config.verbosity === 'clinical') {
+          result.recommended_action = generateRecommendedAction(dim, dimData.score);
+        }
+
+        dimensionResults[dim] = result;
+      }
+    }
+
+    // Format overall score
+    const formattedErsScore = formatScore(ersScore, config.score_format, config.traffic_light_thresholds);
+
+    // Build response (same shape as snapshot + additional fields)
+    const response: Record<string, unknown> = {
+      ers_snapshot: formattedErsScore,
+      dimensions: dimensionResults,
+      readiness_label: readinessLabel,
+      confidence: analysis.overall_confidence,
+      assessment_id: assessmentId,
+      timestamp,
+      // Additional fields for text analysis
+      source_type: sourceType,
+      text_length: text.length,
+      extraction_confidence: analysis.overall_confidence,
+    };
+
+    // Add meta block for non-minimal responses
+    if (config.verbosity !== 'minimal') {
+      response.meta = {
+        verbosity: config.verbosity,
+        tone: config.tone,
+        score_format: config.score_format,
+        api_version: '1.3.0',
+        model_version: 'ers-text-v1',
+        extraction_notes: analysis.extraction_notes,
+      };
+    }
+
+    return partnerApiSuccess(response, 200, undefined, rateLimit);
+  } catch (error) {
+    console.error('Text analysis error:', error);
+    await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 500, Date.now() - startTime);
+    return partnerApiError('Internal server error', 'INTERNAL_ERROR', 500, undefined, rateLimit);
+  }
+}

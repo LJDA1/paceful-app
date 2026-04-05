@@ -65,6 +65,25 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/partner/ers/{externalId}/compare',
+    description: 'Compare user ERS against cohort',
+    defaultPathParams: { externalId: 'sandbox_user_001' },
+    defaultQueryParams: 'cohort=same_stage&period=30d',
+  },
+  {
+    method: 'GET',
+    path: '/partner/ers/benchmarks',
+    description: 'Get cohort benchmarks',
+    defaultQueryParams: 'cohort=same_partner&period=30d&stage=all',
+  },
+  {
+    method: 'GET',
+    path: '/partner/ers/{externalId}/recommendations',
+    description: 'Get improvement recommendations',
+    defaultPathParams: { externalId: 'sandbox_user_001' },
+  },
+  {
+    method: 'GET',
     path: '/partner/analytics/summary',
     description: 'Get analytics summary',
     defaultQueryParams: 'period=30d',
