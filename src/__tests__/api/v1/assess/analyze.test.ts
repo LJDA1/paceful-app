@@ -22,13 +22,13 @@ jest.mock('@anthropic-ai/sdk', () => {
 
 // Mock partner-auth
 const mockValidatePartnerKey = jest.fn();
-const mockCheckPartnerRateLimit = jest.fn();
+const mockCheckEndpointRateLimit = jest.fn();
 const mockLogPartnerApiUsage = jest.fn();
 const mockGetSupabaseAdmin = jest.fn();
 
 jest.mock('@/lib/partner-auth', () => ({
   validatePartnerKey: (...args: unknown[]) => mockValidatePartnerKey(...args),
-  checkPartnerRateLimit: (...args: unknown[]) => mockCheckPartnerRateLimit(...args),
+  checkEndpointRateLimit: (...args: unknown[]) => mockCheckEndpointRateLimit(...args),
   logPartnerApiUsage: (...args: unknown[]) => mockLogPartnerApiUsage(...args),
   partnerApiError: jest.fn((message, code, status) => {
     return new Response(JSON.stringify({ success: false, error: { message, code } }), {
@@ -107,10 +107,11 @@ function setupDefaultMocks() {
     rateLimit: 1000,
   });
 
-  mockCheckPartnerRateLimit.mockResolvedValue({
+  mockCheckEndpointRateLimit.mockResolvedValue({
     allowed: true,
-    remaining: 999,
-    reset: Date.now() + 3600000,
+    limit: 100,
+    remaining: 99,
+    reset: Math.floor(Date.now() / 1000) + 3600,
   });
 
   mockLogPartnerApiUsage.mockResolvedValue(undefined);

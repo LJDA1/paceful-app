@@ -8,7 +8,7 @@
 import { NextRequest } from 'next/server';
 import {
   validatePartnerKey,
-  checkPartnerRateLimit,
+  checkEndpointRateLimit,
   logPartnerApiUsage,
   partnerApiError,
   partnerApiSuccess,
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Check rate limit
-  const rateLimitResult = await checkPartnerRateLimit(validation.partnerId!, validation.rateLimit);
+  const rateLimitResult = await checkEndpointRateLimit(validation.partnerId!, request.url);
   if (!rateLimitResult.allowed) {
     return partnerApiError(
       'Rate limit exceeded',

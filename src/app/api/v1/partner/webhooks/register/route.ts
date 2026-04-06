@@ -9,7 +9,7 @@ import { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
 import {
   validatePartnerKey,
-  checkPartnerRateLimit,
+  checkEndpointRateLimit,
   logPartnerApiUsage,
   partnerApiError,
   partnerApiSuccess,
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Check rate limit
-  const rateLimit = await checkPartnerRateLimit(validation.partnerId!, validation.rateLimit);
+  const rateLimit = await checkEndpointRateLimit(validation.partnerId!, request.url);
   if (!rateLimit.allowed) {
     return partnerApiError(
       'Rate limit exceeded',

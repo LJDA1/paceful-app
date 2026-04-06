@@ -191,7 +191,44 @@ export async function validatePartnerKey(request: NextRequest): Promise<PartnerK
 // ============================================================================
 
 /**
- * Check rate limit for a partner
+ * Endpoint-specific rate limits (requests per hour)
+ */
+export const ENDPOINT_RATE_LIMITS: Record<string, number> = {
+  'assess_analyze': 100,      // /assess/analyze - AI-intensive
+  'assess_snapshot': 200,     // /assess/snapshot - questionnaire
+  'ers': 500,                 // /ers/* - score retrieval
+  'analytics': 50,            // /analytics/* - heavy queries
+  'partner': 200,             // /partner/* - config/info
+  'webhooks': 100,            // /webhooks/* - webhook management
+  'import': 50,               // /import/* - bulk operations
+  'default': 200,             // fallback
+};
+
+/**
+ * Get endpoint category from path for rate limiting
+ */
+export function getEndpointCategory(path: string): string {
+  if (path.includes('/assess/analyze')) return 'assess_analyze';
+  if (path.includes('/assess/snapshot')) return 'assess_snapshot';
+  if (path.includes('/ers/')) return 'ers';
+  if (path.includes('/analytics/')) return 'analytics';
+  if (path.includes('/webhooks/')) return 'webhooks';
+  if (path.includes('/import/')) return 'import';
+  if (path.includes('/partner/')) return 'partner';
+  return 'default';
+}
+
+/**
+ * Get the current hour window start (for windowed rate limiting)
+ */
+function getWindowStart(): Date {
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+  return now;
+}
+
+/**
+ * Check rate limit for a partner (legacy - uses total count)
  * Returns rate limit info with Unix timestamps for standard headers
  */
 export async function checkPartnerRateLimit(
@@ -241,6 +278,152 @@ export async function checkPartnerRateLimit(
   } catch (error) {
     console.error('Rate limit check failed:', error);
     return { allowed: true, limit: rateLimit, remaining: rateLimit, reset };
+  }
+}
+
+/**
+ * Check endpoint-specific rate limit for a partner
+ * Uses windowed counting for efficiency
+ */
+export async function checkEndpointRateLimit(
+  partnerId: string,
+  endpoint: string
+): Promise<RateLimitResult> {
+  const category = getEndpointCategory(endpoint);
+  const limit = ENDPOINT_RATE_LIMITS[category] || ENDPOINT_RATE_LIMITS.default;
+  const windowStart = getWindowStart();
+  const now = Date.now();
+
+  // Reset is at the end of the current hour window
+  const windowEnd = new Date(windowStart);
+  windowEnd.setHours(windowEnd.getHours() + 1);
+  const reset = Math.floor(windowEnd.getTime() / 1000);
+
+  try {
+    const supabase = getSupabaseAdmin();
+
+    // Try to increment the counter atomically using upsert
+    const { data, error } = await supabase
+      .from('partner_rate_limits')
+      .upsert(
+        {
+          partner_id: partnerId,
+          endpoint_category: category,
+          window_start: windowStart.toISOString(),
+          request_count: 1,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'partner_id,endpoint_category,window_start',
+          ignoreDuplicates: false,
+        }
+      )
+      .select('request_count')
+      .single();
+
+    // If upsert created a new row, count is 1
+    // If row existed, we need to increment
+    if (error) {
+      // Fallback: try to get current count and update
+      const { data: existing } = await supabase
+        .from('partner_rate_limits')
+        .select('request_count')
+        .eq('partner_id', partnerId)
+        .eq('endpoint_category', category)
+        .eq('window_start', windowStart.toISOString())
+        .single();
+
+      if (existing) {
+        const newCount = (existing.request_count || 0) + 1;
+
+        // Check if would exceed limit
+        if (newCount > limit) {
+          const retryAfter = Math.max(0, reset - Math.floor(now / 1000));
+          return {
+            allowed: false,
+            limit,
+            remaining: 0,
+            reset,
+            retryAfter,
+          };
+        }
+
+        // Update the count
+        await supabase
+          .from('partner_rate_limits')
+          .update({ request_count: newCount, updated_at: new Date().toISOString() })
+          .eq('partner_id', partnerId)
+          .eq('endpoint_category', category)
+          .eq('window_start', windowStart.toISOString());
+
+        return {
+          allowed: true,
+          limit,
+          remaining: Math.max(0, limit - newCount),
+          reset,
+        };
+      }
+
+      // No existing record, create one
+      await supabase.from('partner_rate_limits').insert({
+        partner_id: partnerId,
+        endpoint_category: category,
+        window_start: windowStart.toISOString(),
+        request_count: 1,
+      });
+
+      return {
+        allowed: true,
+        limit,
+        remaining: limit - 1,
+        reset,
+      };
+    }
+
+    // Upsert succeeded - need to check if we need to increment
+    const currentCount = data?.request_count || 1;
+
+    // If this was an insert (count = 1), we're done
+    if (currentCount === 1) {
+      return {
+        allowed: true,
+        limit,
+        remaining: limit - 1,
+        reset,
+      };
+    }
+
+    // Otherwise increment the existing count
+    const newCount = currentCount + 1;
+
+    if (newCount > limit) {
+      const retryAfter = Math.max(0, reset - Math.floor(now / 1000));
+      return {
+        allowed: false,
+        limit,
+        remaining: 0,
+        reset,
+        retryAfter,
+      };
+    }
+
+    await supabase
+      .from('partner_rate_limits')
+      .update({ request_count: newCount, updated_at: new Date().toISOString() })
+      .eq('partner_id', partnerId)
+      .eq('endpoint_category', category)
+      .eq('window_start', windowStart.toISOString());
+
+    return {
+      allowed: true,
+      limit,
+      remaining: Math.max(0, limit - newCount),
+      reset,
+    };
+  } catch (error) {
+    console.error('Endpoint rate limit check failed:', error);
+    // On error, allow but with degraded info
+    return { allowed: true, limit, remaining: limit, reset };
   }
 }
 

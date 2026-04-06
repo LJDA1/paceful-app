@@ -15,7 +15,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createHash } from 'crypto';
 import {
   validatePartnerKey,
-  checkPartnerRateLimit,
+  checkEndpointRateLimit,
   logPartnerApiUsage,
   partnerApiError,
   partnerApiSuccess,
@@ -398,11 +398,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Check rate limit
-  const rateLimit = await checkPartnerRateLimit(validation.partnerId!, validation.rateLimit);
+  // Check endpoint-specific rate limit (100/hour for analyze)
+  const rateLimit = await checkEndpointRateLimit(validation.partnerId!, '/api/v1/assess/analyze');
   if (!rateLimit.allowed) {
     return partnerApiError(
-      'Rate limit exceeded',
+      `Rate limit exceeded. Limit: ${rateLimit.limit}/hour. Retry after ${rateLimit.retryAfter} seconds.`,
       'RATE_LIMITED',
       429,
       undefined,
