@@ -1,6 +1,21 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  Legend,
+  PieChart,
+  Pie,
+} from 'recharts';
 
 const API_BASE = '/api/v1/partner';
 
@@ -79,7 +94,83 @@ interface BenchmarkData {
   insights: string[];
 }
 
-type DashboardTab = 'overview' | 'webhooks' | 'benchmarks';
+type DashboardTab = 'overview' | 'webhooks' | 'benchmarks' | 'analytics';
+
+// Analytics data types
+interface VolumeDataPoint {
+  date: string;
+  count: number;
+}
+
+interface ErsDistributionBucket {
+  range: string;
+  count: number;
+  percentage: number;
+}
+
+interface DimensionHeatmapItem {
+  dimension: string;
+  average: number;
+  median: number;
+  sampleSize: number;
+  distribution: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+}
+
+interface StageFunnelItem {
+  stage: string;
+  count: number;
+  percentage: number;
+}
+
+interface TopSignal {
+  signal: string;
+  frequency: number;
+  dimension: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+}
+
+interface AnalyticsBenchmarkDimension {
+  dimension: string;
+  verticalAvg: number | null;
+  partnerAvg: number | null;
+  percentile: number | null;
+  trend: string | null;
+}
+
+interface AnalyticsData {
+  period: string;
+  granularity: string;
+  summary: {
+    totalAssessments: number;
+    averageErs: number | null;
+    periodStart: string;
+    periodEnd: string;
+  };
+  assessmentVolume: VolumeDataPoint[];
+  ersDistribution: ErsDistributionBucket[];
+  dimensionHeatmap: DimensionHeatmapItem[];
+  stageFunnel: {
+    stages: StageFunnelItem[];
+    conversionRates: {
+      healingToRebuilding: number;
+      rebuildingToReady: number;
+    };
+  };
+  benchmarkComparison: {
+    vertical: string;
+    dimensions: AnalyticsBenchmarkDimension[];
+    overall: {
+      verticalAvg: number | null;
+      partnerAvg: number | null;
+      percentile: number | null;
+    };
+  } | null;
+  topSignals: TopSignal[];
+}
 
 // Skeleton loader component
 function Skeleton({ width, height, className }: { width?: string; height?: string; className?: string }) {
@@ -133,6 +224,9 @@ export default function PartnerDashboard() {
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'failed' | 'retrying' | 'delivered'>('all');
   const [retryingDeliveryId, setRetryingDeliveryId] = useState<string | null>(null);
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkData | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<'7d' | '30d' | '90d'>('30d');
+  const [analyticsGranularity, setAnalyticsGranularity] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   // Loading states
   const [loadingInfo, setLoadingInfo] = useState(true);
@@ -140,6 +234,7 @@ export default function PartnerDashboard() {
   const [loadingWebhooks, setLoadingWebhooks] = useState(true);
   const [loadingDeliveries, setLoadingDeliveries] = useState(true);
   const [loadingBenchmarks, setLoadingBenchmarks] = useState(false);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
   // Error states
   const [infoError, setInfoError] = useState('');
@@ -147,6 +242,7 @@ export default function PartnerDashboard() {
   const [webhooksError, setWebhooksError] = useState('');
   const [deliveriesError, setDeliveriesError] = useState('');
   const [benchmarksError, setBenchmarksError] = useState('');
+  const [analyticsError, setAnalyticsError] = useState('');
 
   // Copy state
   const [copied, setCopied] = useState(false);
@@ -216,6 +312,19 @@ export default function PartnerDashboard() {
       setBenchmarksError(err instanceof Error ? err.message : 'Failed to fetch benchmarks');
     } finally {
       setLoadingBenchmarks(false);
+    }
+  }, [fetchWithAuth]);
+
+  const fetchAnalytics = useCallback(async (period: string, granularity: string) => {
+    setLoadingAnalytics(true);
+    setAnalyticsError('');
+    try {
+      const data = await fetchWithAuth(`/analytics/dashboard?period=${period}&granularity=${granularity}`);
+      setAnalyticsData(data);
+    } catch (err) {
+      setAnalyticsError(err instanceof Error ? err.message : 'Failed to fetch analytics');
+    } finally {
+      setLoadingAnalytics(false);
     }
   }, [fetchWithAuth]);
 
@@ -290,6 +399,12 @@ export default function PartnerDashboard() {
       fetchBenchmarks();
     }
   }, [isAuthenticated, apiKey, activeTab, benchmarkData, loadingBenchmarks, fetchBenchmarks]);
+
+  // Fetch analytics when tab is selected or filters change
+  useEffect(() => {
+    if (!isAuthenticated || !apiKey || activeTab !== 'analytics') return;
+    fetchAnalytics(analyticsPeriod, analyticsGranularity);
+  }, [isAuthenticated, apiKey, activeTab, analyticsPeriod, analyticsGranularity, fetchAnalytics]);
 
   const handleCopySnippet = () => {
     const snippet = `import { PacefulClient } from '@paceful/sdk';
@@ -720,6 +835,12 @@ const ers = await paceful.ers.get('user-123');`;
             style={styles.tab(activeTab === 'benchmarks')}
           >
             Benchmarks
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            style={styles.tab(activeTab === 'analytics')}
+          >
+            Analytics
           </button>
         </div>
 
@@ -1447,6 +1568,397 @@ const ers = await paceful.ers.get('user-123');`}
               <Card>
                 <p style={{ color: '#6B6560', fontSize: '14px' }}>
                   No benchmark data available yet. Benchmarks are generated weekly when there are at least 50 assessments in your vertical.
+                </p>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <>
+            {/* Period and Granularity Controls */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div style={styles.sectionTitle}>Analytics Dashboard</div>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: '#6B6560' }}>Period:</span>
+                  {(['7d', '30d', '90d'] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setAnalyticsPeriod(p)}
+                      style={styles.filterButton(analyticsPeriod === p)}
+                    >
+                      {p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: '#6B6560' }}>View:</span>
+                  {(['daily', 'weekly', 'monthly'] as const).map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setAnalyticsGranularity(g)}
+                      style={styles.filterButton(analyticsGranularity === g)}
+                    >
+                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {loadingAnalytics ? (
+              <div style={styles.grid}>
+                {[...Array(4)].map((_, i) => (
+                  <Card key={i}>
+                    <Skeleton width="150px" height="24px" />
+                    <Skeleton width="100%" height="200px" className="mt-4" />
+                  </Card>
+                ))}
+              </div>
+            ) : analyticsError ? (
+              <Card>
+                <div style={{ color: '#B56B6B', fontSize: '14px' }}>{analyticsError}</div>
+              </Card>
+            ) : analyticsData ? (
+              <>
+                {/* Summary Stats */}
+                <div style={styles.grid}>
+                  <Card>
+                    <div style={styles.statLabel}>Total Assessments</div>
+                    <div style={styles.statNumber}>{analyticsData.summary.totalAssessments.toLocaleString()}</div>
+                    <div style={{ fontSize: '12px', color: '#9A938A', marginTop: '4px' }}>
+                      {new Date(analyticsData.summary.periodStart).toLocaleDateString()} - {new Date(analyticsData.summary.periodEnd).toLocaleDateString()}
+                    </div>
+                  </Card>
+                  <Card>
+                    <div style={styles.statLabel}>Average ERS</div>
+                    <div style={styles.statNumber}>
+                      {analyticsData.summary.averageErs !== null ? analyticsData.summary.averageErs : '—'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#9A938A', marginTop: '4px' }}>
+                      Emotional Readiness Score
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Assessment Volume Chart */}
+                <div style={{ marginBottom: '24px' }}>
+                  <Card>
+                    <div style={styles.cardTitle}>Assessment Volume</div>
+                    {analyticsData.assessmentVolume.length > 0 ? (
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                          <LineChart data={analyticsData.assessmentVolume}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E0D9" />
+                            <XAxis
+                              dataKey="date"
+                              tick={{ fontSize: 12, fill: '#6B6560' }}
+                              tickFormatter={(value) => {
+                                const d = new Date(value);
+                                return `${d.getMonth() + 1}/${d.getDate()}`;
+                              }}
+                            />
+                            <YAxis tick={{ fontSize: 12, fill: '#6B6560' }} />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #E5E0D9',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                              }}
+                              labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="count"
+                              stroke="#5B8A72"
+                              strokeWidth={2}
+                              dot={{ fill: '#5B8A72', strokeWidth: 0, r: 3 }}
+                              activeDot={{ fill: '#5B8A72', strokeWidth: 0, r: 5 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <p style={{ color: '#6B6560', fontSize: '14px' }}>No assessment data available for this period.</p>
+                    )}
+                  </Card>
+                </div>
+
+                {/* ERS Distribution & Stage Funnel */}
+                <div style={styles.grid}>
+                  {/* ERS Distribution Histogram */}
+                  <Card>
+                    <div style={styles.cardTitle}>ERS Distribution</div>
+                    {analyticsData.ersDistribution.some(b => b.count > 0) ? (
+                      <div style={{ width: '100%', height: 250 }}>
+                        <ResponsiveContainer>
+                          <BarChart data={analyticsData.ersDistribution}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E0D9" />
+                            <XAxis dataKey="range" tick={{ fontSize: 12, fill: '#6B6560' }} />
+                            <YAxis tick={{ fontSize: 12, fill: '#6B6560' }} />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #E5E0D9',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                              }}
+                              formatter={(value, name) => [
+                                name === 'count' ? `${value} assessments` : `${value}%`,
+                                name === 'count' ? 'Count' : 'Percentage'
+                              ]}
+                            />
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                              {analyticsData.ersDistribution.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={
+                                    index <= 1 ? '#B56B6B' :
+                                    index === 2 ? '#C4973B' :
+                                    '#5B8A72'
+                                  }
+                                />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <p style={{ color: '#6B6560', fontSize: '14px' }}>No distribution data available.</p>
+                    )}
+                  </Card>
+
+                  {/* Stage Funnel */}
+                  <Card>
+                    <div style={styles.cardTitle}>Readiness Stage Distribution</div>
+                    {analyticsData.stageFunnel.stages.some(s => s.count > 0) ? (
+                      <>
+                        <div style={{ width: '100%', height: 200 }}>
+                          <ResponsiveContainer>
+                            <PieChart>
+                              <Pie
+                                data={analyticsData.stageFunnel.stages}
+                                dataKey="count"
+                                nameKey="stage"
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={50}
+                                outerRadius={80}
+                                paddingAngle={2}
+                              >
+                                {analyticsData.stageFunnel.stages.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={
+                                      entry.stage === 'Healing' ? '#B56B6B' :
+                                      entry.stage === 'Rebuilding' ? '#C4973B' :
+                                      '#5B8A72'
+                                    }
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: '#FFFFFF',
+                                  border: '1px solid #E5E0D9',
+                                  borderRadius: '8px',
+                                  fontSize: '13px',
+                                }}
+                                formatter={(value, name) => [`${value} (${analyticsData.stageFunnel.stages.find(s => s.stage === name)?.percentage || 0}%)`, name]}
+                              />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px', padding: '12px', backgroundColor: '#F9F6F2', borderRadius: '8px' }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '12px', color: '#6B6560' }}>Healing → Rebuilding</div>
+                            <div style={{ fontSize: '18px', fontWeight: 600, color: '#1F1D1A' }}>
+                              {analyticsData.stageFunnel.conversionRates.healingToRebuilding}%
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '12px', color: '#6B6560' }}>Rebuilding → Ready</div>
+                            <div style={{ fontSize: '18px', fontWeight: 600, color: '#1F1D1A' }}>
+                              {analyticsData.stageFunnel.conversionRates.rebuildingToReady}%
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <p style={{ color: '#6B6560', fontSize: '14px' }}>No stage data available.</p>
+                    )}
+                  </Card>
+                </div>
+
+                {/* Dimension Heatmap */}
+                <div style={{ marginBottom: '24px' }}>
+                  <Card>
+                    <div style={styles.cardTitle}>Dimension Analysis</div>
+                    {analyticsData.dimensionHeatmap.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {analyticsData.dimensionHeatmap.map((dim) => (
+                          <div key={dim.dimension} style={{
+                            padding: '16px',
+                            backgroundColor: '#F9F6F2',
+                            borderRadius: '8px',
+                            borderLeft: `4px solid ${dim.average >= 70 ? '#5B8A72' : dim.average >= 40 ? '#C4973B' : '#B56B6B'}`
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <div style={{ fontSize: '15px', fontWeight: 600, color: '#1F1D1A' }}>{dim.dimension}</div>
+                              <div style={{ display: 'flex', gap: '16px' }}>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontSize: '11px', color: '#9A938A' }}>Average</div>
+                                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#1F1D1A' }}>{dim.average}</div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontSize: '11px', color: '#9A938A' }}>Median</div>
+                                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#6B6560' }}>{dim.median}</div>
+                                </div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '4px', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ width: `${dim.distribution.low}%`, backgroundColor: '#B56B6B', transition: 'width 0.3s' }} title={`Low: ${dim.distribution.low}%`} />
+                              <div style={{ width: `${dim.distribution.medium}%`, backgroundColor: '#C4973B', transition: 'width 0.3s' }} title={`Medium: ${dim.distribution.medium}%`} />
+                              <div style={{ width: `${dim.distribution.high}%`, backgroundColor: '#5B8A72', transition: 'width 0.3s' }} title={`High: ${dim.distribution.high}%`} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '11px', color: '#9A938A' }}>
+                              <span>Low ({dim.distribution.low}%)</span>
+                              <span>Medium ({dim.distribution.medium}%)</span>
+                              <span>High ({dim.distribution.high}%)</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: '#6B6560', fontSize: '14px' }}>No dimension data available.</p>
+                    )}
+                  </Card>
+                </div>
+
+                {/* Benchmark Comparison */}
+                {analyticsData.benchmarkComparison && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <Card>
+                      <div style={styles.cardTitle}>
+                        Your Performance vs {analyticsData.benchmarkComparison.vertical?.replace(/_/g, ' ')} Vertical
+                      </div>
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                          <BarChart
+                            data={analyticsData.benchmarkComparison.dimensions.filter(d => d.verticalAvg !== null)}
+                            layout="vertical"
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E0D9" />
+                            <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12, fill: '#6B6560' }} />
+                            <YAxis
+                              type="category"
+                              dataKey="dimension"
+                              width={150}
+                              tick={{ fontSize: 12, fill: '#6B6560' }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #E5E0D9',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                              }}
+                            />
+                            <Legend />
+                            <Bar dataKey="verticalAvg" name="Vertical Avg" fill="#E5E0D9" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="partnerAvg" name="Your Avg" fill="#5B8A72" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {analyticsData.benchmarkComparison.overall.percentile !== null && (
+                        <div style={{
+                          marginTop: '16px',
+                          padding: '12px 16px',
+                          backgroundColor: '#F9F6F2',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div>
+                            <span style={{ fontSize: '14px', color: '#6B6560' }}>Overall ERS: </span>
+                            <span style={{ fontSize: '16px', fontWeight: 600, color: '#1F1D1A' }}>
+                              {analyticsData.benchmarkComparison.overall.partnerAvg ?? '—'}
+                            </span>
+                            <span style={{ fontSize: '14px', color: '#6B6560' }}> vs vertical avg of </span>
+                            <span style={{ fontSize: '16px', fontWeight: 600, color: '#1F1D1A' }}>
+                              {analyticsData.benchmarkComparison.overall.verticalAvg ?? '—'}
+                            </span>
+                          </div>
+                          <span style={styles.percentileBadge(analyticsData.benchmarkComparison.overall.percentile)}>
+                            {analyticsData.benchmarkComparison.overall.percentile}th percentile
+                          </span>
+                        </div>
+                      )}
+                    </Card>
+                  </div>
+                )}
+
+                {/* Top Signals */}
+                <div style={{ marginBottom: '24px' }}>
+                  <Card>
+                    <div style={styles.cardTitle}>Top Signals</div>
+                    {analyticsData.topSignals.length > 0 ? (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                              <th style={{ textAlign: 'left', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Signal</th>
+                              <th style={{ textAlign: 'left', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Dimension</th>
+                              <th style={{ textAlign: 'left', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Sentiment</th>
+                              <th style={{ textAlign: 'right', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Frequency</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analyticsData.topSignals.map((signal, i) => (
+                              <tr key={i} style={{ borderBottom: '1px solid #F4F1ED' }}>
+                                <td style={{ padding: '12px', color: '#1F1D1A', fontWeight: 500 }}>
+                                  {signal.signal}
+                                </td>
+                                <td style={{ padding: '12px', color: '#6B6560' }}>
+                                  {signal.dimension}
+                                </td>
+                                <td style={{ padding: '12px' }}>
+                                  <span style={{
+                                    display: 'inline-block',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    fontWeight: 500,
+                                    borderRadius: '4px',
+                                    backgroundColor: signal.sentiment === 'positive' ? '#E8F5E9' : signal.sentiment === 'negative' ? '#FFEBEE' : '#F4F1ED',
+                                    color: signal.sentiment === 'positive' ? '#2E7D32' : signal.sentiment === 'negative' ? '#C62828' : '#6B6560',
+                                    textTransform: 'capitalize',
+                                  }}>
+                                    {signal.sentiment}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '12px', textAlign: 'right', color: '#1F1D1A', fontWeight: 600 }}>
+                                  {signal.frequency}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p style={{ color: '#6B6560', fontSize: '14px' }}>No signal data available.</p>
+                    )}
+                  </Card>
+                </div>
+              </>
+            ) : (
+              <Card>
+                <p style={{ color: '#6B6560', fontSize: '14px' }}>
+                  No analytics data available. Start collecting assessments to see your dashboard.
                 </p>
               </Card>
             )}
