@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkAndSendDripEmails } from '@/lib/sandbox-emails';
 
 // Supabase admin client
 const supabaseAdmin = createClient(
@@ -170,6 +171,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Check and send drip emails (async, don't block response)
+      checkAndSendDripEmails(updatedLead.id).catch(err => {
+        console.error('[Capture Lead] Error sending drip emails:', err);
+      });
+
       return NextResponse.json(
         {
           success: true,
@@ -211,6 +217,11 @@ export async function POST(request: NextRequest) {
         { status: 500, headers: corsHeaders() }
       );
     }
+
+    // Check and send drip emails (async, don't block response)
+    checkAndSendDripEmails(newLead.id).catch(err => {
+      console.error('[Capture Lead] Error sending drip emails:', err);
+    });
 
     return NextResponse.json(
       {
