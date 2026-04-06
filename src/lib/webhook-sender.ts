@@ -4,7 +4,7 @@
  * Handles webhook delivery with HMAC signing, retries, and comprehensive logging.
  */
 
-import { createHmac } from 'crypto';
+import { createHmac, createHash } from 'crypto';
 import { getSupabaseAdmin } from './partner-auth';
 
 // ============================================================================
@@ -41,6 +41,14 @@ type DeliveryStatus = 'pending' | 'delivered' | 'retrying' | 'failed';
 const RETRY_DELAYS_MS = [60 * 1000, 5 * 60 * 1000, 30 * 60 * 1000];
 const MAX_ATTEMPTS = 3;
 
+/**
+ * Hash a payload for deduplication tracking
+ */
+function hashPayload(payload: WebhookPayload): string {
+  const payloadString = JSON.stringify(payload);
+  return createHash('sha256').update(payloadString).digest('hex');
+}
+
 // ============================================================================
 // HMAC Signing
 // ============================================================================
@@ -69,6 +77,7 @@ async function createDeliveryRecord(
 ): Promise<string | null> {
   try {
     const supabase = getSupabaseAdmin();
+    const payloadHash = hashPayload(payload);
 
     const { data, error } = await supabase
       .from('webhook_deliveries')
@@ -77,6 +86,7 @@ async function createDeliveryRecord(
         partner_id: partnerId,
         event_type: eventType,
         payload,
+        payload_hash: payloadHash,
         status: 'pending',
         attempt_count: 0,
         max_attempts: MAX_ATTEMPTS,
@@ -131,6 +141,7 @@ async function updateDeliveryRecord(
         next_retry_at: updates.nextRetryAt,
         delivered_at: updates.deliveredAt,
         failed_at: updates.failedAt,
+        last_attempt_at: new Date().toISOString(),
       })
       .eq('id', deliveryId);
   } catch (error) {

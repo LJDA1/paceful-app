@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
     for (const delivery of deliveries || []) {
       const stats = deliveryStats.get(delivery.webhook_id) || { total: 0, success: 0, lastTriggered: null };
       stats.total++;
-      if (delivery.status === 'success') {
+      if (delivery.status === 'delivered') {
         stats.success++;
       }
       if (!stats.lastTriggered || delivery.delivered_at > stats.lastTriggered) {
