@@ -46,6 +46,41 @@ interface WebhookDelivery {
   durationMs: number | null;
 }
 
+interface DimensionBenchmark {
+  dimension: string;
+  displayName: string;
+  verticalAvg: number;
+  verticalMedian: number;
+  verticalP25: number;
+  verticalP75: number;
+  partnerAvg: number | null;
+  partnerSampleSize: number;
+  percentileRank: number | null;
+  percentileLabel: string | null;
+  trend: 'improving' | 'declining' | 'stable' | null;
+  previousAvg: number | null;
+}
+
+interface BenchmarkData {
+  vertical: string;
+  period: string;
+  periodStart: string;
+  periodEnd: string;
+  verticalSampleSize: number;
+  summary: {
+    overallErsVerticalAvg: number | null;
+    overallErsPartnerAvg: number | null;
+    overallPercentile: number | null;
+    overallPercentileLabel: string | null;
+    overallTrend: 'improving' | 'declining' | 'stable' | null;
+    avgPercentileAcrossDimensions: number | null;
+  };
+  dimensions: DimensionBenchmark[];
+  insights: string[];
+}
+
+type DashboardTab = 'overview' | 'webhooks' | 'benchmarks';
+
 // Skeleton loader component
 function Skeleton({ width, height, className }: { width?: string; height?: string; className?: string }) {
   return (
@@ -87,6 +122,9 @@ export default function PartnerDashboard() {
   const [authError, setAuthError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+
   // Data state
   const [partnerInfo, setPartnerInfo] = useState<PartnerInfo | null>(null);
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
@@ -94,18 +132,21 @@ export default function PartnerDashboard() {
   const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'failed' | 'retrying' | 'delivered'>('all');
   const [retryingDeliveryId, setRetryingDeliveryId] = useState<string | null>(null);
+  const [benchmarkData, setBenchmarkData] = useState<BenchmarkData | null>(null);
 
   // Loading states
   const [loadingInfo, setLoadingInfo] = useState(true);
   const [loadingUsage, setLoadingUsage] = useState(true);
   const [loadingWebhooks, setLoadingWebhooks] = useState(true);
   const [loadingDeliveries, setLoadingDeliveries] = useState(true);
+  const [loadingBenchmarks, setLoadingBenchmarks] = useState(false);
 
   // Error states
   const [infoError, setInfoError] = useState('');
   const [usageError, setUsageError] = useState('');
   const [webhooksError, setWebhooksError] = useState('');
   const [deliveriesError, setDeliveriesError] = useState('');
+  const [benchmarksError, setBenchmarksError] = useState('');
 
   // Copy state
   const [copied, setCopied] = useState(false);
@@ -164,6 +205,19 @@ export default function PartnerDashboard() {
       setRetryingDeliveryId(null);
     }
   }, [fetchWithAuth, fetchDeliveries, deliveryFilter]);
+
+  const fetchBenchmarks = useCallback(async () => {
+    setLoadingBenchmarks(true);
+    setBenchmarksError('');
+    try {
+      const data = await fetchWithAuth('/benchmarks');
+      setBenchmarkData(data);
+    } catch (err) {
+      setBenchmarksError(err instanceof Error ? err.message : 'Failed to fetch benchmarks');
+    } finally {
+      setLoadingBenchmarks(false);
+    }
+  }, [fetchWithAuth]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,6 +282,14 @@ export default function PartnerDashboard() {
     // Fetch deliveries
     fetchDeliveries(deliveryFilter);
   }, [isAuthenticated, apiKey, fetchWithAuth, fetchDeliveries, deliveryFilter]);
+
+  // Fetch benchmarks when tab is selected
+  useEffect(() => {
+    if (!isAuthenticated || !apiKey || activeTab !== 'benchmarks') return;
+    if (!benchmarkData && !loadingBenchmarks) {
+      fetchBenchmarks();
+    }
+  }, [isAuthenticated, apiKey, activeTab, benchmarkData, loadingBenchmarks, fetchBenchmarks]);
 
   const handleCopySnippet = () => {
     const snippet = `import { PacefulClient } from '@paceful/sdk';
@@ -462,6 +524,101 @@ const ers = await paceful.ers.get('user-123');`;
       backgroundColor: '#9A938A',
       cursor: 'not-allowed',
     } as React.CSSProperties,
+    tabContainer: {
+      display: 'flex',
+      gap: '4px',
+      backgroundColor: '#F4F1ED',
+      padding: '4px',
+      borderRadius: '8px',
+      marginBottom: '24px',
+    } as React.CSSProperties,
+    tab: (isActive: boolean) => ({
+      padding: '10px 20px',
+      fontSize: '14px',
+      fontWeight: 500,
+      backgroundColor: isActive ? '#FFFFFF' : 'transparent',
+      color: isActive ? '#1F1D1A' : '#6B6560',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+      boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+    }) as React.CSSProperties,
+    benchmarkBar: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      marginBottom: '16px',
+    } as React.CSSProperties,
+    benchmarkLabel: {
+      width: '140px',
+      fontSize: '14px',
+      fontWeight: 500,
+      color: '#1F1D1A',
+    } as React.CSSProperties,
+    benchmarkBarContainer: {
+      flex: 1,
+      position: 'relative' as const,
+      height: '32px',
+      backgroundColor: '#F4F1ED',
+      borderRadius: '4px',
+      overflow: 'hidden',
+    } as React.CSSProperties,
+    benchmarkBarFill: (percentile: number) => ({
+      position: 'absolute' as const,
+      top: 0,
+      left: 0,
+      height: '100%',
+      width: `${percentile}%`,
+      backgroundColor: percentile >= 75 ? '#5B8A72' : percentile >= 50 ? '#C4973B' : '#B56B6B',
+      borderRadius: '4px',
+      transition: 'width 0.5s ease',
+    }) as React.CSSProperties,
+    benchmarkVerticalLine: (position: number) => ({
+      position: 'absolute' as const,
+      top: 0,
+      left: `${position}%`,
+      height: '100%',
+      width: '2px',
+      backgroundColor: '#6B6560',
+    }) as React.CSSProperties,
+    benchmarkValue: {
+      width: '80px',
+      textAlign: 'right' as const,
+      fontSize: '14px',
+      fontWeight: 600,
+      color: '#1F1D1A',
+    } as React.CSSProperties,
+    percentileBadge: (percentile: number) => ({
+      display: 'inline-block',
+      padding: '4px 10px',
+      fontSize: '13px',
+      fontWeight: 600,
+      borderRadius: '12px',
+      backgroundColor: percentile >= 75 ? '#E8F5E9' : percentile >= 50 ? '#FFF3E0' : '#FFEBEE',
+      color: percentile >= 75 ? '#2E7D32' : percentile >= 50 ? '#E65100' : '#C62828',
+    }) as React.CSSProperties,
+    trendBadge: (trend: string) => ({
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '4px',
+      padding: '4px 8px',
+      fontSize: '12px',
+      fontWeight: 500,
+      borderRadius: '4px',
+      backgroundColor: trend === 'improving' ? '#E8F5E9' : trend === 'declining' ? '#FFEBEE' : '#F4F1ED',
+      color: trend === 'improving' ? '#2E7D32' : trend === 'declining' ? '#C62828' : '#6B6560',
+    }) as React.CSSProperties,
+    insightCard: {
+      padding: '12px 16px',
+      backgroundColor: '#F9F6F2',
+      borderRadius: '8px',
+      borderLeft: '3px solid #5B8A72',
+      marginBottom: '12px',
+      fontSize: '14px',
+      color: '#1F1D1A',
+      lineHeight: 1.5,
+    } as React.CSSProperties,
   };
 
   // Login screen
@@ -544,6 +701,31 @@ const ers = await paceful.ers.get('user-123');`;
       </header>
 
       <div style={styles.container}>
+        {/* Tab Navigation */}
+        <div style={styles.tabContainer}>
+          <button
+            onClick={() => setActiveTab('overview')}
+            style={styles.tab(activeTab === 'overview')}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('webhooks')}
+            style={styles.tab(activeTab === 'webhooks')}
+          >
+            Webhooks
+          </button>
+          <button
+            onClick={() => setActiveTab('benchmarks')}
+            style={styles.tab(activeTab === 'benchmarks')}
+          >
+            Benchmarks
+          </button>
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <>
         {/* Overview Stats */}
         <div style={styles.sectionTitle}>Overview</div>
         <div style={styles.grid}>
@@ -947,6 +1129,329 @@ const ers = await paceful.ers.get('user-123');`}
             </div>
           )}
         </Card>
+          </>
+        )}
+
+        {/* Webhooks Tab */}
+        {activeTab === 'webhooks' && (
+          <>
+            <div style={styles.sectionTitle}>Registered Webhooks</div>
+            <div style={{ marginBottom: '24px' }}>
+              <Card>
+                {loadingWebhooks ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {[...Array(2)].map((_, i) => (
+                      <div key={i}>
+                        <Skeleton width="300px" height="16px" />
+                        <Skeleton width="200px" height="14px" />
+                      </div>
+                    ))}
+                  </div>
+                ) : webhooksError ? (
+                  <div style={{ color: '#B56B6B', fontSize: '14px' }}>{webhooksError}</div>
+                ) : webhooks.length === 0 ? (
+                  <p style={{ color: '#6B6560', fontSize: '14px' }}>
+                    No webhooks registered.{' '}
+                    <a href="/partners/docs#webhooks" style={styles.link}>
+                      Learn how to set up webhooks
+                    </a>
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {webhooks.map((webhook) => (
+                      <div
+                        key={webhook.id}
+                        style={{
+                          padding: '16px',
+                          backgroundColor: '#F9F6F2',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <code style={{ fontSize: '14px', color: '#1F1D1A', wordBreak: 'break-all' }}>
+                            {webhook.url}
+                          </code>
+                          <span style={styles.statusBadge(webhook.isActive ? 'delivered' : 'failed')}>
+                            {webhook.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {webhook.events.map((event) => (
+                            <span
+                              key={event}
+                              style={{
+                                display: 'inline-block',
+                                padding: '4px 8px',
+                                fontSize: '12px',
+                                borderRadius: '4px',
+                                backgroundColor: '#E5E0D9',
+                                color: '#6B6560',
+                              }}
+                            >
+                              {event}
+                            </span>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: '8px', fontSize: '13px', color: '#9A938A' }}>
+                          {webhook.deliveries7d > 0 ? (
+                            <>
+                              {webhook.deliveries7d} deliveries (7d) · {webhook.successRate}% success
+                              {webhook.lastTriggeredAt && (
+                                <> · Last triggered {new Date(webhook.lastTriggeredAt).toLocaleDateString()}</>
+                              )}
+                            </>
+                          ) : (
+                            'No deliveries in the last 7 days'
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            <div style={styles.sectionTitle}>Recent Deliveries</div>
+            <Card>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ fontSize: '14px', color: '#6B6560' }}>Filter by status:</div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(['all', 'delivered', 'failed', 'retrying'] as const).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setDeliveryFilter(filter)}
+                      style={styles.filterButton(deliveryFilter === filter)}
+                    >
+                      {filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {loadingDeliveries ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Skeleton width="150px" height="16px" />
+                      <Skeleton width="80px" height="24px" />
+                      <Skeleton width="100px" height="16px" />
+                    </div>
+                  ))}
+                </div>
+              ) : deliveriesError ? (
+                <div style={{ color: '#B56B6B', fontSize: '14px' }}>{deliveriesError}</div>
+              ) : deliveries.length === 0 ? (
+                <p style={{ color: '#6B6560', fontSize: '14px' }}>
+                  No webhook deliveries found{deliveryFilter !== 'all' ? ` with status "${deliveryFilter}"` : ''}.
+                </p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Event</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Status</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Response</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Attempts</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Time</th>
+                        <th style={{ textAlign: 'right', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {deliveries.map((delivery) => (
+                        <tr key={delivery.id} style={{ borderBottom: '1px solid #F4F1ED' }}>
+                          <td style={{ padding: '12px', color: '#1F1D1A' }}>
+                            <code style={{ fontSize: '13px' }}>{delivery.eventType}</code>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <span style={styles.statusBadge(delivery.status)}>{delivery.status}</span>
+                          </td>
+                          <td style={{ padding: '12px', color: '#6B6560' }}>
+                            {delivery.httpStatusCode ? (
+                              <span style={{ fontFamily: 'monospace' }}>
+                                HTTP {delivery.httpStatusCode}
+                                {delivery.durationMs && ` (${delivery.durationMs}ms)`}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#9A938A' }}>—</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px', color: '#6B6560' }}>
+                            {delivery.attemptCount}/{delivery.maxAttempts}
+                          </td>
+                          <td style={{ padding: '12px', color: '#6B6560', fontSize: '13px' }}>
+                            {new Date(delivery.createdAt).toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {delivery.status === 'failed' && (
+                              <button
+                                onClick={() => retryDelivery(delivery.id)}
+                                disabled={retryingDeliveryId === delivery.id}
+                                style={{
+                                  ...styles.retryButton,
+                                  ...(retryingDeliveryId === delivery.id ? styles.retryButtonDisabled : {}),
+                                }}
+                              >
+                                {retryingDeliveryId === delivery.id ? 'Retrying...' : 'Retry'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          </>
+        )}
+
+        {/* Benchmarks Tab */}
+        {activeTab === 'benchmarks' && (
+          <>
+            <div style={styles.sectionTitle}>Industry Benchmarks</div>
+            {loadingBenchmarks ? (
+              <Card>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <Skeleton width="200px" height="32px" />
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Skeleton width="140px" height="20px" />
+                      <Skeleton width="100%" height="32px" />
+                      <Skeleton width="80px" height="20px" />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ) : benchmarksError ? (
+              <Card>
+                <div style={{ color: '#B56B6B', fontSize: '14px' }}>{benchmarksError}</div>
+                {benchmarksError.includes('No vertical') && (
+                  <p style={{ fontSize: '14px', color: '#6B6560', marginTop: '12px' }}>
+                    Contact <a href="mailto:partners@paceful.com" style={styles.link}>partners@paceful.com</a> to configure your industry vertical.
+                  </p>
+                )}
+              </Card>
+            ) : benchmarkData ? (
+              <>
+                {/* Summary Card */}
+                <Card>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', color: '#9A938A', marginBottom: '4px' }}>Your Vertical</div>
+                      <div style={{ fontSize: '24px', fontWeight: 600, color: '#1F1D1A', textTransform: 'capitalize' }}>
+                        {benchmarkData.vertical?.replace(/_/g, ' ') || 'N/A'}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#6B6560', marginTop: '4px' }}>
+                        Based on {benchmarkData.verticalSampleSize?.toLocaleString() || 0} assessments ({benchmarkData.period})
+                      </div>
+                    </div>
+                    {benchmarkData.summary.overallPercentile !== null && (
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '14px', color: '#9A938A', marginBottom: '4px' }}>Overall Ranking</div>
+                        <div style={styles.percentileBadge(benchmarkData.summary.overallPercentile)}>
+                          {benchmarkData.summary.overallPercentile}th percentile
+                        </div>
+                        {benchmarkData.summary.overallTrend && (
+                          <div style={{ marginTop: '8px' }}>
+                            <span style={styles.trendBadge(benchmarkData.summary.overallTrend)}>
+                              {benchmarkData.summary.overallTrend === 'improving' && '↑ '}
+                              {benchmarkData.summary.overallTrend === 'declining' && '↓ '}
+                              {benchmarkData.summary.overallTrend === 'stable' && '→ '}
+                              {benchmarkData.summary.overallTrend.charAt(0).toUpperCase() + benchmarkData.summary.overallTrend.slice(1)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Overall ERS Comparison */}
+                  {benchmarkData.summary.overallErsVerticalAvg !== null && (
+                    <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#F9F6F2', borderRadius: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '14px', color: '#6B6560', marginBottom: '4px' }}>Vertical Average ERS</div>
+                          <div style={{ fontSize: '28px', fontWeight: 700, color: '#1F1D1A' }}>
+                            {benchmarkData.summary.overallErsVerticalAvg}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '14px', color: '#6B6560', marginBottom: '4px' }}>Your Users Average</div>
+                          <div style={{ fontSize: '28px', fontWeight: 700, color: benchmarkData.summary.overallErsPartnerAvg !== null && benchmarkData.summary.overallErsPartnerAvg >= benchmarkData.summary.overallErsVerticalAvg ? '#5B8A72' : '#B56B6B' }}>
+                            {benchmarkData.summary.overallErsPartnerAvg !== null ? benchmarkData.summary.overallErsPartnerAvg : '—'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dimension Benchmarks */}
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#1F1D1A', marginBottom: '16px' }}>
+                    Dimension Comparison
+                  </div>
+                  {benchmarkData.dimensions
+                    .filter(d => d.dimension !== 'overall_ers')
+                    .map((dim) => (
+                      <div key={dim.dimension} style={styles.benchmarkBar}>
+                        <div style={styles.benchmarkLabel}>{dim.displayName}</div>
+                        <div style={styles.benchmarkBarContainer}>
+                          {/* Partner's position */}
+                          {dim.percentileRank !== null && (
+                            <div style={styles.benchmarkBarFill(dim.percentileRank)} />
+                          )}
+                          {/* Vertical average marker */}
+                          <div style={{
+                            ...styles.benchmarkVerticalLine(50),
+                            backgroundColor: '#9A938A',
+                            width: '1px',
+                          }} />
+                        </div>
+                        <div style={styles.benchmarkValue}>
+                          {dim.percentileRank !== null ? (
+                            <span style={{ color: dim.percentileRank >= 50 ? '#5B8A72' : '#B56B6B' }}>
+                              {dim.percentileRank}%
+                            </span>
+                          ) : (
+                            <span style={{ color: '#9A938A' }}>—</span>
+                          )}
+                        </div>
+                        {dim.trend && (
+                          <span style={styles.trendBadge(dim.trend)}>
+                            {dim.trend === 'improving' && '↑'}
+                            {dim.trend === 'declining' && '↓'}
+                            {dim.trend === 'stable' && '→'}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  <div style={{ fontSize: '12px', color: '#9A938A', marginTop: '8px' }}>
+                    Bar shows your percentile rank within the vertical. 50% line represents the median.
+                  </div>
+                </Card>
+
+                {/* Insights */}
+                {benchmarkData.insights && benchmarkData.insights.length > 0 && (
+                  <div style={{ marginTop: '24px' }}>
+                    <div style={styles.sectionTitle}>Insights</div>
+                    <Card>
+                      {benchmarkData.insights.map((insight, i) => (
+                        <div key={i} style={styles.insightCard}>
+                          {insight}
+                        </div>
+                      ))}
+                    </Card>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Card>
+                <p style={{ color: '#6B6560', fontSize: '14px' }}>
+                  No benchmark data available yet. Benchmarks are generated weekly when there are at least 50 assessments in your vertical.
+                </p>
+              </Card>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
