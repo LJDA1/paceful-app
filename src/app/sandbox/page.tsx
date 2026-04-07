@@ -108,7 +108,16 @@ export default function SandboxPage() {
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if banner was dismissed (stored in localStorage)
+  useEffect(() => {
+    const dismissed = localStorage.getItem('paceful_sandbox_banner_dismissed');
+    if (dismissed === 'true') {
+      setBannerDismissed(true);
+    }
+  }, []);
 
   // Initialize session
   useEffect(() => {
@@ -834,12 +843,94 @@ export default function SandboxPage() {
         )}
       </main>
 
+      {/* Conversion Banner - appears after 3+ assessments */}
+      {assessmentCount >= 3 && !showEmailCapture && !bannerDismissed && status !== 'success' && (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'linear-gradient(135deg, #5B8A72 0%, #3D6B54 100%)',
+          padding: '16px 24px',
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+          zIndex: 40,
+        }}>
+          <div style={{
+            maxWidth: '1000px',
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '24px',
+            flexWrap: 'wrap',
+          }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <p style={{
+                margin: 0,
+                fontWeight: 600,
+                fontSize: '16px',
+                color: '#FFFFFF',
+              }}>
+                Ready to integrate the ERS API?
+              </p>
+              <p style={{
+                margin: '4px 0 0 0',
+                fontSize: '14px',
+                color: 'rgba(255,255,255,0.85)',
+              }}>
+                Get your API keys in 60 seconds and start building
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <Link
+                href="/partners/signup"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  background: '#D4973B',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Get API Keys
+                <span>→</span>
+              </Link>
+              <button
+                onClick={() => {
+                  setBannerDismissed(true);
+                  localStorage.setItem('paceful_sandbox_banner_dismissed', 'true');
+                }}
+                style={{
+                  padding: '8px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '20px',
+                  lineHeight: 1,
+                }}
+                aria-label="Dismiss banner"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer style={{
         borderTop: '1px solid #E8E2DA',
         padding: '24px',
         textAlign: 'center',
         marginTop: '48px',
+        marginBottom: assessmentCount >= 3 && !bannerDismissed && status !== 'success' ? '80px' : 0,
       }}>
         <p style={{ fontSize: '14px', color: '#9A938A' }}>
           Built by Paceful · <Link href="/partners" style={{ color: '#5B8A72' }}>Partner API</Link> · <Link href="/partners/docs" style={{ color: '#5B8A72' }}>Documentation</Link>

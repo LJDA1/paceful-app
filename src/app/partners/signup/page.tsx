@@ -13,6 +13,17 @@ interface FormData {
   useCase: string;
   expectedVolume: string;
   description: string;
+  termsAccepted: boolean;
+}
+
+interface RegistrationResult {
+  testApiKey: string;
+  liveApiKey: string;
+  testKeyActive: boolean;
+  liveKeyActive: boolean;
+  isPersonalEmail: boolean;
+  emailVerificationRequired: boolean;
+  emailVerificationSent: boolean;
 }
 
 const USE_CASES = [
@@ -46,10 +57,12 @@ export default function PartnerSignup() {
     useCase: '',
     expectedVolume: '',
     description: '',
+    termsAccepted: false,
   });
-  const [sandboxKey, setSandboxKey] = useState<string>('');
+  const [registrationResult, setRegistrationResult] = useState<RegistrationResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [copied, setCopied] = useState(false);
+  const [copiedTest, setCopiedTest] = useState(false);
+  const [copiedLive, setCopiedLive] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -66,7 +79,7 @@ export default function PartnerSignup() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/v1/partner/signup', {
+      const response = await fetch('/api/v1/partner/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -80,7 +93,15 @@ export default function PartnerSignup() {
         return;
       }
 
-      setSandboxKey(data.sandboxApiKey);
+      setRegistrationResult({
+        testApiKey: data.testApiKey,
+        liveApiKey: data.liveApiKey,
+        testKeyActive: data.testKeyActive,
+        liveKeyActive: data.liveKeyActive,
+        isPersonalEmail: data.isPersonalEmail,
+        emailVerificationRequired: data.emailVerificationRequired,
+        emailVerificationSent: data.emailVerificationSent,
+      });
       setFormState('success');
     } catch (err) {
       setErrorMessage('Network error. Please check your connection and try again.');
@@ -88,10 +109,20 @@ export default function PartnerSignup() {
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(sandboxKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyTestKey = () => {
+    if (registrationResult) {
+      navigator.clipboard.writeText(registrationResult.testApiKey);
+      setCopiedTest(true);
+      setTimeout(() => setCopiedTest(false), 2000);
+    }
+  };
+
+  const copyLiveKey = () => {
+    if (registrationResult) {
+      navigator.clipboard.writeText(registrationResult.liveApiKey);
+      setCopiedLive(true);
+      setTimeout(() => setCopiedLive(false), 2000);
+    }
   };
 
   const styles = {
@@ -319,9 +350,54 @@ export default function PartnerSignup() {
       color: '#92400E',
       lineHeight: 1.5,
     } as React.CSSProperties,
+    checkboxGroup: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '12px',
+      marginBottom: '24px',
+    } as React.CSSProperties,
+    checkbox: {
+      width: '20px',
+      height: '20px',
+      marginTop: '2px',
+      cursor: 'pointer',
+      accentColor: '#5B8A72',
+    } as React.CSSProperties,
+    checkboxLabel: {
+      fontSize: '14px',
+      color: '#1F1D1A',
+      lineHeight: 1.5,
+    } as React.CSSProperties,
+    keyStatusBadge: (active: boolean) => ({
+      display: 'inline-block',
+      padding: '4px 10px',
+      borderRadius: '12px',
+      fontSize: '12px',
+      fontWeight: 600,
+      backgroundColor: active ? '#E8F5E9' : '#FEF9E7',
+      color: active ? '#2E7D32' : '#92400E',
+      marginTop: '8px',
+    } as React.CSSProperties),
+    keySection: {
+      marginBottom: '16px',
+    } as React.CSSProperties,
+    verificationBanner: {
+      backgroundColor: '#E3F2FD',
+      borderRadius: '8px',
+      padding: '16px',
+      marginBottom: '24px',
+      borderLeft: '3px solid #1976D2',
+    } as React.CSSProperties,
+    personalEmailBanner: {
+      backgroundColor: '#FEF9E7',
+      borderRadius: '8px',
+      padding: '16px',
+      marginBottom: '24px',
+      borderLeft: '3px solid #D4973B',
+    } as React.CSSProperties,
   };
 
-  if (formState === 'success') {
+  if (formState === 'success' && registrationResult) {
     return (
       <div style={styles.page}>
         <header style={styles.header}>
@@ -337,16 +413,62 @@ export default function PartnerSignup() {
             <div style={styles.successIcon}>🎉</div>
             <h1 style={styles.successTitle}>You&apos;re All Set!</h1>
             <p style={styles.successText}>
-              Your sandbox API key is active immediately. Start building your integration now.
+              Your API keys are ready. Start building your integration now.
             </p>
 
-            <div style={styles.keyContainer}>
-              <div style={styles.keyLabel}>Your Sandbox API Key</div>
-              <div style={styles.keyValue}>
-                <code style={styles.keyText}>{sandboxKey}</code>
-                <button onClick={copyToClipboard} style={styles.copyButton}>
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
+            {/* Verification Banner */}
+            {registrationResult.emailVerificationSent && !registrationResult.isPersonalEmail && (
+              <div style={styles.verificationBanner}>
+                <strong style={{ color: '#1565C0' }}>Check your email!</strong>
+                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#1565C0' }}>
+                  We sent a verification link to activate your live key for production use.
+                </p>
+              </div>
+            )}
+
+            {/* Personal Email Banner */}
+            {registrationResult.isPersonalEmail && (
+              <div style={styles.personalEmailBanner}>
+                <strong style={{ color: '#92400E' }}>Want production access?</strong>
+                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#92400E' }}>
+                  Sign up with your company email to get full access to the live API.
+                </p>
+              </div>
+            )}
+
+            {/* Test Key */}
+            <div style={styles.keySection}>
+              <div style={styles.keyContainer}>
+                <div style={styles.keyLabel}>Test API Key</div>
+                <div style={styles.keyValue}>
+                  <code style={styles.keyText}>{registrationResult.testApiKey}</code>
+                  <button onClick={copyTestKey} style={styles.copyButton}>
+                    {copiedTest ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <div style={styles.keyStatusBadge(true)}>
+                  Active - Use for development
+                </div>
+              </div>
+            </div>
+
+            {/* Live Key */}
+            <div style={styles.keySection}>
+              <div style={styles.keyContainer}>
+                <div style={styles.keyLabel}>Live API Key</div>
+                <div style={styles.keyValue}>
+                  <code style={styles.keyText}>{registrationResult.liveApiKey}</code>
+                  <button onClick={copyLiveKey} style={styles.copyButton}>
+                    {copiedLive ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <div style={styles.keyStatusBadge(registrationResult.liveKeyActive)}>
+                  {registrationResult.liveKeyActive
+                    ? 'Active - Use for production'
+                    : registrationResult.isPersonalEmail
+                    ? 'Requires business email'
+                    : 'Verify email to activate'}
+                </div>
               </div>
             </div>
 
@@ -357,11 +479,16 @@ export default function PartnerSignup() {
               <Link href="/partners/docs" style={styles.link}>
                 Read the Docs
               </Link>
+              <Link href="/partners/dashboard" style={styles.link}>
+                View Dashboard
+              </Link>
             </div>
 
             <div style={styles.note}>
-              <strong>What&apos;s next?</strong> Your sandbox key works with all API endpoints using mock data.
-              To upgrade to a production key with real data, we&apos;ll review your application and reach out within 24 hours.
+              <strong>What&apos;s next?</strong> Your test key works with all API endpoints using sandbox data.
+              {registrationResult.isPersonalEmail
+                ? ' Sign up again with a business email to unlock production access.'
+                : ' Check your email to verify and activate your live key for production.'}
             </div>
           </div>
         </main>
@@ -383,9 +510,9 @@ export default function PartnerSignup() {
       </header>
 
       <main style={styles.main}>
-        <h1 style={styles.title}>Get Your API Key</h1>
+        <h1 style={styles.title}>Get Your API Keys</h1>
         <p style={styles.subtitle}>
-          Start building in 30 seconds. Your sandbox key works immediately — no approval needed.
+          Start building in 60 seconds. Your test key works immediately — no approval needed.
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -494,22 +621,48 @@ export default function PartnerSignup() {
             <p style={styles.hint}>Optional — helps us understand your needs better</p>
           </div>
 
+          <div style={styles.checkboxGroup}>
+            <input
+              type="checkbox"
+              id="termsAccepted"
+              name="termsAccepted"
+              checked={formData.termsAccepted}
+              onChange={(e) => setFormData(prev => ({ ...prev, termsAccepted: e.target.checked }))}
+              style={styles.checkbox}
+            />
+            <label htmlFor="termsAccepted" style={styles.checkboxLabel}>
+              I agree to the{' '}
+              <Link href="/partners/terms" style={{ color: '#5B8A72', textDecoration: 'underline' }}>
+                Partner Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" style={{ color: '#5B8A72', textDecoration: 'underline' }}>
+                Privacy Policy
+              </Link>
+              <span style={styles.required}>*</span>
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={formState === 'submitting'}
+            disabled={formState === 'submitting' || !formData.termsAccepted}
             style={{
               ...styles.submitButton,
-              ...(formState === 'submitting' ? styles.submitButtonDisabled : {}),
+              ...(formState === 'submitting' || !formData.termsAccepted ? styles.submitButtonDisabled : {}),
             }}
           >
-            {formState === 'submitting' ? 'Creating your key...' : 'Get My Sandbox Key'}
+            {formState === 'submitting' ? 'Creating your keys...' : 'Get My API Keys'}
           </button>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#9A938A' }}>
-          Already have a key?{' '}
+          Already have an account?{' '}
+          <Link href="/partners/login" style={{ color: '#5B8A72' }}>
+            Log in
+          </Link>
+          {' · '}
           <Link href="/partners/docs" style={{ color: '#5B8A72' }}>
-            Go to Documentation
+            Documentation
           </Link>
         </p>
       </main>

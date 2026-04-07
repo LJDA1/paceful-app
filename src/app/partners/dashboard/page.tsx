@@ -94,7 +94,25 @@ interface BenchmarkData {
   insights: string[];
 }
 
-type DashboardTab = 'overview' | 'webhooks' | 'benchmarks' | 'analytics';
+type DashboardTab = 'overview' | 'webhooks' | 'benchmarks' | 'analytics' | 'keys';
+
+type AuthMethod = 'none' | 'session' | 'api_key';
+
+interface SessionData {
+  partnerId: string;
+  email: string;
+  companyName: string;
+  contactName: string;
+}
+
+interface KeysData {
+  testApiKey: string;
+  liveApiKey: string | null;
+  testKeyActive: boolean;
+  liveKeyActive: boolean;
+  emailVerified: boolean;
+  isPersonalEmail: boolean;
+}
 
 // Analytics data types
 interface VolumeDataPoint {
@@ -206,12 +224,20 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 }
 
 export default function PartnerDashboard() {
-  // Auth state - API key stored in React state only (never localStorage/cookies)
+  // Auth state
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('none');
   const [apiKey, setApiKey] = useState('');
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // Session auth state
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  const [keysData, setKeysData] = useState<KeysData | null>(null);
+  const [copiedTestKey, setCopiedTestKey] = useState(false);
+  const [copiedLiveKey, setCopiedLiveKey] = useState(false);
 
   // Tab state
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
@@ -246,6 +272,33 @@ export default function PartnerDashboard() {
 
   // Copy state
   const [copied, setCopied] = useState(false);
+
+  // Check for session cookie on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/v1/partner/auth/session');
+        const data = await response.json();
+
+        if (data.authenticated && data.session) {
+          setSessionData(data.session);
+          setKeysData(data.keys);
+          setAuthMethod('session');
+          setIsAuthenticated(true);
+          // Use the test key for API calls
+          if (data.keys?.testApiKey) {
+            setApiKey(data.keys.testApiKey);
+          }
+        }
+      } catch (error) {
+        console.error('Session check failed:', error);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
+    checkSession();
+  }, []);
 
   const fetchWithAuth = useCallback(async (endpoint: string, options?: RequestInit) => {
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -349,6 +402,7 @@ export default function PartnerDashboard() {
       }
 
       setApiKey(apiKeyInput);
+      setAuthMethod('api_key');
       setIsAuthenticated(true);
       setPartnerInfo(data.data);
       setLoadingInfo(false);
@@ -359,13 +413,41 @@ export default function PartnerDashboard() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Clear session cookie if logged in via magic link
+    if (authMethod === 'session') {
+      try {
+        await fetch('/api/v1/partner/auth/logout', { method: 'POST' });
+      } catch (error) {
+        console.error('Logout failed:', error);
+      }
+    }
+
     setApiKey('');
     setApiKeyInput('');
+    setAuthMethod('none');
     setIsAuthenticated(false);
     setPartnerInfo(null);
     setUsageStats(null);
     setWebhooks([]);
+    setSessionData(null);
+    setKeysData(null);
+  };
+
+  const copyTestKey = () => {
+    if (keysData?.testApiKey) {
+      navigator.clipboard.writeText(keysData.testApiKey);
+      setCopiedTestKey(true);
+      setTimeout(() => setCopiedTestKey(false), 2000);
+    }
+  };
+
+  const copyLiveKey = () => {
+    if (keysData?.liveApiKey) {
+      navigator.clipboard.writeText(keysData.liveApiKey);
+      setCopiedLiveKey(true);
+      setTimeout(() => setCopiedLiveKey(false), 2000);
+    }
   };
 
   // Fetch all data when authenticated
@@ -736,6 +818,30 @@ const ers = await paceful.ers.get('user-123');`;
     } as React.CSSProperties,
   };
 
+  // Loading session check
+  if (checkingSession) {
+    return (
+      <div style={styles.page}>
+        <header style={styles.header}>
+          <div style={styles.logo}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" fill="#5B8A72" />
+              <path d="M8 12 L11 15 L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Paceful Partners
+          </div>
+        </header>
+        <div style={styles.loginContainer}>
+          <Card>
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <p style={{ color: '#6B6560' }}>Loading...</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   // Login screen
   if (!isAuthenticated) {
     return (
@@ -764,7 +870,7 @@ const ers = await paceful.ers.get('user-123');`;
                 type="text"
                 value={apiKeyInput}
                 onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="pk_live_..."
+                placeholder="pk_test_... or pk_live_..."
                 style={styles.input}
                 autoComplete="off"
               />
@@ -780,6 +886,22 @@ const ers = await paceful.ers.get('user-123');`;
               </button>
             </form>
             {authError && <p style={styles.errorText}>{authError}</p>}
+            <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #E5E0D9' }}>
+              <p style={{ fontSize: '14px', color: '#6B6560', marginBottom: '8px' }}>
+                Or log in with email
+              </p>
+              <a
+                href="/partners/login"
+                style={{
+                  color: '#5B8A72',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                }}
+              >
+                Use magic link instead
+              </a>
+            </div>
           </Card>
         </div>
       </div>
@@ -804,15 +926,22 @@ const ers = await paceful.ers.get('user-123');`;
             <path d="M8 12 L11 15 L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Paceful Partners
-          {partnerInfo && (
+          {(partnerInfo || sessionData) && (
             <span style={{ color: '#6B6560', fontWeight: 400, marginLeft: '8px' }}>
-              — {partnerInfo.partnerName}
+              — {partnerInfo?.partnerName || sessionData?.companyName}
             </span>
           )}
         </div>
-        <button onClick={handleLogout} style={styles.logoutButton}>
-          Log out
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {authMethod === 'session' && sessionData && (
+            <span style={{ fontSize: '13px', color: '#6B6560' }}>
+              {sessionData.email}
+            </span>
+          )}
+          <button onClick={handleLogout} style={styles.logoutButton}>
+            Log out
+          </button>
+        </div>
       </header>
 
       <div style={styles.container}>
@@ -842,6 +971,14 @@ const ers = await paceful.ers.get('user-123');`;
           >
             Analytics
           </button>
+          {authMethod === 'session' && keysData && (
+            <button
+              onClick={() => setActiveTab('keys')}
+              style={styles.tab(activeTab === 'keys')}
+            >
+              API Keys
+            </button>
+          )}
         </div>
 
         {/* Overview Tab */}
@@ -1962,6 +2099,209 @@ const ers = await paceful.ers.get('user-123');`}
                 </p>
               </Card>
             )}
+          </>
+        )}
+
+        {/* Keys Tab */}
+        {activeTab === 'keys' && keysData && (
+          <>
+            <div style={styles.sectionTitle}>Your API Keys</div>
+
+            {/* Verification Status */}
+            {!keysData.emailVerified && !keysData.isPersonalEmail && (
+              <div style={{
+                backgroundColor: '#E3F2FD',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '24px',
+                borderLeft: '3px solid #1976D2',
+              }}>
+                <p style={{ margin: 0, color: '#1565C0', fontWeight: 600 }}>
+                  Verify your email to activate your live key
+                </p>
+                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#1565C0' }}>
+                  Check your inbox for the verification email, or contact partners@paceful.com if you need help.
+                </p>
+              </div>
+            )}
+
+            {keysData.isPersonalEmail && (
+              <div style={{
+                backgroundColor: '#FEF9E7',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '24px',
+                borderLeft: '3px solid #D4973B',
+              }}>
+                <p style={{ margin: 0, color: '#92400E', fontWeight: 600 }}>
+                  Personal email detected
+                </p>
+                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#92400E' }}>
+                  To get production access, please sign up again with your company email address.
+                </p>
+              </div>
+            )}
+
+            <div style={styles.grid}>
+              {/* Test Key Card */}
+              <Card>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                  <div>
+                    <div style={styles.cardTitle}>Test API Key</div>
+                    <p style={{ fontSize: '14px', color: '#6B6560', margin: 0 }}>
+                      Use for development and testing
+                    </p>
+                  </div>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 10px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    backgroundColor: '#E8F5E9',
+                    color: '#2E7D32',
+                  }}>
+                    Active
+                  </span>
+                </div>
+                <div style={{
+                  backgroundColor: '#F9F6F2',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                }}>
+                  <code style={{
+                    fontFamily: 'monospace',
+                    fontSize: '14px',
+                    color: '#1F1D1A',
+                    wordBreak: 'break-all',
+                    flex: 1,
+                  }}>
+                    {keysData.testApiKey}
+                  </code>
+                  <button
+                    onClick={copyTestKey}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      backgroundColor: '#5B8A72',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {copiedTestKey ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </Card>
+
+              {/* Live Key Card */}
+              <Card>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                  <div>
+                    <div style={styles.cardTitle}>Live API Key</div>
+                    <p style={{ fontSize: '14px', color: '#6B6560', margin: 0 }}>
+                      Use for production
+                    </p>
+                  </div>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 10px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    backgroundColor: keysData.liveKeyActive ? '#E8F5E9' : '#FEF9E7',
+                    color: keysData.liveKeyActive ? '#2E7D32' : '#92400E',
+                  }}>
+                    {keysData.liveKeyActive ? 'Active' : keysData.isPersonalEmail ? 'Requires Business Email' : 'Pending Verification'}
+                  </span>
+                </div>
+                {keysData.liveApiKey ? (
+                  <div style={{
+                    backgroundColor: '#F9F6F2',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    opacity: keysData.liveKeyActive ? 1 : 0.6,
+                  }}>
+                    <code style={{
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      color: '#1F1D1A',
+                      wordBreak: 'break-all',
+                      flex: 1,
+                    }}>
+                      {keysData.liveApiKey}
+                    </code>
+                    <button
+                      onClick={copyLiveKey}
+                      disabled={!keysData.liveKeyActive}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        backgroundColor: keysData.liveKeyActive ? '#5B8A72' : '#9A938A',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: keysData.liveKeyActive ? 'pointer' : 'not-allowed',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {copiedLiveKey ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{
+                    backgroundColor: '#F9F6F2',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    color: '#6B6560',
+                    fontSize: '14px',
+                  }}>
+                    No live key available
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Key Usage Info */}
+            <div style={{ marginTop: '24px' }}>
+              <Card>
+                <div style={styles.cardTitle}>Using Your Keys</div>
+                <div style={{
+                  backgroundColor: '#1F1D1A',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  fontFamily: 'monospace',
+                  fontSize: '13px',
+                  lineHeight: 1.6,
+                  color: '#E5E0D9',
+                  overflow: 'auto',
+                }}>
+                  <pre style={{ margin: 0 }}>
+{`curl -X POST ${typeof window !== 'undefined' ? window.location.origin : 'https://paceful.com'}/api/v1/partner/ers/calculate \\
+  -H "Authorization: Bearer ${keysData.testApiKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"user_id": "user-123", "text": "Your text here"}'`}
+                  </pre>
+                </div>
+                <p style={{ fontSize: '14px', color: '#6B6560', marginTop: '12px', marginBottom: 0 }}>
+                  Test keys work with all API endpoints and return sandbox data.
+                  {keysData.liveKeyActive && ' Live keys return production data and are rate-limited.'}
+                </p>
+              </Card>
+            </div>
           </>
         )}
       </div>
