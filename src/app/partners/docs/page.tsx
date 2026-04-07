@@ -192,6 +192,10 @@ const NAV_SECTIONS = [
     { id: 'analyze-text', label: 'Analyze Text' },
     { id: 'analyze-batch', label: 'Batch Analysis' },
   ]},
+  { id: 'verticals', label: 'Industry Verticals', children: [
+    { id: 'verticals-list', label: 'List Verticals' },
+    { id: 'vertical-assess', label: 'Vertical Assessment' },
+  ]},
   { id: 'partner-config', label: 'Partner Config', children: [
     { id: 'get-config', label: 'Get Config' },
     { id: 'update-config', label: 'Update Config' },
@@ -2060,6 +2064,228 @@ data = response.json()`
     "timestamp": "2026-04-06T12:00:00Z"
   }
 }`} />
+          </div>
+        </section>
+
+        {/* Industry Verticals */}
+        <section id="verticals" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Industry Verticals</h2>
+          <p style={styles.paragraph}>
+            Industry-specific signal detection built on top of core ERS analysis. Each vertical defines
+            a catalog of signals relevant to that industry, with risk scoring and recommended actions.
+          </p>
+          <p style={styles.paragraph}>
+            <strong>Available verticals:</strong> gambling (responsible gambling / player protection).
+            More verticals coming soon: workplace wellness, insurance risk, education.
+          </p>
+
+          <div id="verticals-list" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="GET" />
+              /verticals
+            </div>
+            <p style={styles.paragraph}>
+              Discover all available industry verticals. Public endpoint (no authentication required).
+            </p>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "verticals": [
+      {
+        "slug": "gambling",
+        "name": "Responsible Gambling",
+        "description": "Player protection and harm detection for gambling platforms",
+        "signal_count": 14
+      }
+    ],
+    "count": 1,
+    "endpoint_pattern": "/api/v1/assess/:vertical",
+    "documentation": "https://paceful.com/partners/docs#verticals"
+  }
+}`} />
+          </div>
+
+          <div id="vertical-assess" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /assess/:vertical
+            </div>
+            <p style={styles.paragraph}>
+              Run industry-specific signal detection alongside core ERS analysis. Replace <code>:vertical</code> with
+              a vertical slug (e.g., <code>/assess/gambling</code>).
+            </p>
+            <ParamsTable params={[
+              { name: 'user_id', type: 'string', required: true, description: 'Your external user identifier' },
+              { name: 'text', type: 'string', required: true, description: 'Text to analyze (min 20 chars)' },
+              { name: 'source_type', type: 'string', required: false, description: '"journal", "session_notes", "chat_transcript", or "free_text"' },
+            ]} />
+            <CodeBlock code={{
+              curl: `curl -X POST https://paceful.com/api/v1/assess/gambling \\
+  -H "X-API-Key: YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "user_id": "player_123",
+    "text": "I just need one more win to break even. I have been chasing my losses all week. I borrowed money from my brother to keep playing. I know I should stop but I can not resist the urge.",
+    "source_type": "chat_transcript"
+  }'`,
+              javascript: `const response = await fetch('https://paceful.com/api/v1/assess/gambling', {
+  method: 'POST',
+  headers: {
+    'X-API-Key': 'YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    user_id: 'player_123',
+    text: 'I just need one more win to break even...',
+    source_type: 'chat_transcript'
+  })
+});
+const data = await response.json();`,
+              python: `import requests
+
+response = requests.post(
+    'https://paceful.com/api/v1/assess/gambling',
+    headers={'X-API-Key': 'YOUR_API_KEY'},
+    json={
+        'user_id': 'player_123',
+        'text': 'I just need one more win to break even...',
+        'source_type': 'chat_transcript'
+    }
+)
+data = response.json()`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "user_id": "player_123",
+    "vertical": "gambling",
+    "ers": {
+      "ers_snapshot": 42,
+      "dimensions": {
+        "emotional_stability": { "score": 38, "label": "low", "confidence": "medium" },
+        "self_reflection": { "score": 55, "label": "moderate", "confidence": "medium" },
+        "coping_capacity": { "score": 32, "label": "low", "confidence": "high" },
+        "behavioral_engagement": { "score": 45, "label": "moderate", "confidence": "medium" },
+        "social_readiness": { "score": 40, "label": "moderate", "confidence": "medium" }
+      },
+      "readiness_label": "Healing",
+      "confidence": "medium"
+    },
+    "vertical_analysis": {
+      "risk_score": 72,
+      "risk_level": "high",
+      "recommended_action": "Flag for manual review",
+      "signals": [
+        {
+          "id": "loss_chasing",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Pattern: 'I just need one more win to break even', 'chasing my losses'"
+        },
+        {
+          "id": "financial_distress",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Pattern: 'borrowed money from my brother to keep playing'"
+        },
+        {
+          "id": "impulse_patterns",
+          "detected": true,
+          "confidence": "medium",
+          "evidence": "Pattern: 'I can not resist the urge'"
+        },
+        {
+          "id": "recovery_help_seeking",
+          "detected": false,
+          "confidence": null,
+          "evidence": null
+        }
+      ],
+      "signals_detected": 6,
+      "signals_total": 14
+    },
+    "source_type": "chat_transcript",
+    "extraction_confidence": "high",
+    "assessed_at": "2026-04-06T14:30:00Z"
+  }
+}`} />
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', marginTop: '24px' }}>Gambling Vertical Signals</h4>
+            <p style={styles.paragraph}>
+              The gambling vertical detects 14 signals related to problematic gambling behavior:
+            </p>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '13px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Signal</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Description</th>
+                  <th style={{ textAlign: 'center', padding: '8px 0', color: '#6B6560' }}>Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { id: 'loss_chasing', desc: 'Pursuing losses through continued gambling', weight: 0.8 },
+                  { id: 'desperation_urgency', desc: 'Desperate need to gamble or win immediately', weight: 0.9 },
+                  { id: 'financial_distress', desc: 'Financial problems related to gambling', weight: 0.85 },
+                  { id: 'sleep_disruption', desc: 'Gambling affecting sleep patterns', weight: 0.5 },
+                  { id: 'social_isolation', desc: 'Withdrawal from social connections', weight: 0.7 },
+                  { id: 'denial_minimization', desc: 'Downplaying gambling behavior', weight: 0.75 },
+                  { id: 'emotional_volatility', desc: 'Extreme emotional swings from outcomes', weight: 0.65 },
+                  { id: 'impulse_patterns', desc: 'Inability to control gambling urges', weight: 0.7 },
+                  { id: 'relationship_conflict', desc: 'Gambling causing relationship problems', weight: 0.6 },
+                  { id: 'work_productivity_decline', desc: 'Gambling affecting work performance', weight: 0.55 },
+                  { id: 'substance_co_use', desc: 'Concurrent substance use with gambling', weight: 0.8 },
+                  { id: 'self_harm_hopelessness', desc: 'Hopelessness or self-harm ideation', weight: 1.0 },
+                  { id: 'withdrawal_symptoms', desc: 'Distress when not gambling', weight: 0.7 },
+                  { id: 'recovery_help_seeking', desc: 'Wanting help (protective factor)', weight: -0.5 },
+                ].map((s) => (
+                  <tr key={s.id} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '6px 0' }}><code>{s.id}</code></td>
+                    <td style={{ padding: '6px 0', color: '#6B6560' }}>{s.desc}</td>
+                    <td style={{ padding: '6px 0', textAlign: 'center', color: s.weight < 0 ? '#5B8A72' : '#6B6560' }}>
+                      {s.weight}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Risk Levels</h4>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px',
+              marginBottom: '16px',
+            }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E5E0D9' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Level</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Score Range</th>
+                  <th style={{ textAlign: 'left', padding: '8px 0', color: '#6B6560' }}>Recommended Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { level: 'low', range: '0-25', action: 'Continue monitoring' },
+                  { level: 'moderate', range: '26-50', action: 'Trigger soft intervention' },
+                  { level: 'high', range: '51-75', action: 'Flag for manual review' },
+                  { level: 'critical', range: '76-100', action: 'Immediate intervention required' },
+                ].map((r) => (
+                  <tr key={r.level} style={{ borderBottom: '1px solid #E5E0D9' }}>
+                    <td style={{ padding: '8px 0' }}><strong>{r.level}</strong></td>
+                    <td style={{ padding: '8px 0' }}>{r.range}</td>
+                    <td style={{ padding: '8px 0', color: '#6B6560' }}>{r.action}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 

@@ -196,6 +196,7 @@ export async function validatePartnerKey(request: NextRequest): Promise<PartnerK
 export const ENDPOINT_RATE_LIMITS: Record<string, number> = {
   'assess_analyze': 100,      // /assess/analyze - AI-intensive
   'assess_snapshot': 200,     // /assess/snapshot - questionnaire
+  'assess_vertical': 100,     // /assess/:vertical - AI-intensive vertical analysis
   'ers': 500,                 // /ers/* - score retrieval
   'analytics': 50,            // /analytics/* - heavy queries
   'partner': 200,             // /partner/* - config/info
@@ -210,6 +211,8 @@ export const ENDPOINT_RATE_LIMITS: Record<string, number> = {
 export function getEndpointCategory(path: string): string {
   if (path.includes('/assess/analyze')) return 'assess_analyze';
   if (path.includes('/assess/snapshot')) return 'assess_snapshot';
+  // Match /assess/:vertical (any other assess endpoint)
+  if (path.match(/\/assess\/[a-z_-]+$/)) return 'assess_vertical';
   if (path.includes('/ers/')) return 'ers';
   if (path.includes('/analytics/')) return 'analytics';
   if (path.includes('/webhooks/')) return 'webhooks';
