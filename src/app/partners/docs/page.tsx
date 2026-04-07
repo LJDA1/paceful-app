@@ -188,6 +188,10 @@ const NAV_SECTIONS = [
     { id: 'snapshot-questions', label: 'Get Questions' },
     { id: 'snapshot-submit', label: 'Submit Assessment' },
   ]},
+  { id: 'text-analysis', label: 'Text Analysis', children: [
+    { id: 'analyze-text', label: 'Analyze Text' },
+    { id: 'analyze-batch', label: 'Batch Analysis' },
+  ]},
   { id: 'partner-config', label: 'Partner Config', children: [
     { id: 'get-config', label: 'Get Config' },
     { id: 'update-config', label: 'Update Config' },
@@ -610,7 +614,7 @@ const result = await fetch('https://paceful-app.vercel.app/api/v1/assess/snapsho
   body: JSON.stringify({
     config: {
       verbosity: 'clinical',       // Get full details with recommended_action
-      tone: 'motivational',         // Encouraging language
+      tone: 'motivational',         // Supportive clinical language
       score_format: 'traffic_light' // red/yellow/green output
     },
     responses: [
@@ -629,7 +633,7 @@ result = requests.post(
     json={
         'config': {
             'verbosity': 'clinical',        # Get full details
-            'tone': 'motivational',          # Encouraging language
+            'tone': 'motivational',          # Supportive clinical language
             'score_format': 'traffic_light'  # red/yellow/green
         },
         'responses': [
@@ -1760,8 +1764,8 @@ const { questions, dimensions } = await response.json();`,
               <tbody>
                 {[
                   { tone: 'clinical', style: 'Professional, objective', use: 'Healthcare providers, clinical settings (default)' },
-                  { tone: 'casual', style: 'Friendly, approachable', use: 'Consumer apps, peer support platforms' },
-                  { tone: 'motivational', style: 'Encouraging, growth-focused', use: 'Coaching apps, wellness programs' },
+                  { tone: 'casual', style: 'Accessible clinical', use: 'Consumer apps, peer support platforms' },
+                  { tone: 'motivational', style: 'Supportive clinical', use: 'Coaching apps, wellness programs' },
                 ].map((t) => (
                   <tr key={t.tone} style={{ borderBottom: '1px solid #E5E0D9' }}>
                     <td style={{ padding: '8px 0' }}><code>{t.tone}</code></td>
@@ -1899,6 +1903,163 @@ const { questions, dimensions } = await response.json();`,
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        {/* Text Analysis */}
+        <section id="text-analysis" style={styles.section}>
+          <h2 style={styles.sectionTitle}>Text Analysis</h2>
+          <p style={styles.paragraph}>
+            Analyze unstructured text (journal entries, session notes, chat transcripts) using Claude AI
+            to extract emotional readiness signals. Returns the same ERS structure as snapshot assessments
+            with dimension scores, reasoning, and confidence levels.
+          </p>
+
+          <div id="analyze-text" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /assess/analyze
+            </div>
+            <p style={styles.paragraph}>
+              Analyze a single text entry and return an ERS score with dimension breakdown.
+              Minimum text length is 20 characters; longer text provides higher confidence scores.
+            </p>
+            <ParamsTable params={[
+              { name: 'user_id', type: 'string', required: true, description: 'Your external user identifier' },
+              { name: 'text', type: 'string', required: true, description: 'The text to analyze (min 20 chars, recommended 100+)' },
+              { name: 'source_type', type: 'string', required: false, description: '"journal", "session_notes", "chat_transcript", or "free_text" (default)' },
+              { name: 'config', type: 'object', required: false, description: 'Override verbosity, tone, score_format' },
+            ]} />
+            <CodeBlock code={{
+              curl: `curl -X POST https://paceful.com/api/v1/assess/analyze \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "user_id": "user_123",
+    "text": "Today was hard but I handled it better than I would have a few months ago. When Sarah canceled our lunch plans, my first instinct was to spiral into thinking she doesn't care about me. But I caught myself and reminded myself that she's been overwhelmed with her new job.",
+    "source_type": "journal",
+    "config": { "verbosity": "standard" }
+  }'`,
+              javascript: `const response = await fetch('https://paceful.com/api/v1/assess/analyze', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    user_id: 'user_123',
+    text: 'Today was hard but I handled it better than I would have a few months ago...',
+    source_type: 'journal',
+    config: { verbosity: 'standard' }
+  })
+});
+const data = await response.json();`,
+              python: `import requests
+
+response = requests.post(
+    'https://paceful.com/api/v1/assess/analyze',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'},
+    json={
+        'user_id': 'user_123',
+        'text': 'Today was hard but I handled it better...',
+        'source_type': 'journal',
+        'config': {'verbosity': 'standard'}
+    }
+)
+data = response.json()`
+            }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "ers_snapshot": 68,
+    "dimensions": {
+      "emotional_stability": {
+        "score": 65,
+        "label": "high",
+        "confidence": "medium",
+        "reasoning": "Emotional stability indicators are moderate. Key signals: mood consistency and emotional regulation language.",
+        "top_signals": ["mood consistency", "emotional regulation language"]
+      },
+      "self_reflection": {
+        "score": 78,
+        "label": "high",
+        "confidence": "high",
+        "reasoning": "Self-reflection capacity indicators are strong. Key signals: self-awareness statements and pattern recognition.",
+        "top_signals": ["self-awareness statements", "pattern recognition"]
+      }
+      // ... other dimensions
+    },
+    "readiness_label": "Rebuilding",
+    "confidence": "medium",
+    "assessment_id": "anlz_abc123",
+    "timestamp": "2026-04-06T12:00:00Z",
+    "source_type": "journal",
+    "text_length": 284,
+    "extraction_confidence": "medium"
+  }
+}`} />
+          </div>
+
+          <div id="analyze-batch" style={styles.endpoint}>
+            <div style={styles.endpointPath}>
+              <MethodBadge method="POST" />
+              /assess/analyze/batch
+            </div>
+            <p style={styles.paragraph}>
+              Analyze multiple text entries and compute a composite ERS score with trend analysis.
+              Recent entries are weighted higher in the composite calculation. Maximum 20 entries per batch.
+            </p>
+            <ParamsTable params={[
+              { name: 'user_id', type: 'string', required: true, description: 'Your external user identifier' },
+              { name: 'entries', type: 'array', required: true, description: 'Array of text entries (max 20)' },
+              { name: 'entries[].text', type: 'string', required: true, description: 'Text content to analyze' },
+              { name: 'entries[].source_type', type: 'string', required: false, description: 'Source type for this entry' },
+              { name: 'entries[].timestamp', type: 'string', required: false, description: 'ISO timestamp (used for weighting)' },
+              { name: 'config', type: 'object', required: false, description: 'Override verbosity, tone, score_format' },
+            ]} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
+            <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "composite": {
+      "ers_score": 62,
+      "readiness_label": "Rebuilding",
+      "confidence": "medium",
+      "dimensions": {
+        "emotional_stability": {
+          "score": 58,
+          "label": "moderate",
+          "trend": "improving",
+          "trend_delta": 8
+        }
+        // ... other dimensions with trends
+      }
+    },
+    "trend": {
+      "direction": "improving",
+      "delta": 12,
+      "entries_analyzed": 6,
+      "time_span": {
+        "earliest": "2026-03-15T00:00:00Z",
+        "latest": "2026-04-05T00:00:00Z"
+      }
+    },
+    "entries": [
+      {
+        "index": 0,
+        "timestamp": "2026-03-15T00:00:00Z",
+        "source_type": "journal",
+        "text_length": 245,
+        "ers_score": 48,
+        "confidence": "medium"
+      }
+      // ... per-entry results
+    ],
+    "assessment_id": "batch_xyz789",
+    "timestamp": "2026-04-06T12:00:00Z"
+  }
+}`} />
           </div>
         </section>
 
