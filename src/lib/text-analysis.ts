@@ -253,15 +253,15 @@ export function generateReasoning(
   const label = dimensionLabels[dimension];
 
   if (tone === 'casual') {
-    if (tier === 'high') return `${label} looks solid! Based on: ${signalStr}${confNote}.`;
-    if (tier === 'mid') return `${label} is developing. Based on: ${signalStr}${confNote}.`;
-    return `${label} could use some attention. Based on: ${signalStr}${confNote}.`;
+    if (tier === 'high') return `${label} presents strongly in this assessment. Based on: ${signalStr}${confNote}.`;
+    if (tier === 'mid') return `${label} shows moderate development. Based on: ${signalStr}${confNote}.`;
+    return `${label} is an area that would benefit from additional focus. Based on: ${signalStr}${confNote}.`;
   }
 
   if (tone === 'motivational') {
-    if (tier === 'high') return `${label} is a real strength here! Based on: ${signalStr}${confNote}.`;
-    if (tier === 'mid') return `${label} is building nicely - keep going! Based on: ${signalStr}${confNote}.`;
-    return `${label} is an opportunity for growth! Based on: ${signalStr}${confNote}.`;
+    if (tier === 'high') return `${label} demonstrates notable strength in this area. Based on: ${signalStr}${confNote}.`;
+    if (tier === 'mid') return `${label} shows meaningful progress with continued potential. Based on: ${signalStr}${confNote}.`;
+    return `${label} represents a key growth opportunity. Based on: ${signalStr}${confNote}.`;
   }
 
   // Clinical (default)

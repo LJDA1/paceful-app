@@ -585,28 +585,12 @@ export function getSentimentColors(level: SentimentLevel): { text: string; bg: s
 }
 
 /**
- * Get emoji for emotion type
+ * Get label for emotion type (no emoji - clinical format)
  */
 export function getEmotionEmoji(emotion: EmotionType): string {
-  const emojis: Record<EmotionType, string> = {
-    joy: '😊',
-    sadness: '😢',
-    anger: '😠',
-    fear: '😨',
-    surprise: '😲',
-    disgust: '😒',
-    trust: '🤝',
-    anticipation: '🤩',
-    love: '❤️',
-    gratitude: '🙏',
-    hope: '🌟',
-    anxiety: '😰',
-    loneliness: '💔',
-    acceptance: '☮️',
-    confusion: '😕',
-    relief: '😮‍💨',
-  };
-  return emojis[emotion];
+  // Returns empty string - emojis removed for clinical presentation
+  // Function retained for API compatibility
+  return '';
 }
 
 /**

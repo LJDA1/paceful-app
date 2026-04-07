@@ -689,13 +689,11 @@ export default function SandboxPage() {
                     />
                     {csvData.length > 0 ? (
                       <div>
-                        <div style={{ fontSize: '24px', marginBottom: '8px' }}>📄</div>
                         <p style={{ fontWeight: 600, color: '#1F1D1A' }}>{csvFileName}</p>
                         <p style={{ color: '#5C574F', fontSize: '14px' }}>{csvData.length} entries loaded</p>
                       </div>
                     ) : (
                       <div>
-                        <div style={{ fontSize: '32px', marginBottom: '12px' }}>📁</div>
                         <p style={{ fontWeight: 600, color: '#1F1D1A' }}>Drop CSV file here or click to upload</p>
                         <p style={{ color: '#9A938A', fontSize: '14px', marginTop: '4px' }}>
                           Required columns: user_id, text
@@ -809,17 +807,14 @@ export default function SandboxPage() {
             }}>
               {[
                 {
-                  icon: '🧠',
                   title: 'AI-Powered Analysis',
                   description: 'Claude analyzes text for emotional signals across 5 clinical dimensions.',
                 },
                 {
-                  icon: '📊',
                   title: 'Detailed Breakdown',
                   description: 'Get scores and reasoning for each dimension with confidence levels.',
                 },
                 {
-                  icon: '📈',
                   title: 'Batch Processing',
                   description: 'Analyze up to 20 entries at once with trend detection.',
                 },
@@ -830,7 +825,6 @@ export default function SandboxPage() {
                   padding: '20px',
                   border: '1px solid #E8E2DA',
                 }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>{feature.icon}</div>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>{feature.title}</h3>
                   <p style={{ fontSize: '14px', color: '#5C574F' }}>{feature.description}</p>
                 </div>
@@ -1328,7 +1322,7 @@ function getStage(score: number) {
       label: 'Healing',
       color: '#B86B64',
       bgLight: 'rgba(184, 107, 100, 0.1)',
-      icon: '💜',
+      icon: '',
     };
   }
   if (score < 70) {
@@ -1336,13 +1330,13 @@ function getStage(score: number) {
       label: 'Rebuilding',
       color: '#D4973B',
       bgLight: 'rgba(212, 151, 59, 0.1)',
-      icon: '🌱',
+      icon: '',
     };
   }
   return {
     label: 'Ready',
     color: '#5B8A72',
     bgLight: 'rgba(91, 138, 114, 0.1)',
-    icon: '✨',
+    icon: '',
   };
 }
