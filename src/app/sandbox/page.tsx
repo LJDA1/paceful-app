@@ -548,6 +548,37 @@ export default function SandboxPage() {
               </Link>
             </div>
 
+            {/* Integration Guides Link */}
+            <div style={{
+              marginTop: '24px',
+              padding: '16px 20px',
+              background: '#FFFFFF',
+              border: '1px solid #E8E2DA',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '16px',
+              flexWrap: 'wrap',
+            }}>
+              <p style={{ fontSize: '14px', color: '#5C574F', margin: 0 }}>
+                Building something with this? See step-by-step integration blueprints for dating apps, therapy platforms, HR tools, and gambling operators.
+              </p>
+              <Link
+                href="/docs/integrations/dating"
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: '#5B8A72',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                See integration guides →
+              </Link>
+            </div>
+
             {/* CTA Banner */}
             <div style={{
               marginTop: '48px',

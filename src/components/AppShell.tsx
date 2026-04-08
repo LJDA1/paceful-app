@@ -6,7 +6,7 @@ import ErrorBoundary from './ErrorBoundary';
 import OfflineBanner from './OfflineBanner';
 import ChatFAB from './ChatFAB';
 
-const noNavRoutes = ['/auth', '/onboarding', '/login', '/signup', '/sandbox'];
+const noNavRoutes = ['/auth', '/onboarding', '/login', '/signup', '/sandbox', '/docs/integrations'];
 const marketingRoutes = ['/design-partners', '/investors', '/api-docs', '/privacy', '/terms', '/demo', '/pricing'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
