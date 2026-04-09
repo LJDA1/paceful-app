@@ -332,6 +332,31 @@ export default function SandboxPage() {
     setError(null);
   }, []);
 
+  // Share results
+  const [shareCopied, setShareCopied] = useState(false);
+  const handleShare = useCallback(() => {
+    let text = '';
+    if (singleResult) {
+      const d = singleResult.dimensions;
+      text = `Paceful ERS Analysis: Score ${singleResult.ers_snapshot}/100 (${singleResult.readiness_label}) — ` +
+        `Emotional Stability: ${d.emotional_stability.score}, ` +
+        `Self Reflection: ${d.self_reflection.score}, ` +
+        `Coping Capacity: ${d.coping_capacity.score}, ` +
+        `Behavioral Engagement: ${d.behavioral_engagement.score}, ` +
+        `Social Readiness: ${d.social_readiness.score}. ` +
+        `Try it yourself: paceful-app.vercel.app/sandbox`;
+    } else if (batchResult) {
+      text = `Paceful ERS Batch Analysis: Composite Score ${batchResult.composite_ers_score}/100 (${batchResult.readiness_label}), ` +
+        `${batchResult.entry_count} entries, trend: ${batchResult.trend.direction}. ` +
+        `Try it yourself: paceful-app.vercel.app/sandbox`;
+    }
+    if (text) {
+      navigator.clipboard.writeText(text);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  }, [singleResult, batchResult]);
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Logo Bar */}
@@ -528,6 +553,22 @@ export default function SandboxPage() {
               >
                 Analyze Another
               </button>
+              <button
+                onClick={handleShare}
+                style={{
+                  padding: '14px 28px',
+                  background: shareCopied ? '#5B8A72' : '#FFFFFF',
+                  border: `2px solid ${shareCopied ? '#5B8A72' : '#E8E2DA'}`,
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: shareCopied ? '#FFFFFF' : '#1F1D1A',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {shareCopied ? 'Copied!' : 'Share results'}
+              </button>
               <Link
                 href="/partners/signup"
                 style={{
@@ -548,34 +589,18 @@ export default function SandboxPage() {
               </Link>
             </div>
 
-            {/* Integration Guides Link */}
-            <div style={{
-              marginTop: '24px',
-              padding: '16px 20px',
-              background: '#FFFFFF',
-              border: '1px solid #E8E2DA',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '16px',
-              flexWrap: 'wrap',
-            }}>
-              <p style={{ fontSize: '14px', color: '#5C574F', margin: 0 }}>
-                Building something with this? See step-by-step integration blueprints for dating apps, therapy platforms, HR tools, and gambling operators.
-              </p>
+            {/* Integration guide link */}
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
               <Link
-                href="/docs/integrations/dating"
+                href="/docs/integrations"
                 style={{
                   fontSize: '14px',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   color: '#5B8A72',
                   textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
                 }}
               >
-                See integration guides →
+                See how to integrate this into your product →
               </Link>
             </div>
 
@@ -1020,6 +1045,14 @@ function LoadingSpinner() {
 
 function SingleResultView({ result }: { result: SingleResult }) {
   const stage = getStage(result.ers_snapshot);
+  const [showJson, setShowJson] = useState(false);
+  const [jsonCopied, setJsonCopied] = useState(false);
+
+  const handleCopyJson = () => {
+    navigator.clipboard.writeText(JSON.stringify({ success: true, data: result }, null, 2));
+    setJsonCopied(true);
+    setTimeout(() => setJsonCopied(false), 2000);
+  };
 
   return (
     <div>
@@ -1128,6 +1161,81 @@ function SingleResultView({ result }: { result: SingleResult }) {
           </div>
         </div>
       )}
+
+      {/* JSON Response Toggle */}
+      <div style={{ marginTop: '16px' }}>
+        <button
+          onClick={() => setShowJson(v => !v)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'none',
+            border: 'none',
+            padding: '8px 0',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#5B8A72',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{
+            display: 'inline-block',
+            transition: 'transform 0.2s',
+            transform: showJson ? 'rotate(90deg)' : 'rotate(0deg)',
+            fontSize: '10px',
+          }}>▶</span>
+          {showJson ? 'Hide' : 'See the'} JSON response
+        </button>
+
+        {showJson && (
+          <div style={{ position: 'relative', marginTop: '8px' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '10px 16px',
+              background: '#1A1A1A',
+              borderRadius: '8px 8px 0 0',
+              borderBottom: '1px solid #333',
+            }}>
+              <span style={{ fontSize: '12px', color: '#9A938A', fontFamily: 'monospace' }}>
+                POST /api/v1/assess/analyze → 200 OK
+              </span>
+              <button
+                onClick={handleCopyJson}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  background: jsonCopied ? '#5B8A72' : '#3D3D3A',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+              >
+                {jsonCopied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <pre style={{
+              margin: 0,
+              padding: '16px',
+              background: '#2D2D2D',
+              borderRadius: '0 0 8px 8px',
+              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+              fontSize: '12px',
+              lineHeight: 1.6,
+              color: '#E5E0D9',
+              overflowX: 'auto',
+              maxHeight: '400px',
+              overflowY: 'auto',
+            }}>
+              {JSON.stringify({ success: true, data: result }, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
