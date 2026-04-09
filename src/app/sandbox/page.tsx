@@ -396,7 +396,7 @@ export default function SandboxPage() {
             color: '#FFFFFF',
             marginBottom: '12px',
           }}>
-            Analyze Any Text for Emotional Readiness
+            Paceful API
           </h1>
           <p style={{
             fontSize: '18px',
@@ -404,21 +404,8 @@ export default function SandboxPage() {
             maxWidth: '600px',
             margin: '0 auto',
           }}>
-            Analyze text and extract emotional readiness signals. No signup required.
+            Emotional Readiness Score
           </p>
-          <div style={{
-            marginTop: '16px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            background: 'rgba(255,255,255,0.15)',
-            borderRadius: '20px',
-            fontSize: '14px',
-            color: '#FFFFFF',
-          }}>
-            <span style={{ opacity: 0.8 }}>{remainingAssessments} free assessments remaining</span>
-          </div>
         </div>
       </header>
 
@@ -884,6 +871,11 @@ export default function SandboxPage() {
                   </>
                 )}
               </button>
+              {!isRateLimited && (
+                <p style={{ marginTop: '8px', fontSize: '12px', color: '#9A938A', textAlign: 'center' }}>
+                  {remainingAssessments} free assessment{remainingAssessments !== 1 ? 's' : ''} remaining
+                </p>
+              )}
             </div>
 
             {/* Features Preview */}
