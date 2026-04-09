@@ -661,7 +661,7 @@ export default function PartnersLandingPage() {
           </h1>
           <p style={styles.heroSubtitle}>
             Paste a journal entry, session transcript, or chat log. Get a clinically-grounded
-            ERS score across 5 dimensions. No integration needed to try it.
+            Emotional Readiness Score across 5 dimensions. No integration needed to try it.
           </p>
           <Link href="/sandbox" style={styles.heroCta}>
             Try the Sandbox
@@ -707,7 +707,7 @@ export default function PartnersLandingPage() {
               </div>
               <h3 style={styles.stepTitle}>Get Scores</h3>
               <p style={styles.stepDesc}>
-                Receive a 0-100 ERS score with breakdowns across 5 clinical dimensions
+                Receive a 0-100 Emotional Readiness Score with breakdowns across 5 clinical dimensions
                 and confidence intervals.
               </p>
             </div>
@@ -939,7 +939,7 @@ export default function PartnersLandingPage() {
               </div>
               <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#9A938A' }}>
                 <span>0</span>
-                <span>ERS Score</span>
+                <span>Score</span>
                 <span>100</span>
               </div>
             </div>

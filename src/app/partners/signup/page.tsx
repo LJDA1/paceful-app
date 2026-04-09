@@ -616,7 +616,7 @@ export default function PartnerSignup() {
               value={formData.description}
               onChange={handleChange}
               style={styles.textarea}
-              placeholder="How do you plan to use Paceful's ERS in your product?"
+              placeholder="How do you plan to use Paceful's API in your product?"
             />
             <p style={styles.hint}>Optional — helps us understand your needs better</p>
           </div>

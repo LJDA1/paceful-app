@@ -1628,7 +1628,7 @@ const ers = await paceful.ers.get('user-123');`}
                     <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#F9F6F2', borderRadius: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: '14px', color: '#6B6560', marginBottom: '4px' }}>Vertical Average ERS</div>
+                          <div style={{ fontSize: '14px', color: '#6B6560', marginBottom: '4px' }}>Vertical Average Score</div>
                           <div style={{ fontSize: '28px', fontWeight: 700, color: '#1F1D1A' }}>
                             {benchmarkData.summary.overallErsVerticalAvg}
                           </div>
@@ -1770,7 +1770,7 @@ const ers = await paceful.ers.get('user-123');`}
                     </div>
                   </Card>
                   <Card>
-                    <div style={styles.statLabel}>Average ERS</div>
+                    <div style={styles.statLabel}>Average Score</div>
                     <div style={styles.statNumber}>
                       {analyticsData.summary.averageErs !== null ? analyticsData.summary.averageErs : '—'}
                     </div>
@@ -1828,7 +1828,7 @@ const ers = await paceful.ers.get('user-123');`}
                 <div style={styles.grid}>
                   {/* ERS Distribution Histogram */}
                   <Card>
-                    <div style={styles.cardTitle}>ERS Distribution</div>
+                    <div style={styles.cardTitle}>Score Distribution</div>
                     {analyticsData.ersDistribution.some(b => b.count > 0) ? (
                       <div style={{ width: '100%', height: 250 }}>
                         <ResponsiveContainer>
@@ -2022,7 +2022,7 @@ const ers = await paceful.ers.get('user-123');`}
                           alignItems: 'center'
                         }}>
                           <div>
-                            <span style={{ fontSize: '14px', color: '#6B6560' }}>Overall ERS: </span>
+                            <span style={{ fontSize: '14px', color: '#6B6560' }}>Overall Score: </span>
                             <span style={{ fontSize: '16px', fontWeight: 600, color: '#1F1D1A' }}>
                               {analyticsData.benchmarkComparison.overall.partnerAvg ?? '—'}
                             </span>
