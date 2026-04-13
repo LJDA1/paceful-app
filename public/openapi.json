@@ -1,0 +1,1875 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Paceful Partner API",
+    "version": "1.3.0",
+    "description": "The Paceful Partner API enables you to integrate Emotional Readiness Scores into your product — dating apps, therapy platforms, workplace tools, and more.\n\n## Authentication\n\nAll endpoints (except sandbox and health) require a partner API key in the `X-API-Key` header.\n\n```\nX-API-Key: pk_live_your_key_here\n```\n\nGet your API key at [paceful.app/partners/signup](https://paceful.app/partners/signup).\n\n## Rate Limiting\n\nRate limits are applied per API key. Check response headers:\n\n| Header | Description |\n|--------|-------------|\n| `X-RateLimit-Limit` | Max requests per hour |\n| `X-RateLimit-Remaining` | Requests remaining |\n| `X-RateLimit-Reset` | Unix timestamp when window resets |\n\nExceeded limits return `429 Too Many Requests`.\n\n## Sandbox Mode\n\nUse a sandbox API key (`pk_sandbox_...`) for testing. Sandbox requests:\n- Return deterministic realistic data\n- Do not persist to production\n- Do not count against rate limits\n\n## Emotional Readiness Score Dimensions\n\nThe score is computed from 5 weighted dimensions:\n\n| Dimension | Weight | Description |\n|-----------|--------|-------------|\n| Emotional Stability | 25% | Mood variance, emotional regulation |\n| Self Reflection | 15% | Self-awareness, pattern recognition |\n| Coping Capacity | 20% | Healthy coping, problem-solving |\n| Behavioral Engagement | 15% | Activity levels, routine consistency |\n| Social Readiness | 25% | Openness to relationships, trust |\n\n## Score Stages\n\n| Stage | Score Range | Label |\n|-------|-------------|-------|\n| Healing | 0–39 | Not Ready |\n| Rebuilding | 40–74 | Rebuilding |\n| Ready | 75–100 | Ready |\n",
+    "contact": {
+      "name": "Paceful Partner Support",
+      "email": "partners@paceful.com",
+      "url": "https://paceful.app/partners"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://paceful.app/terms"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://paceful.app",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development"
+    }
+  ],
+  "security": [
+    { "ApiKeyAuth": [] }
+  ],
+  "tags": [
+    {
+      "name": "Assessment",
+      "description": "Score text and questionnaire responses to produce Emotional Readiness Scores"
+    },
+    {
+      "name": "ERS",
+      "description": "Retrieve and manage Emotional Readiness Scores for your users"
+    },
+    {
+      "name": "Analytics",
+      "description": "Aggregate usage analytics and mood tracking"
+    },
+    {
+      "name": "Configuration",
+      "description": "Manage partner-level defaults for response verbosity, tone, and score format"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Register and manage webhooks for real-time score change events"
+    },
+    {
+      "name": "Sandbox",
+      "description": "Unauthenticated demo endpoints for testing the API without a key"
+    },
+    {
+      "name": "Health",
+      "description": "API health and status checks"
+    }
+  ],
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "API health check",
+        "description": "Check API availability and service status. No authentication required.",
+        "operationId": "getHealth",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API is operational",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" },
+                "example": {
+                  "status": "operational",
+                  "version": "1.3.0",
+                  "timestamp": "2026-04-13T12:00:00Z",
+                  "services": {
+                    "api": { "status": "operational", "responseTimeMs": 18 },
+                    "database": { "status": "operational", "responseTimeMs": 4 },
+                    "ers_engine": { "status": "operational", "responseTimeMs": 61 }
+                  },
+                  "uptime": "99.9%"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/v1/assess/snapshot/questions": {
+      "get": {
+        "tags": ["Assessment"],
+        "summary": "Get assessment questions",
+        "description": "Retrieve the 10 Likert-scale questions used in the snapshot questionnaire. Present these to your users before calling `POST /api/v1/assess/snapshot`.",
+        "operationId": "getSnapshotQuestions",
+        "responses": {
+          "200": {
+            "description": "Assessment questions",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QuestionsResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "questions": [
+                      {
+                        "id": "es_1",
+                        "dimension": "emotional_stability",
+                        "text": "Over the past week, how often did you feel in control of your emotions?",
+                        "scale": { "min": 1, "max": 5, "minLabel": "Never", "maxLabel": "Always" }
+                      },
+                      {
+                        "id": "es_2",
+                        "dimension": "emotional_stability",
+                        "text": "How well have you been able to manage stressful situations recently?",
+                        "scale": { "min": 1, "max": 5, "minLabel": "Not at all", "maxLabel": "Very well" }
+                      }
+                    ],
+                    "dimensions": [
+                      { "id": "emotional_stability", "name": "Emotional Stability", "weight": 0.25 },
+                      { "id": "self_reflection", "name": "Self Reflection", "weight": 0.15 },
+                      { "id": "coping_capacity", "name": "Coping Capacity", "weight": 0.20 },
+                      { "id": "behavioral_engagement", "name": "Behavioral Engagement", "weight": 0.15 },
+                      { "id": "social_readiness", "name": "Social Readiness", "weight": 0.25 }
+                    ],
+                    "instructions": {
+                      "totalQuestions": 10,
+                      "questionsPerDimension": 2,
+                      "scaleType": "likert",
+                      "scaleRange": [1, 5]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+
+    "/api/v1/assess/snapshot": {
+      "post": {
+        "tags": ["Assessment"],
+        "summary": "Questionnaire-based assessment",
+        "description": "Submit answers to the 10-question Likert-scale assessment and receive a scored Emotional Readiness Score snapshot. Use `GET /api/v1/assess/snapshot/questions` to retrieve the questions first.",
+        "operationId": "assessSnapshot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SnapshotRequest" },
+              "example": {
+                "user_id": "user_12345",
+                "responses": [
+                  { "question_id": "es_1", "dimension": "emotional_stability", "value": 4 },
+                  { "question_id": "es_2", "dimension": "emotional_stability", "value": 3 },
+                  { "question_id": "sr_1", "dimension": "self_reflection", "value": 5 },
+                  { "question_id": "sr_2", "dimension": "self_reflection", "value": 4 },
+                  { "question_id": "cc_1", "dimension": "coping_capacity", "value": 3 },
+                  { "question_id": "cc_2", "dimension": "coping_capacity", "value": 4 },
+                  { "question_id": "be_1", "dimension": "behavioral_engagement", "value": 3 },
+                  { "question_id": "be_2", "dimension": "behavioral_engagement", "value": 2 },
+                  { "question_id": "so_1", "dimension": "social_readiness", "value": 4 },
+                  { "question_id": "so_2", "dimension": "social_readiness", "value": 3 }
+                ],
+                "config": {
+                  "verbosity": "standard",
+                  "tone": "clinical",
+                  "score_format": "numerical"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scored assessment result",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AssessmentResult" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "ers_snapshot": 67,
+                    "readiness_label": "Rebuilding",
+                    "confidence": "high",
+                    "dimensions": {
+                      "emotional_stability": { "score": 70, "label": "high", "confidence": "high" },
+                      "self_reflection": { "score": 80, "label": "high", "confidence": "high" },
+                      "coping_capacity": { "score": 60, "label": "moderate", "confidence": "high" },
+                      "behavioral_engagement": { "score": 50, "label": "moderate", "confidence": "high" },
+                      "social_readiness": { "score": 70, "label": "high", "confidence": "high" }
+                    },
+                    "assessment_id": "snap_a4k9r_mn78op",
+                    "timestamp": "2026-04-13T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+
+    "/api/v1/assess/analyze": {
+      "post": {
+        "tags": ["Assessment"],
+        "summary": "Text-based analysis",
+        "description": "Analyze unstructured text — journal entries, session notes, chat transcripts — and extract an Emotional Readiness Score using AI. Supports confidence scoring and signal extraction.\n\n**Minimum text length:** 20 characters  \n**Maximum text length:** 10,000 characters",
+        "operationId": "analyzeText",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AnalyzeTextRequest" },
+              "example": {
+                "user_id": "user_12345",
+                "text": "Today was hard but I handled it better than I would have a few months ago. When my plans got canceled, I caught myself before spiraling. I've been doing breathing exercises and they actually help. I'm starting to recognize my patterns and I think I'm ready to start putting myself out there again.",
+                "source_type": "journal",
+                "config": {
+                  "verbosity": "standard",
+                  "tone": "clinical",
+                  "score_format": "numerical",
+                  "include_signals": true
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis result",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnalyzeResult" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "ers_snapshot": 67,
+                    "readiness_label": "Rebuilding",
+                    "confidence": "medium",
+                    "dimensions": {
+                      "emotional_stability": {
+                        "score": 65,
+                        "label": "moderate",
+                        "confidence": "high",
+                        "reasoning": "Emotional stability indicators are moderate. Key signals: caught myself before spiraling, breathing exercises help.",
+                        "top_signals": ["caught myself before spiraling", "breathing exercises help"]
+                      },
+                      "self_reflection": {
+                        "score": 72,
+                        "label": "high",
+                        "confidence": "high",
+                        "reasoning": "Self-reflection capacity indicators are strong. Key signals: recognize my patterns, handled it better than before.",
+                        "top_signals": ["recognize my patterns", "handled it better"]
+                      },
+                      "coping_capacity": {
+                        "score": 70,
+                        "label": "high",
+                        "confidence": "medium",
+                        "reasoning": "Coping capacity indicators are strong. Key signals: breathing exercises and they actually help.",
+                        "top_signals": ["breathing exercises actually help"]
+                      },
+                      "behavioral_engagement": {
+                        "score": 58,
+                        "label": "moderate",
+                        "confidence": "medium",
+                        "reasoning": "Behavioral engagement indicators are moderate.",
+                        "top_signals": []
+                      },
+                      "social_readiness": {
+                        "score": 62,
+                        "label": "moderate",
+                        "confidence": "medium",
+                        "reasoning": "Social readiness indicators are moderate. Key signals: ready to start putting myself out there.",
+                        "top_signals": ["ready to start putting myself out there"]
+                      }
+                    },
+                    "assessment_id": "anlz_m2k8x9_abc123",
+                    "timestamp": "2026-04-13T12:00:00Z",
+                    "source_type": "journal",
+                    "text_length": 312,
+                    "meta": {
+                      "verbosity": "standard",
+                      "tone": "clinical",
+                      "score_format": "numerical",
+                      "model_version": "ers-1.3"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+
+    "/api/v1/assess/analyze/batch": {
+      "post": {
+        "tags": ["Assessment"],
+        "summary": "Batch text analysis",
+        "description": "Analyze up to 20 text entries and compute a composite Emotional Readiness Score with trend detection. Entries are time-weighted — more recent entries contribute more to the composite score.\n\n**Max entries per request:** 20",
+        "operationId": "analyzeTextBatch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BatchAnalyzeRequest" },
+              "example": {
+                "user_id": "user_12345",
+                "entries": [
+                  {
+                    "text": "Feeling overwhelmed today. Couldn't focus at all.",
+                    "source_type": "journal",
+                    "timestamp": "2026-04-06T10:00:00Z"
+                  },
+                  {
+                    "text": "Better today. Applied for that promotion I've been thinking about.",
+                    "source_type": "journal",
+                    "timestamp": "2026-04-10T10:00:00Z"
+                  },
+                  {
+                    "text": "Great weekend hiking with friends. Felt present and happy.",
+                    "source_type": "journal",
+                    "timestamp": "2026-04-13T10:00:00Z"
+                  }
+                ],
+                "config": {
+                  "verbosity": "standard",
+                  "tone": "clinical"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Composite analysis result with trend",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchAnalyzeResult" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "composite": {
+                      "ers_score": 63,
+                      "readiness_label": "Rebuilding",
+                      "confidence": "medium"
+                    },
+                    "trend": {
+                      "direction": "improving",
+                      "delta": 14,
+                      "entries_analyzed": 3,
+                      "time_span": {
+                        "earliest": "2026-04-06T10:00:00Z",
+                        "latest": "2026-04-13T10:00:00Z"
+                      }
+                    },
+                    "dimensions": {
+                      "emotional_stability": { "score": 62, "label": "moderate", "confidence": "medium", "trend": "improving" },
+                      "self_reflection": { "score": 68, "label": "moderate", "confidence": "medium", "trend": "stable" },
+                      "coping_capacity": { "score": 65, "label": "moderate", "confidence": "medium", "trend": "improving" },
+                      "behavioral_engagement": { "score": 60, "label": "moderate", "confidence": "low", "trend": "improving" },
+                      "social_readiness": { "score": 58, "label": "moderate", "confidence": "low", "trend": "stable" }
+                    },
+                    "entries": [
+                      { "index": 0, "ers_score": 42, "confidence": "low", "source_type": "journal" },
+                      { "index": 1, "ers_score": 61, "confidence": "medium", "source_type": "journal" },
+                      { "index": 2, "ers_score": 74, "confidence": "medium", "source_type": "journal" }
+                    ],
+                    "assessment_id": "batch_v7r3p_xy99ab",
+                    "timestamp": "2026-04-13T12:05:00Z",
+                    "meta": { "weighting_method": "time_exponential" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+
+    "/api/v1/assess/{vertical}": {
+      "post": {
+        "tags": ["Assessment"],
+        "summary": "Vertical-specific assessment",
+        "description": "Analyze text using a vertical-specific risk engine. Returns standard Emotional Readiness Score dimensions plus a `vertical_analysis` block with industry-specific risk signals.\n\n**Supported verticals:**\n- `dating` — Post-breakup readiness, attachment signals\n- `mental_health` — Between-session monitoring, crisis risk\n- `workplace` — Burnout, attrition risk, return-to-work readiness\n- `gambling` — Problem gambling signals, duty-of-care interventions\n- `insurance` — Emotional risk indicators for policy underwriting",
+        "operationId": "assessVertical",
+        "parameters": [
+          {
+            "name": "vertical",
+            "in": "path",
+            "required": true,
+            "description": "Target vertical",
+            "schema": {
+              "type": "string",
+              "enum": ["dating", "mental_health", "workplace", "gambling", "insurance"]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VerticalAssessRequest" },
+              "example": {
+                "user_id": "player_88421",
+                "text": "I keep losing but I know the next session will turn it around. I've borrowed money to keep playing. I can't tell my family.",
+                "source_type": "chat_transcript"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vertical assessment result",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VerticalAssessResult" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "user_id": "player_88421",
+                    "vertical": "gambling",
+                    "ers": {
+                      "ers_snapshot": 34,
+                      "readiness_label": "Not Ready",
+                      "confidence": "medium"
+                    },
+                    "vertical_analysis": {
+                      "risk_score": 74,
+                      "risk_level": "high",
+                      "recommended_action": "Immediate outreach required",
+                      "signals_detected": 4,
+                      "signals_total": 8,
+                      "signals": [
+                        { "id": "loss_chasing", "detected": true, "confidence": "high", "evidence": "Referenced chasing losses to recover" },
+                        { "id": "financial_stress", "detected": true, "confidence": "high", "evidence": "Mentioned borrowing to fund play" },
+                        { "id": "emotional_dysreg", "detected": true, "confidence": "medium", "evidence": "Expressed frustration and desperation" },
+                        { "id": "social_withdrawal", "detected": true, "confidence": "low", "evidence": "Hiding activity from family" }
+                      ]
+                    },
+                    "assessed_at": "2026-04-13T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    },
+
+    "/api/v1/ers/{userId}": {
+      "get": {
+        "tags": ["ERS"],
+        "summary": "Get user's Emotional Readiness Score",
+        "description": "Retrieve the current Emotional Readiness Score and dimensional breakdown for a user. Returns the most recently calculated score with trend data.",
+        "operationId": "getErsScore",
+        "parameters": [
+          { "$ref": "#/components/parameters/userId" },
+          {
+            "name": "include_history",
+            "in": "query",
+            "description": "Include score history for the last 30 days",
+            "schema": { "type": "boolean", "default": false }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Emotional Readiness Score data",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErsScoreResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "user_id": "user_12345",
+                    "ers_score": 67,
+                    "ers_stage": "rebuilding",
+                    "readiness_label": "Rebuilding",
+                    "dimensions": {
+                      "emotional_stability": 65,
+                      "self_reflection": 72,
+                      "coping_capacity": 70,
+                      "behavioral_engagement": 58,
+                      "social_readiness": 62
+                    },
+                    "trend": {
+                      "direction": "improving",
+                      "delta": 3.2,
+                      "period_days": 7
+                    },
+                    "confidence": 0.85,
+                    "calculated_at": "2026-04-13T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+
+    "/api/v1/ers/{userId}/dimensions": {
+      "get": {
+        "tags": ["ERS"],
+        "summary": "Get detailed dimension breakdown",
+        "description": "Get the full dimensional breakdown for a user including historical trends, contributing signals, and recommended actions per dimension.",
+        "operationId": "getErsDimensions",
+        "parameters": [
+          { "$ref": "#/components/parameters/userId" },
+          {
+            "name": "period",
+            "in": "query",
+            "description": "Historical period for trend data",
+            "schema": {
+              "type": "string",
+              "enum": ["7d", "30d", "90d"],
+              "default": "30d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed dimension data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DimensionsDetailResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "user_id": "user_12345",
+                    "period": "30d",
+                    "dimensions": {
+                      "emotional_stability": {
+                        "score": 65,
+                        "label": "moderate",
+                        "weight": 0.25,
+                        "trend": { "direction": "improving", "delta": 4.1 },
+                        "history": [
+                          { "date": "2026-03-14", "score": 61 },
+                          { "date": "2026-03-21", "score": 63 },
+                          { "date": "2026-04-13", "score": 65 }
+                        ],
+                        "recommended_actions": ["Practice mindfulness for 10 min daily", "Track mood twice per day"]
+                      }
+                    },
+                    "calculated_at": "2026-04-13T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+
+    "/api/v1/ers/batch": {
+      "post": {
+        "tags": ["ERS"],
+        "summary": "Batch get Emotional Readiness Scores",
+        "description": "Retrieve Emotional Readiness Scores for up to 50 users in a single request. Useful for populating dashboards or running aggregate analytics.",
+        "operationId": "getErsScoresBatch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ErsBatchRequest" },
+              "example": {
+                "user_ids": ["user_12345", "user_67890", "user_11111"],
+                "include_dimensions": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch Emotional Readiness Score results",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErsBatchResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "results": [
+                      {
+                        "user_id": "user_12345",
+                        "ers_score": 67,
+                        "ers_stage": "rebuilding",
+                        "dimensions": { "emotional_stability": 65, "self_reflection": 72, "coping_capacity": 70, "behavioral_engagement": 58, "social_readiness": 62 },
+                        "found": true
+                      },
+                      {
+                        "user_id": "user_67890",
+                        "ers_score": 81,
+                        "ers_stage": "ready",
+                        "dimensions": { "emotional_stability": 83, "self_reflection": 79, "coping_capacity": 80, "behavioral_engagement": 82, "social_readiness": 84 },
+                        "found": true
+                      },
+                      { "user_id": "user_11111", "found": false }
+                    ],
+                    "total_requested": 3,
+                    "total_found": 2
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+
+    "/api/v1/analytics/summary": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Partner analytics summary",
+        "description": "Aggregate analytics for your integration: total users, score distributions, stage breakdowns, and API usage metrics.",
+        "operationId": "getAnalyticsSummary",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "description": "Time period for analytics",
+            "schema": {
+              "type": "string",
+              "enum": ["7d", "30d", "90d", "all"],
+              "default": "30d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnalyticsSummaryResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "period": "30d",
+                    "users": { "total": 1250, "active": 890, "new": 156 },
+                    "scores": {
+                      "average": 58.3,
+                      "median": 61,
+                      "distribution": { "healing": 312, "rebuilding": 498, "ready": 440 }
+                    },
+                    "api_usage": {
+                      "total_calls": 15420,
+                      "by_endpoint": {
+                        "assess_snapshot": 8200,
+                        "assess_analyze": 4100,
+                        "ers_get": 3120
+                      }
+                    },
+                    "trends": { "score_change": 2.1, "engagement_change": 5.3 }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+
+    "/api/v1/mood/{userId}/analytics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "User mood analytics",
+        "description": "Retrieve mood tracking analytics for a specific user including patterns, trends, and correlation with their Emotional Readiness Score.",
+        "operationId": "getMoodAnalytics",
+        "parameters": [
+          { "$ref": "#/components/parameters/userId" },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["7d", "30d", "90d"],
+              "default": "30d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mood analytics",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MoodAnalyticsResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "user_id": "user_12345",
+                    "period": "30d",
+                    "mood_entries": 24,
+                    "average_mood": 3.4,
+                    "mood_trend": "improving",
+                    "patterns": {
+                      "lowest_day": "Monday",
+                      "highest_day": "Saturday",
+                      "consecutive_lows": 0
+                    },
+                    "ers_correlation": 0.72
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+
+    "/api/v1/partner/config": {
+      "get": {
+        "tags": ["Configuration"],
+        "summary": "Get partner configuration",
+        "description": "Retrieve your current partner defaults — verbosity, tone, score format, and traffic light thresholds. These defaults apply to all API responses unless overridden per-request.",
+        "operationId": "getPartnerConfig",
+        "responses": {
+          "200": {
+            "description": "Current partner configuration",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartnerConfigResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "partner_id": "partner_abc123",
+                    "verbosity": "standard",
+                    "tone": "clinical",
+                    "score_format": "numerical",
+                    "traffic_light_thresholds": { "red_max": 33, "yellow_max": 66 },
+                    "include_signals": true,
+                    "include_trend": true,
+                    "created_at": "2026-02-15T00:00:00Z",
+                    "updated_at": "2026-04-01T10:30:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "put": {
+        "tags": ["Configuration"],
+        "summary": "Update partner configuration",
+        "description": "Update your partner defaults. All fields are optional — only provided fields are updated. Changes take effect immediately on subsequent API calls.",
+        "operationId": "updatePartnerConfig",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PartnerConfigUpdate" },
+              "example": {
+                "verbosity": "clinical",
+                "tone": "motivational",
+                "score_format": "percentage",
+                "traffic_light_thresholds": { "red_max": 40, "yellow_max": 70 },
+                "include_signals": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated configuration",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartnerConfigResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/api/v1/partner/webhooks": {
+      "get": {
+        "tags": ["Webhooks"],
+        "summary": "List registered webhooks",
+        "description": "Returns all webhook registrations for your partner account.",
+        "operationId": "listWebhooks",
+        "responses": {
+          "200": {
+            "description": "Webhook list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WebhookListResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "webhooks": [
+                      {
+                        "webhook_id": "wh_x9r2k_abc123",
+                        "url": "https://your-app.com/webhooks/paceful",
+                        "events": ["ers.stage_changed", "mood.critical"],
+                        "status": "active",
+                        "created_at": "2026-02-20T10:00:00Z"
+                      }
+                    ],
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Webhooks"],
+        "summary": "Register a webhook",
+        "description": "Register a URL to receive real-time event notifications. Paceful signs each webhook payload with an HMAC-SHA256 signature in the `X-Paceful-Signature` header.\n\n**Supported events:**\n- `ers.stage_changed` — User transitions between Healing / Rebuilding / Ready\n- `ers.score_threshold` — Score crosses a configured threshold\n- `mood.critical` — 3+ consecutive low mood scores\n- `mood.logged` — Any mood entry is logged\n- `journal.created` — A journal entry is submitted for analysis",
+        "operationId": "registerWebhook",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WebhookRegisterRequest" },
+              "example": {
+                "url": "https://your-app.com/webhooks/paceful",
+                "events": ["ers.stage_changed", "mood.critical"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WebhookRegisterResponse" },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "webhook_id": "wh_x9r2k_abc123",
+                    "secret": "whsec_do_not_share_this_value",
+                    "events": ["ers.stage_changed", "mood.critical"],
+                    "status": "created"
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/api/v1/partner/webhooks/{webhookId}": {
+      "delete": {
+        "tags": ["Webhooks"],
+        "summary": "Delete a webhook",
+        "description": "Deregister a webhook. Events will no longer be delivered to this URL.",
+        "operationId": "deleteWebhook",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID returned during registration",
+            "schema": { "type": "string", "example": "wh_x9r2k_abc123" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted",
+            "content": {
+              "application/json": {
+                "example": { "success": true, "data": { "deleted": true, "webhook_id": "wh_x9r2k_abc123" } }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/api/sandbox/analyze": {
+      "post": {
+        "tags": ["Sandbox"],
+        "summary": "Demo text analysis (no key required)",
+        "description": "Analyze text and receive an Emotional Readiness Score without an API key. Rate limited to 5 requests per session and 20 per IP per day. Identical response shape to `POST /api/v1/assess/analyze`.\n\nPerfect for embedding a demo on your site or testing the API before signing up.",
+        "operationId": "sandboxAnalyze",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SandboxAnalyzeRequest" },
+              "example": {
+                "text": "I've been journaling every morning and I feel like I'm finally processing the breakup. I'm not ready to date yet but I'm open to making new friends.",
+                "source_type": "journal",
+                "session_id": "sess_abc123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis result",
+            "headers": {
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnalyzeResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    }
+  },
+
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Your partner API key. Get one at [paceful.app/partners/signup](https://paceful.app/partners/signup).\n- Production keys: `pk_live_...`\n- Sandbox keys: `pk_sandbox_...`"
+      }
+    },
+
+    "headers": {
+      "X-RateLimit-Limit": {
+        "description": "Maximum requests allowed per hour",
+        "schema": { "type": "integer", "example": 1000 }
+      },
+      "X-RateLimit-Remaining": {
+        "description": "Requests remaining in current window",
+        "schema": { "type": "integer", "example": 987 }
+      },
+      "X-RateLimit-Reset": {
+        "description": "Unix timestamp when the rate limit window resets",
+        "schema": { "type": "integer", "example": 1744588800 }
+      }
+    },
+
+    "parameters": {
+      "userId": {
+        "name": "userId",
+        "in": "path",
+        "required": true,
+        "description": "Your system's external user identifier",
+        "schema": { "type": "string", "example": "user_12345" }
+      }
+    },
+
+    "schemas": {
+      "ResponseConfig": {
+        "type": "object",
+        "description": "Per-request response formatting. Overrides your partner defaults for this call only.",
+        "properties": {
+          "verbosity": {
+            "type": "string",
+            "enum": ["minimal", "standard", "clinical"],
+            "default": "minimal",
+            "description": "`minimal` — score + label only. `standard` — adds reasoning + signals. `clinical` — full detail with recommended actions."
+          },
+          "tone": {
+            "type": "string",
+            "enum": ["clinical", "casual", "motivational"],
+            "default": "clinical",
+            "description": "Tone of reasoning text when verbosity is standard or clinical."
+          },
+          "score_format": {
+            "type": "string",
+            "enum": ["numerical", "percentage", "tier_label", "traffic_light"],
+            "default": "numerical",
+            "description": "`numerical` → 67. `percentage` → \"67%\". `tier_label` → \"moderate\". `traffic_light` → \"yellow\"."
+          },
+          "traffic_light_thresholds": {
+            "type": "object",
+            "description": "Custom thresholds for traffic_light format. Default: red ≤33, yellow ≤66, green >66.",
+            "properties": {
+              "red_max": { "type": "integer", "minimum": 0, "maximum": 100, "example": 33 },
+              "yellow_max": { "type": "integer", "minimum": 0, "maximum": 100, "example": 66 }
+            }
+          },
+          "include_signals": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include `top_signals` array in dimension results."
+          },
+          "include_trend": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include trend data when historical scores are available."
+          }
+        }
+      },
+
+      "DimensionScore": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Dimension score 0–100 (or formatted string when score_format is not numerical)"
+          },
+          "label": {
+            "type": "string",
+            "enum": ["very_low", "low", "moderate", "high", "very_high"]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Present when verbosity is standard or clinical"
+          },
+          "top_signals": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Text excerpts supporting this score. Present when include_signals is true."
+          },
+          "recommended_action": {
+            "type": "string",
+            "description": "Present when verbosity is clinical"
+          }
+        }
+      },
+
+      "DimensionsMap": {
+        "type": "object",
+        "properties": {
+          "emotional_stability": { "$ref": "#/components/schemas/DimensionScore" },
+          "self_reflection": { "$ref": "#/components/schemas/DimensionScore" },
+          "coping_capacity": { "$ref": "#/components/schemas/DimensionScore" },
+          "behavioral_engagement": { "$ref": "#/components/schemas/DimensionScore" },
+          "social_readiness": { "$ref": "#/components/schemas/DimensionScore" }
+        }
+      },
+
+      "AssessmentResult": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ers_snapshot": { "type": "number", "description": "Composite score 0–100" },
+              "readiness_label": {
+                "type": "string",
+                "enum": ["Not Ready", "Healing", "Rebuilding", "Ready"]
+              },
+              "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+              "dimensions": { "$ref": "#/components/schemas/DimensionsMap" },
+              "assessment_id": { "type": "string", "example": "snap_a4k9r_mn78op" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+
+      "AnalyzeResult": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ers_snapshot": { "type": "number" },
+              "readiness_label": { "type": "string", "enum": ["Not Ready", "Healing", "Rebuilding", "Ready"] },
+              "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+              "dimensions": { "$ref": "#/components/schemas/DimensionsMap" },
+              "assessment_id": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "source_type": { "type": "string" },
+              "text_length": { "type": "integer" },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "verbosity": { "type": "string" },
+                  "tone": { "type": "string" },
+                  "score_format": { "type": "string" },
+                  "model_version": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "QuestionsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "questions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "dimension": { "type": "string" },
+                    "text": { "type": "string" },
+                    "scale": {
+                      "type": "object",
+                      "properties": {
+                        "min": { "type": "integer" },
+                        "max": { "type": "integer" },
+                        "minLabel": { "type": "string" },
+                        "maxLabel": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              },
+              "dimensions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "weight": { "type": "number" }
+                  }
+                }
+              },
+              "instructions": {
+                "type": "object",
+                "properties": {
+                  "totalQuestions": { "type": "integer", "example": 10 },
+                  "questionsPerDimension": { "type": "integer", "example": 2 },
+                  "scaleType": { "type": "string", "example": "likert" },
+                  "scaleRange": { "type": "array", "items": { "type": "integer" }, "example": [1, 5] }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "SnapshotRequest": {
+        "type": "object",
+        "required": ["user_id", "responses"],
+        "properties": {
+          "user_id": { "type": "string", "description": "Your external user identifier" },
+          "responses": {
+            "type": "array",
+            "minItems": 10,
+            "maxItems": 10,
+            "items": {
+              "type": "object",
+              "required": ["question_id", "dimension", "value"],
+              "properties": {
+                "question_id": { "type": "string" },
+                "dimension": {
+                  "type": "string",
+                  "enum": ["emotional_stability", "self_reflection", "coping_capacity", "behavioral_engagement", "social_readiness"]
+                },
+                "value": { "type": "integer", "minimum": 1, "maximum": 5 }
+              }
+            }
+          },
+          "config": { "$ref": "#/components/schemas/ResponseConfig" }
+        }
+      },
+
+      "AnalyzeTextRequest": {
+        "type": "object",
+        "required": ["user_id", "text"],
+        "properties": {
+          "user_id": { "type": "string" },
+          "text": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 10000,
+            "description": "Text content to analyze"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": ["journal", "session_notes", "chat_transcript", "free_text"],
+            "default": "free_text"
+          },
+          "config": { "$ref": "#/components/schemas/ResponseConfig" }
+        }
+      },
+
+      "BatchAnalyzeRequest": {
+        "type": "object",
+        "required": ["user_id", "entries"],
+        "properties": {
+          "user_id": { "type": "string" },
+          "entries": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": ["text"],
+              "properties": {
+                "text": { "type": "string", "minLength": 20 },
+                "source_type": {
+                  "type": "string",
+                  "enum": ["journal", "session_notes", "chat_transcript", "free_text"]
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When this entry was written. Used for time-weighted scoring."
+                }
+              }
+            }
+          },
+          "config": { "$ref": "#/components/schemas/ResponseConfig" }
+        }
+      },
+
+      "BatchAnalyzeResult": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "composite": {
+                "type": "object",
+                "properties": {
+                  "ers_score": { "type": "number" },
+                  "readiness_label": { "type": "string" },
+                  "confidence": { "type": "string" }
+                }
+              },
+              "trend": {
+                "type": "object",
+                "properties": {
+                  "direction": { "type": "string", "enum": ["improving", "stable", "declining"] },
+                  "delta": { "type": "number", "description": "Score change from first to last entry" },
+                  "entries_analyzed": { "type": "integer" },
+                  "time_span": {
+                    "type": "object",
+                    "properties": {
+                      "earliest": { "type": "string", "format": "date-time" },
+                      "latest": { "type": "string", "format": "date-time" }
+                    }
+                  }
+                }
+              },
+              "dimensions": { "$ref": "#/components/schemas/DimensionsMap" },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "index": { "type": "integer" },
+                    "ers_score": { "type": "number" },
+                    "confidence": { "type": "string" },
+                    "source_type": { "type": "string" }
+                  }
+                }
+              },
+              "assessment_id": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "weighting_method": { "type": "string", "example": "time_exponential" }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "VerticalAssessRequest": {
+        "type": "object",
+        "required": ["user_id", "text"],
+        "properties": {
+          "user_id": { "type": "string" },
+          "text": { "type": "string", "minLength": 20, "maxLength": 10000 },
+          "source_type": {
+            "type": "string",
+            "enum": ["journal", "session_notes", "chat_transcript", "free_text"],
+            "default": "free_text"
+          }
+        }
+      },
+
+      "VerticalAssessResult": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user_id": { "type": "string" },
+              "vertical": { "type": "string" },
+              "ers": {
+                "type": "object",
+                "properties": {
+                  "ers_snapshot": { "type": "number" },
+                  "readiness_label": { "type": "string" },
+                  "confidence": { "type": "string" }
+                }
+              },
+              "vertical_analysis": {
+                "type": "object",
+                "properties": {
+                  "risk_score": { "type": "number", "minimum": 0, "maximum": 100 },
+                  "risk_level": { "type": "string", "enum": ["low", "moderate", "high", "critical"] },
+                  "recommended_action": { "type": "string" },
+                  "signals_detected": { "type": "integer" },
+                  "signals_total": { "type": "integer" },
+                  "signals": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "detected": { "type": "boolean" },
+                        "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+                        "evidence": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              },
+              "assessed_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+
+      "ErsScoreResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user_id": { "type": "string" },
+              "ers_score": { "type": "number" },
+              "ers_stage": { "type": "string", "enum": ["healing", "rebuilding", "ready"] },
+              "readiness_label": { "type": "string" },
+              "dimensions": {
+                "type": "object",
+                "additionalProperties": { "type": "number" },
+                "description": "Flat map of dimension name → score"
+              },
+              "trend": {
+                "type": "object",
+                "properties": {
+                  "direction": { "type": "string", "enum": ["improving", "stable", "declining"] },
+                  "delta": { "type": "number" },
+                  "period_days": { "type": "integer" }
+                }
+              },
+              "confidence": { "type": "number", "description": "Model confidence 0–1" },
+              "calculated_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+
+      "ErsBatchRequest": {
+        "type": "object",
+        "required": ["user_ids"],
+        "properties": {
+          "user_ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "maxItems": 50,
+            "description": "External user IDs to look up"
+          },
+          "include_dimensions": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+
+      "ErsBatchResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": { "type": "string" },
+                    "ers_score": { "type": "number" },
+                    "ers_stage": { "type": "string" },
+                    "dimensions": { "type": "object", "additionalProperties": { "type": "number" } },
+                    "found": { "type": "boolean" }
+                  }
+                }
+              },
+              "total_requested": { "type": "integer" },
+              "total_found": { "type": "integer" }
+            }
+          }
+        }
+      },
+
+      "DimensionsDetailResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user_id": { "type": "string" },
+              "period": { "type": "string" },
+              "dimensions": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "score": { "type": "number" },
+                    "label": { "type": "string" },
+                    "weight": { "type": "number" },
+                    "trend": {
+                      "type": "object",
+                      "properties": {
+                        "direction": { "type": "string" },
+                        "delta": { "type": "number" }
+                      }
+                    },
+                    "history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": { "type": "string", "format": "date" },
+                          "score": { "type": "number" }
+                        }
+                      }
+                    },
+                    "recommended_actions": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              },
+              "calculated_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+
+      "AnalyticsSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "period": { "type": "string" },
+              "users": {
+                "type": "object",
+                "properties": {
+                  "total": { "type": "integer" },
+                  "active": { "type": "integer" },
+                  "new": { "type": "integer" }
+                }
+              },
+              "scores": {
+                "type": "object",
+                "properties": {
+                  "average": { "type": "number" },
+                  "median": { "type": "number" },
+                  "distribution": {
+                    "type": "object",
+                    "properties": {
+                      "healing": { "type": "integer" },
+                      "rebuilding": { "type": "integer" },
+                      "ready": { "type": "integer" }
+                    }
+                  }
+                }
+              },
+              "api_usage": {
+                "type": "object",
+                "properties": {
+                  "total_calls": { "type": "integer" },
+                  "by_endpoint": { "type": "object", "additionalProperties": { "type": "integer" } }
+                }
+              },
+              "trends": {
+                "type": "object",
+                "properties": {
+                  "score_change": { "type": "number" },
+                  "engagement_change": { "type": "number" }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "MoodAnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user_id": { "type": "string" },
+              "period": { "type": "string" },
+              "mood_entries": { "type": "integer" },
+              "average_mood": { "type": "number", "minimum": 1, "maximum": 5 },
+              "mood_trend": { "type": "string", "enum": ["improving", "stable", "declining"] },
+              "patterns": {
+                "type": "object",
+                "properties": {
+                  "lowest_day": { "type": "string" },
+                  "highest_day": { "type": "string" },
+                  "consecutive_lows": { "type": "integer" }
+                }
+              },
+              "ers_correlation": {
+                "type": "number",
+                "description": "Pearson correlation between mood scores and Emotional Readiness Score (-1 to 1)"
+              }
+            }
+          }
+        }
+      },
+
+      "PartnerConfigResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "partner_id": { "type": "string" },
+              "verbosity": { "type": "string", "enum": ["minimal", "standard", "clinical"] },
+              "tone": { "type": "string", "enum": ["clinical", "casual", "motivational"] },
+              "score_format": { "type": "string", "enum": ["numerical", "percentage", "tier_label", "traffic_light"] },
+              "traffic_light_thresholds": {
+                "type": "object",
+                "properties": {
+                  "red_max": { "type": "integer" },
+                  "yellow_max": { "type": "integer" }
+                }
+              },
+              "include_signals": { "type": "boolean" },
+              "include_trend": { "type": "boolean" },
+              "created_at": { "type": "string", "format": "date-time" },
+              "updated_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+
+      "PartnerConfigUpdate": {
+        "type": "object",
+        "properties": {
+          "verbosity": { "type": "string", "enum": ["minimal", "standard", "clinical"] },
+          "tone": { "type": "string", "enum": ["clinical", "casual", "motivational"] },
+          "score_format": { "type": "string", "enum": ["numerical", "percentage", "tier_label", "traffic_light"] },
+          "traffic_light_thresholds": {
+            "type": "object",
+            "properties": {
+              "red_max": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "yellow_max": { "type": "integer", "minimum": 0, "maximum": 100 }
+            }
+          },
+          "include_signals": { "type": "boolean" },
+          "include_trend": { "type": "boolean" }
+        }
+      },
+
+      "WebhookRegisterRequest": {
+        "type": "object",
+        "required": ["url", "events"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "HTTPS URL to deliver events to"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["ers.stage_changed", "ers.score_threshold", "mood.critical", "mood.logged", "journal.created"]
+            },
+            "minItems": 1
+          }
+        }
+      },
+
+      "WebhookRegisterResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "webhook_id": { "type": "string" },
+              "secret": {
+                "type": "string",
+                "description": "HMAC secret for verifying payload signatures. Store this securely — it is only shown once."
+              },
+              "events": { "type": "array", "items": { "type": "string" } },
+              "status": { "type": "string", "enum": ["created", "updated"] }
+            }
+          }
+        }
+      },
+
+      "WebhookListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "webhooks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "webhook_id": { "type": "string" },
+                    "url": { "type": "string" },
+                    "events": { "type": "array", "items": { "type": "string" } },
+                    "status": { "type": "string", "enum": ["active", "paused", "failing"] },
+                    "created_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              },
+              "total": { "type": "integer" }
+            }
+          }
+        }
+      },
+
+      "SandboxAnalyzeRequest": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "text": { "type": "string", "minLength": 20, "maxLength": 10000 },
+          "source_type": {
+            "type": "string",
+            "enum": ["journal", "session_notes", "chat_transcript", "free_text"],
+            "default": "free_text"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Client-generated session identifier for rate limiting"
+          }
+        }
+      },
+
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["operational", "degraded", "slow", "down"] },
+          "version": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "services": {
+            "type": "object",
+            "properties": {
+              "api": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string" },
+                  "responseTimeMs": { "type": "integer" }
+                }
+              },
+              "database": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string" },
+                  "responseTimeMs": { "type": "integer" }
+                }
+              },
+              "ers_engine": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string" },
+                  "responseTimeMs": { "type": "integer" }
+                }
+              }
+            }
+          },
+          "uptime": { "type": "string", "example": "99.9%" }
+        }
+      },
+
+      "Error": {
+        "type": "object",
+        "required": ["success", "error"],
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": { "type": "string" },
+              "code": {
+                "type": "string",
+                "enum": ["BAD_REQUEST", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "RATE_LIMITED", "INTERNAL_ERROR"]
+              },
+              "details": { "type": "object", "additionalProperties": true }
+            }
+          }
+        }
+      }
+    },
+
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "success": false,
+              "error": { "message": "text must be at least 20 characters", "code": "BAD_REQUEST" }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid API key",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "success": false,
+              "error": { "message": "Invalid API key", "code": "UNAUTHORIZED" }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "API key lacks required permissions",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "success": false,
+              "error": { "message": "API key does not have access to this resource", "code": "FORBIDDEN" }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "success": false,
+              "error": { "message": "User not found", "code": "NOT_FOUND" }
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+          "X-RateLimit-Remaining": {
+            "description": "Requests remaining (will be 0)",
+            "schema": { "type": "integer", "example": 0 }
+          },
+          "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" },
+          "Retry-After": {
+            "description": "Seconds until rate limit resets",
+            "schema": { "type": "integer", "example": 3600 }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "success": false,
+              "error": { "message": "Rate limit exceeded. Please retry after 3600 seconds.", "code": "RATE_LIMITED" }
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": {
+              "success": false,
+              "error": { "message": "Internal server error", "code": "INTERNAL_ERROR" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

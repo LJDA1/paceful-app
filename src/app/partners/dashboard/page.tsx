@@ -938,6 +938,14 @@ const ers = await paceful.ers.get('user-123');`;
               {sessionData.email}
             </span>
           )}
+          <a href="/docs/api" style={{
+            fontSize: '13px',
+            color: '#5B8A72',
+            fontWeight: 500,
+            textDecoration: 'none',
+          }}>
+            API Reference
+          </a>
           <button onClick={handleLogout} style={styles.logoutButton}>
             Log out
           </button>

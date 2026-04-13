@@ -14,7 +14,7 @@ export default function ApiDocsPage() {
       const Redoc = (window as unknown as { Redoc?: { init: (specUrl: string, options: object, element: HTMLElement | null) => void } }).Redoc;
       if (Redoc) {
         Redoc.init(
-          '/api/v1/openapi',
+          '/openapi.json',
           {
             theme: {
               colors: {
@@ -147,7 +147,7 @@ export default function ApiDocsPage() {
             </div>
 
             <a
-              href="/api/v1/openapi"
+              href="/openapi.json"
               download="paceful-openapi.json"
               style={{
                 padding: '8px 16px',
@@ -212,7 +212,7 @@ function SwaggerUIView() {
       const SwaggerUIBundle = (window as unknown as { SwaggerUIBundle?: (config: object) => void }).SwaggerUIBundle;
       if (SwaggerUIBundle) {
         SwaggerUIBundle({
-          url: '/api/v1/openapi',
+          url: '/openapi.json',
           dom_id: '#swagger-ui',
           presets: [
             (window as unknown as { SwaggerUIBundle: { presets: { apis: unknown } } }).SwaggerUIBundle.presets.apis,
@@ -229,12 +229,12 @@ function SwaggerUIView() {
   return (
     <>
       <Script
-        src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"
+        src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js"
         onLoad={() => setLoaded(true)}
       />
       <link
         rel="stylesheet"
-        href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css"
       />
       <style>{`
         .swagger-ui .topbar { display: none !important; }
