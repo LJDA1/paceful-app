@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 
@@ -62,6 +63,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${dmSans.variable} ${fraunces.variable} font-sans antialiased min-h-screen`} style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <AppShell>{children}</AppShell>
+        <SpeedInsights />
       </body>
     </html>
   );
