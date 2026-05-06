@@ -32,6 +32,17 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Include vertical config files in serverless function bundles.
+  // The vertical signal engine reads these via fs.readdirSync at runtime,
+  // so Vercel's output file tracing can't detect them automatically.
+  outputFileTracingIncludes: {
+    '/api/v1/analyze/[vertical]': ['./config/verticals/**/*'],
+    '/api/v1/analyze/[vertical]/batch': ['./config/verticals/**/*'],
+    '/api/v1/analyze/[vertical]/conversation': ['./config/verticals/**/*'],
+    '/api/v1/signals/[vertical]': ['./config/verticals/**/*'],
+    '/api/v1/signals/list': ['./config/verticals/**/*'],
+  },
+
   // Security headers for all routes
   async headers() {
     return [

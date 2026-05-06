@@ -25,8 +25,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Paceful - Emotional Readiness Platform",
-  description: "Track your emotional healing journey with science-backed insights. Get your Emotional Readiness Score and see the progress you can't always feel.",
+  metadataBase: new URL("https://paceful-app.vercel.app"),
+  title: "Paceful — Emotional Readiness Scoring Infrastructure",
+  description: "API-first emotional readiness scoring for insurance, CX, gambling, dating, and healthcare platforms. Drop a JSON config, get a new vertical.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -38,19 +39,22 @@ export const metadata: Metadata = {
     apple: "/icon.svg",
   },
   openGraph: {
-    title: "Paceful - Emotional Readiness Platform",
-    description: "Track your emotional healing journey with science-backed insights. Get your Emotional Readiness Score and see the progress you can't always feel.",
-    url: "https://app.paceful.com",
+    title: "Paceful — Emotional Readiness Scoring Infrastructure",
+    description: "API-first emotional readiness scoring for insurance, CX, gambling, dating, and healthcare platforms. Drop a JSON config, get a new vertical.",
+    url: "https://paceful-app.vercel.app",
     siteName: "Paceful",
-    images: [{ url: "/og-image.svg", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Paceful — Emotional Readiness Scoring Infrastructure" }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Paceful - Emotional Readiness Platform",
-    description: "Track your emotional healing journey with science-backed insights.",
-    images: ["/og-image.svg"],
+    title: "Paceful — Emotional Readiness Scoring Infrastructure",
+    description: "API-first emotional readiness scoring for insurance, CX, gambling, dating, and healthcare platforms. Drop a JSON config, get a new vertical.",
+    images: ["/og-image.png"],
   },
+  authors: [{ name: "LJ", url: "https://linkedin.com/in/lewis-johnson-0a12a7208" }],
+  creator: "LJ",
+  publisher: "Paceful",
 };
 
 export default function RootLayout({
