@@ -4,86 +4,66 @@ import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import Link from 'next/link';
 
-export default function ApiDocsPage() {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [viewMode, setViewMode] = useState<'redoc' | 'swagger'>('redoc');
+const REDOC_THEME = {
+  theme: {
+    colors: {
+      primary: { main: '#5B8A72' },
+      success: { main: '#5B8A72' },
+      warning: { main: '#D4973B' },
+      error: { main: '#B86B64' },
+      text: { primary: '#1F1D1A', secondary: '#5C574F' },
+      border: { dark: '#E8E2DA', light: '#F0EBE4' },
+      http: {
+        get: '#5B8A72',
+        post: '#D4973B',
+        put: '#D4973B',
+        delete: '#B86B64',
+        patch: '#5E8DB0',
+        head: '#9A938A',
+        options: '#9A938A',
+      },
+    },
+    typography: {
+      fontSize: '15px',
+      fontFamily: '"DM Sans", system-ui, -apple-system, sans-serif',
+      headings: {
+        fontFamily: '"Fraunces", Georgia, serif',
+        fontWeight: '500',
+      },
+      code: {
+        fontSize: '13px',
+        fontFamily: '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace',
+        color: '#1F1D1A',
+        backgroundColor: '#F0EBE4',
+      },
+    },
+    sidebar: {
+      backgroundColor: '#F9F6F2',
+      textColor: '#1F1D1A',
+      activeTextColor: '#5B8A72',
+    },
+    rightPanel: {
+      backgroundColor: '#1F1D1A',
+      textColor: 'rgba(249,246,242,0.9)',
+    },
+  },
+  hideDownloadButton: false,
+  hideHostname: false,
+  expandResponses: '200',
+  pathInMiddlePanel: true,
+  scrollYOffset: 0,
+  nativeScrollbars: true,
+};
 
-  useEffect(() => {
-    // Initialize Redoc when script loads
-    if (isLoaded && viewMode === 'redoc' && typeof window !== 'undefined') {
-      const Redoc = (window as unknown as { Redoc?: { init: (specUrl: string, options: object, element: HTMLElement | null) => void } }).Redoc;
-      if (Redoc) {
-        Redoc.init(
-          '/openapi.json',
-          {
-            theme: {
-              colors: {
-                primary: {
-                  main: '#5B8A72',
-                },
-                success: {
-                  main: '#5B8A72',
-                },
-                warning: {
-                  main: '#D4973B',
-                },
-                error: {
-                  main: '#B86B64',
-                },
-                text: {
-                  primary: '#1F1D1A',
-                  secondary: '#5C574F',
-                },
-                border: {
-                  dark: '#E8E2DA',
-                  light: '#F0EBE4',
-                },
-              http: {
-                  get: '#5B8A72',
-                  post: '#D4973B',
-                  put: '#D4973B',
-                  delete: '#B86B64',
-                  patch: '#5E8DB0',
-                  head: '#9A938A',
-                  options: '#9A938A',
-                },
-              },
-              typography: {
-                fontSize: '15px',
-                fontFamily: '"DM Sans", system-ui, -apple-system, sans-serif',
-                headings: {
-                  fontFamily: '"Fraunces", Georgia, serif',
-                  fontWeight: '500',
-                },
-                code: {
-                  fontSize: '13px',
-                  fontFamily: '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace',
-                  color: '#1F1D1A',
-                  backgroundColor: '#F0EBE4',
-                },
-              },
-              sidebar: {
-                backgroundColor: '#F9F6F2',
-                textColor: '#1F1D1A',
-                activeTextColor: '#5B8A72',
-              },
-              rightPanel: {
-                backgroundColor: '#1F1D1A',
-                textColor: 'rgba(249,246,242,0.9)',
-              },
-            },
-            hideDownloadButton: false,
-            hideHostname: false,
-            expandResponses: '200',
-            pathInMiddlePanel: true,
-            scrollYOffset: 0,
-            nativeScrollbars: true,
-          },
-          document.getElementById('redoc-container')
-        );
-      }
-    }
-  }, [isLoaded, viewMode]);
+function initRedoc() {
+  const Redoc = (window as unknown as { Redoc?: { init: (specUrl: string, options: object, element: HTMLElement | null) => void } }).Redoc;
+  if (Redoc) {
+    Redoc.init('/openapi.json', REDOC_THEME, document.getElementById('redoc-container'));
+  }
+}
+
+export default function ApiDocsPage() {
+  const [viewMode, setViewMode] = useState<'redoc' | 'swagger'>('redoc');
 
   return (
     <div style={{ minHeight: '100vh', background: '#F9F6F2' }}>
@@ -202,7 +182,8 @@ export default function ApiDocsPage() {
         <>
           <Script
             src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"
-            onLoad={() => setIsLoaded(true)}
+            strategy="afterInteractive"
+            onLoad={initRedoc}
           />
           <div id="redoc-container" style={{ minHeight: 'calc(100vh - 80px)' }} />
         </>

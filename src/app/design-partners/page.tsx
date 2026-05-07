@@ -938,32 +938,32 @@ export default function DesignPartnersPage() {
                 className="w-2 h-2 rounded-full animate-pulse"
                 style={{ background: '#5B8A72' }}
               />
-              Limited to 3 design partners
+              5 design partner slots open
             </div>
 
             <h1
               className="text-[36px] sm:text-[44px] lg:text-[52px] font-bold leading-[1.1] mb-6"
               style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
             >
-              Partner with Paceful
+              Become a Paceful design partner.
             </h1>
 
             <p className="text-[18px] sm:text-[20px] leading-relaxed mb-8" style={{ color: '#5C574F' }}>
-              Integrate emotional readiness intelligence into your platform.
-              Help your users build healthier relationships with science-backed predictions.
+              Co-build the ERS API with us. Shape the signal packs, vertical configs, and explainability layer that power your platform — before they ship to everyone else.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={scrollToForm}
-                className="px-8 py-4 text-[16px] font-semibold text-white rounded-full transition-opacity hover:opacity-90"
+              <a
+                href="https://cal.com/paceful/design-partner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-8 py-4 text-[16px] font-semibold text-white rounded-full transition-opacity hover:opacity-90 text-center"
                 style={{ background: '#5B8A72' }}
               >
-                Apply for Access
-              </button>
+                Book a scoping call
+              </a>
               <a
-                href="/exports/paceful_sample_dataset.csv"
-                download
+                href="/docs/api"
                 className="px-8 py-4 text-[16px] font-semibold rounded-full flex items-center justify-center gap-2 transition-colors"
                 style={{
                   background: '#FFFFFF',
@@ -971,8 +971,7 @@ export default function DesignPartnersPage() {
                   color: '#1F1D1A'
                 }}
               >
-                <DownloadIcon className="w-5 h-5" />
-                Sample Dataset
+                View API docs
               </a>
             </div>
           </div>
@@ -987,53 +986,53 @@ export default function DesignPartnersPage() {
               className="text-[28px] sm:text-[32px] font-bold mb-4"
               style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
             >
-              What You Get
+              What design partners get
             </h2>
             <p className="text-[16px] max-w-2xl mx-auto" style={{ color: '#5C574F' }}>
-              Design partners receive exclusive benefits during the 60-day pilot program
+              Exclusive access and influence during the 90-day co-build program
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <BenefitCard
-              title="60-Day Free API Access"
+              title="Full API Access"
               items={[
-                'Full prediction API (timeline, outcomes, risks)',
-                'Unlimited API calls during pilot',
-                'Weekly data updates'
+                'Unlimited ERS calls during pilot',
+                'All 5 verticals unlocked',
+                'Batch + streaming endpoints'
               ]}
               icon={<ApiIcon className="w-6 h-6" />}
               iconBg="rgba(91,138,114,0.1)"
               iconColor="#5B8A72"
             />
             <BenefitCard
-              title="Custom Model Development"
+              title="Custom Signal Pack Co-Development"
               items={[
-                'Adapt predictions to your use case',
-                'Fine-tune for your user base',
-                'Co-design API features'
+                'Tune signal weights for your vertical',
+                'Add proprietary data sources',
+                'Ship a named signal pack with your branding'
               ]}
               icon={<GearIcon className="w-6 h-6" />}
               iconBg="rgba(212,151,59,0.1)"
               iconColor="#D4973B"
             />
             <BenefitCard
-              title="Early Adopter Benefits"
+              title="Early Adopter Pricing"
               items={[
-                'Lock in founding pricing ($2K/mo vs $5K)',
-                'First access to new features',
-                'Input on product roadmap'
+                'Lock in $7,200/mo (list price $14,400)',
+                'Rate locked for 24 months',
+                'Direct roadmap input'
               ]}
               icon={<StarIcon className="w-6 h-6" />}
               iconBg="rgba(123,168,150,0.15)"
               iconColor="#7BA896"
             />
             <BenefitCard
-              title="Marketing Value"
+              title="Go-to-Market Support"
               items={[
-                'Co-authored case study',
-                'Press release opportunity',
-                '"Powered by Paceful" badge'
+                'Co-authored technical case study',
+                '"Powered by Paceful" certification',
+                'Intro to our partner network'
               ]}
               icon={<MegaphoneIcon className="w-6 h-6" />}
               iconBg="rgba(184,107,100,0.1)"
@@ -1055,8 +1054,7 @@ export default function DesignPartnersPage() {
                 Simple REST API
               </h2>
               <p className="text-[16px] mb-6" style={{ color: '#5C574F' }}>
-                Get emotional readiness predictions with a single API call.
-                Our response includes ERS score, component breakdown, and actionable recommendations.
+                One POST call returns an ERS score, five-dimension breakdown, readiness tier, and explainability text — ready to render in your UI or trigger your own workflows.
               </p>
 
               <div className="space-y-4">
@@ -1112,31 +1110,31 @@ export default function DesignPartnersPage() {
               className="text-[28px] sm:text-[32px] font-bold mb-4"
               style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
             >
-              Use Cases
+              Who this is for
             </h2>
             <p className="text-[16px] max-w-2xl mx-auto" style={{ color: '#5C574F' }}>
-              Our prediction API adapts to various industries focused on emotional wellness
+              Platforms that need emotional intelligence as infrastructure, not a bolt-on feature
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <UseCaseCard
-              title="Dating Apps"
-              description="Gate matches by emotional readiness. Reduce premature connections and improve long-term relationship success rates for your users."
+              title="Insurance & Risk"
+              description="Score applicant emotional state to improve underwriting accuracy and flag high-risk life transitions before claims spike."
               icon={<HeartIcon className="w-5 h-5" />}
               iconBg="rgba(184,107,100,0.1)"
               iconColor="#B86B64"
             />
             <UseCaseCard
-              title="Mental Health Platforms"
-              description="Track client progress objectively. Predict recovery timelines and measure treatment efficacy for relationship transitions."
+              title="Mental Health & Therapy Platforms"
+              description="Quantify client readiness and progress. Surface the right intervention at the right moment with a calibrated ERS score."
               icon={<SparkleIcon className="w-5 h-5" />}
               iconBg="rgba(212,151,59,0.1)"
               iconColor="#D4973B"
             />
             <UseCaseCard
-              title="HR & Wellness Programs"
-              description="Support employees through life transitions. Identify those needing extra support and predict return-to-productivity timelines."
+              title="CX & Workforce Platforms"
+              description="Detect elevated emotional risk in support queues or employee wellness programs and trigger the right response automatically."
               icon={<BriefcaseIcon className="w-5 h-5" />}
               iconBg="rgba(91,138,114,0.1)"
               iconColor="#5B8A72"
