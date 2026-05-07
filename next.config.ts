@@ -43,6 +43,17 @@ const nextConfig: NextConfig = {
     '/api/v1/signals/list': ['./config/verticals/**/*'],
   },
 
+  // Clean redirect for shareable methodology URL
+  async redirects() {
+    return [
+      {
+        source: '/methodology',
+        destination: '/Paceful_Methodology.pdf',
+        permanent: false,
+      },
+    ];
+  },
+
   // Security headers for all routes
   async headers() {
     return [
