@@ -38,17 +38,28 @@ export default function ApiDocsPage() {
                   dark: '#E8E2DA',
                   light: '#F0EBE4',
                 },
+              http: {
+                  get: '#5B8A72',
+                  post: '#D4973B',
+                  put: '#D4973B',
+                  delete: '#B86B64',
+                  patch: '#5E8DB0',
+                  head: '#9A938A',
+                  options: '#9A938A',
+                },
               },
               typography: {
                 fontSize: '15px',
-                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontFamily: '"DM Sans", system-ui, -apple-system, sans-serif',
                 headings: {
-                  fontFamily: '"Fraunces", serif',
+                  fontFamily: '"Fraunces", Georgia, serif',
                   fontWeight: '500',
                 },
                 code: {
                   fontSize: '13px',
-                  fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+                  fontFamily: '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace',
+                  color: '#1F1D1A',
+                  backgroundColor: '#F0EBE4',
                 },
               },
               sidebar: {
@@ -58,6 +69,7 @@ export default function ApiDocsPage() {
               },
               rightPanel: {
                 backgroundColor: '#1F1D1A',
+                textColor: 'rgba(249,246,242,0.9)',
               },
             },
             hideDownloadButton: false,

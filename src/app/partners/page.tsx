@@ -50,7 +50,7 @@ export default function PartnersLandingPage() {
       zIndex: 1,
     } as React.CSSProperties,
     heroTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: 'clamp(36px, 6vw, 64px)',
       fontWeight: 600,
       color: '#1F1D1A',
@@ -71,15 +71,14 @@ export default function PartnersLandingPage() {
       display: 'inline-flex',
       alignItems: 'center',
       gap: '10px',
-      padding: '18px 36px',
+      padding: '16px 32px',
       backgroundColor: '#5B8A72',
       color: '#FFFFFF',
-      borderRadius: '8px',
+      borderRadius: '50px',
       fontWeight: 600,
-      fontSize: '18px',
+      fontSize: '16px',
       textDecoration: 'none',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 4px 14px rgba(91, 138, 114, 0.3)',
+      transition: 'opacity 0.2s ease',
     } as React.CSSProperties,
     heroSecondary: {
       display: 'flex',
@@ -115,7 +114,7 @@ export default function PartnersLandingPage() {
       textAlign: 'center' as const,
     } as React.CSSProperties,
     sectionTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: 'clamp(28px, 4vw, 44px)',
       fontWeight: 600,
       textAlign: 'center' as const,
@@ -173,7 +172,7 @@ export default function PartnersLandingPage() {
       fontSize: '40px',
     } as React.CSSProperties,
     stepTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '22px',
       fontWeight: 600,
       marginBottom: '12px',
@@ -225,7 +224,7 @@ export default function PartnersLandingPage() {
       letterSpacing: '1px',
     } as React.CSSProperties,
     useCaseTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '20px',
       fontWeight: 600,
       color: '#1F1D1A',
@@ -290,7 +289,7 @@ export default function PartnersLandingPage() {
       paddingLeft: '24px',
     } as React.CSSProperties,
     whyTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '36px',
       fontWeight: 600,
       marginBottom: '24px',
@@ -349,7 +348,7 @@ export default function PartnersLandingPage() {
       letterSpacing: '1px',
     } as React.CSSProperties,
     pricingTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '28px',
       fontWeight: 600,
       marginBottom: '12px',
@@ -377,7 +376,7 @@ export default function PartnersLandingPage() {
       marginBottom: '4px',
     } as React.CSSProperties,
     pricingTierPrice: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '32px',
       fontWeight: 700,
       color: '#1F1D1A',
@@ -432,7 +431,7 @@ export default function PartnersLandingPage() {
     benchmarkContent: {
     } as React.CSSProperties,
     benchmarkTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '28px',
       fontWeight: 600,
       marginBottom: '16px',
@@ -482,7 +481,7 @@ export default function PartnersLandingPage() {
       fontSize: '28px',
     } as React.CSSProperties,
     integrationTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '18px',
       fontWeight: 600,
       marginBottom: '8px',
@@ -498,7 +497,7 @@ export default function PartnersLandingPage() {
       backgroundColor: '#1F1D1A',
       borderRadius: '12px',
       padding: '24px',
-      fontFamily: 'monospace',
+      fontFamily: 'var(--font-mono)',
       fontSize: '14px',
       color: '#E5E0D9',
       overflowX: 'auto' as const,
@@ -522,7 +521,7 @@ export default function PartnersLandingPage() {
       textAlign: 'center' as const,
     } as React.CSSProperties,
     trustNumber: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: '48px',
       fontWeight: 700,
       color: '#FFFFFF',
@@ -541,7 +540,7 @@ export default function PartnersLandingPage() {
       textAlign: 'center' as const,
     } as React.CSSProperties,
     finalCtaTitle: {
-      fontFamily: '"Fraunces", Georgia, serif',
+      fontFamily: 'var(--font-serif)',
       fontSize: 'clamp(28px, 4vw, 44px)',
       fontWeight: 600,
       color: '#FFFFFF',
@@ -560,14 +559,14 @@ export default function PartnersLandingPage() {
       display: 'inline-flex',
       alignItems: 'center',
       gap: '10px',
-      padding: '18px 36px',
+      padding: '16px 32px',
       backgroundColor: '#5B8A72',
       color: '#FFFFFF',
-      borderRadius: '8px',
+      borderRadius: '50px',
       fontWeight: 600,
-      fontSize: '18px',
+      fontSize: '16px',
       textDecoration: 'none',
-      transition: 'all 0.2s ease',
+      transition: 'opacity 0.2s ease',
     } as React.CSSProperties,
     finalCtaLinks: {
       display: 'flex',
@@ -581,41 +580,6 @@ export default function PartnersLandingPage() {
       fontSize: '14px',
     } as React.CSSProperties,
 
-    // Footer
-    footer: {
-      backgroundColor: '#F9F6F2',
-      padding: '48px 24px',
-      borderTop: '1px solid #E5E0D9',
-    } as React.CSSProperties,
-    footerInner: {
-      maxWidth: '1100px',
-      margin: '0 auto',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      flexWrap: 'wrap' as const,
-      gap: '24px',
-    } as React.CSSProperties,
-    footerLogo: {
-      fontFamily: '"Fraunces", Georgia, serif',
-      fontSize: '20px',
-      fontWeight: 600,
-      color: '#1F1D1A',
-    } as React.CSSProperties,
-    footerLinks: {
-      display: 'flex',
-      gap: '24px',
-      flexWrap: 'wrap' as const,
-    } as React.CSSProperties,
-    footerLink: {
-      fontSize: '14px',
-      color: '#6B6560',
-      textDecoration: 'none',
-    } as React.CSSProperties,
-    footerCopyright: {
-      fontSize: '14px',
-      color: '#9A938A',
-    } as React.CSSProperties,
   };
 
   const CheckIcon = () => (
