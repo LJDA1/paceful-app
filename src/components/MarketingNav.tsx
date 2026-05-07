@@ -24,7 +24,7 @@ const NAV_LINKS = [
   { href: '/sandbox', label: 'Sandbox' },
   { href: '/roi', label: 'ROI Calculator' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/design-partners', label: 'Partners' },
+  { href: '/partners', label: 'Partners' },
   { href: '/api-docs', label: 'API' },
 ];
 

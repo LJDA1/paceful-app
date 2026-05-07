@@ -15,7 +15,7 @@ const publicRoutes = [
   '/about',
   '/privacy',
   '/terms',
-  '/design-partners',
+  '/partners',
   '/api-docs',
   '/investors',
 ];
@@ -24,7 +24,7 @@ const publicRoutes = [
 const authOnlyRoutes = ['/onboarding'];
 
 // Routes that are completely public (marketing, landing)
-const marketingRoutes = ['/', '/pricing', '/about', '/privacy', '/terms', '/design-partners', '/api-docs', '/investors'];
+const marketingRoutes = ['/', '/pricing', '/about', '/privacy', '/terms', '/partners', '/api-docs', '/investors'];
 
 // App routes that require completed onboarding
 const appRoutes = ['/dashboard', '/journal', '/mood', '/moods', '/ers', '/exercises', '/predictions', '/matches'];

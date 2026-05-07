@@ -1400,7 +1400,7 @@ X-RateLimit-Reset: 1710763200`}
                   Join our design partner program for early access and dedicated support.
                 </p>
                 <Link
-                  href="/design-partners"
+                  href="/partners"
                   className="inline-flex px-6 py-3 bg-white font-semibold rounded-full transition-opacity hover:opacity-90"
                   style={{ color: '#5B8A72' }}
                 >
