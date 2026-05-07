@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { DM_Sans, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 
@@ -13,6 +13,12 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   weight: ["300", "500", "700"],
+});
+
+const jbMono = JetBrains_Mono({
+  variable: "--font-jb-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const viewport: Viewport = {
@@ -64,7 +70,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${fraunces.variable} font-sans antialiased min-h-screen`} style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+      <body className={`${dmSans.variable} ${fraunces.variable} ${jbMono.variable} font-sans antialiased min-h-screen`} style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <AppShell>{children}</AppShell>
       </body>
     </html>

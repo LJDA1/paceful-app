@@ -23,13 +23,28 @@
   /* Legacy support */
   --background: var(--bg);
   --foreground: var(--text);
+
+  /* B2B design token aliases */
+  --color-bg-primary: var(--bg);
+  --color-bg-surface: var(--bg-card);
+  --color-bg-dark: #1A1A1A;
+  --color-text-primary: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-on-dark: var(--bg);
+  --color-accent-green: var(--primary);
+  --color-accent-green-dark: var(--primary-dark);
+  --color-accent-gold: var(--accent);
+  --color-accent-black: #0A0A0A;
+  --color-border-subtle: var(--border);
+  --font-serif: var(--font-fraunces), 'Playfair Display', Georgia, serif;
 }
 
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);
   --font-sans: var(--font-dm-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces);
+  --font-mono: var(--font-jb-mono);
 
   /* Paceful Design System Colors */
   --color-paceful-primary: #5B8A72;

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 interface TrustStats {
   assessmentCount: number;
@@ -28,7 +30,7 @@ export default function PartnersLandingPage() {
 
   const styles = {
     page: {
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: 'var(--font-sans)',
       color: '#1F1D1A',
       backgroundColor: '#F9F6F2',
     } as React.CSSProperties,
@@ -636,10 +638,8 @@ export default function PartnersLandingPage() {
 
   return (
     <div style={styles.page}>
-      {/* Google Font */}
+      <MarketingNav />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&display=swap');
-
         @media (max-width: 768px) {
           .steps-grid { grid-template-columns: 1fr !important; }
           .use-cases-grid { grid-template-columns: 1fr !important; }
@@ -1055,23 +1055,7 @@ export default function PartnersLandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={styles.footer}>
-        <div style={styles.footerInner}>
-          <div style={styles.footerLogo}>Paceful</div>
-          <div style={styles.footerLinks}>
-            <Link href="/" style={styles.footerLink}>Home</Link>
-            <Link href="/partners" style={styles.footerLink}>Partners</Link>
-            <Link href="/partners/docs" style={styles.footerLink}>API Docs</Link>
-            <Link href="/partners/changelog" style={styles.footerLink}>Changelog</Link>
-            <Link href="/privacy" style={styles.footerLink}>Privacy</Link>
-            <Link href="/terms" style={styles.footerLink}>Terms</Link>
-          </div>
-          <div style={styles.footerCopyright}>
-            © 2026 Paceful
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

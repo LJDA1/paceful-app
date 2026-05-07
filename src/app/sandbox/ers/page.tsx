@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 // Types
 type Dimension = 'emotional_stability' | 'self_reflection' | 'coping_capacity' | 'behavioral_engagement' | 'social_readiness';
@@ -359,28 +361,7 @@ export default function SandboxPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      {/* Logo Bar */}
-      <div style={{
-        padding: '16px 24px',
-        borderBottom: '1px solid #E8E2DA',
-        background: '#FFFFFF',
-      }}>
-        <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="16" fill="#5B8A72" />
-            <path d="M10 16C10 12.686 12.686 10 16 10C19.314 10 22 12.686 22 16" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-            <circle cx="16" cy="19" r="3" fill="white" />
-          </svg>
-          <span style={{
-            fontFamily: "'Fraunces', serif",
-            fontSize: '20px',
-            fontWeight: 500,
-            color: '#1F1D1A',
-          }}>
-            Paceful
-          </span>
-        </Link>
-      </div>
+      <MarketingNav />
 
       {/* Header */}
       <header style={{
@@ -1228,6 +1209,7 @@ function SingleResultView({ result }: { result: SingleResult }) {
           </div>
         )}
       </div>
+      <MarketingFooter />
     </div>
   );
 }

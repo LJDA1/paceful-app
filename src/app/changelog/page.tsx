@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 export const metadata: Metadata = {
   title: 'API Changelog | Paceful',
@@ -113,55 +115,10 @@ export default function ChangelogPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#FAF9F7',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      backgroundColor: 'var(--bg)',
+      fontFamily: 'var(--font-sans)',
     }}>
-      {/* Header */}
-      <header style={{
-        backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid #E5E0D9',
-        padding: '16px 24px',
-      }}>
-        <div style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <Link href="/partners" style={{
-            fontSize: '20px',
-            fontWeight: 700,
-            color: '#1F1D1A',
-            textDecoration: 'none',
-          }}>
-            Paceful
-          </Link>
-          <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <Link href="/partners/docs" style={{
-              fontSize: '14px',
-              color: '#6B6560',
-              textDecoration: 'none',
-            }}>
-              Documentation
-            </Link>
-            <Link href="/changelog/rss" style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '14px',
-              color: '#5B8A72',
-              textDecoration: 'none',
-              fontWeight: 500,
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1Z"/>
-              </svg>
-              RSS Feed
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <MarketingNav />
 
       {/* Hero */}
       <div style={{
@@ -409,24 +366,7 @@ export default function ChangelogPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer style={{
-        borderTop: '1px solid #E5E0D9',
-        padding: '24px',
-        textAlign: 'center',
-        marginTop: '48px',
-      }}>
-        <p style={{ fontSize: '14px', color: '#9A938A' }}>
-          Built by Paceful ·{' '}
-          <Link href="/partners" style={{ color: '#5B8A72', textDecoration: 'none' }}>
-            Partner API
-          </Link>
-          {' · '}
-          <Link href="/partners/docs" style={{ color: '#5B8A72', textDecoration: 'none' }}>
-            Documentation
-          </Link>
-        </p>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }
