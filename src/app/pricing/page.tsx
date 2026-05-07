@@ -1,348 +1,595 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+/**
+ * Paceful Pricing Page
+ */
+
+import React, { useState } from 'react';
 import MarketingNav from '@/components/MarketingNav';
 import MarketingFooter from '@/components/MarketingFooter';
 
-// ============================================================================
-// Icons
-// ============================================================================
+// ============================================================
+// PRICING DATA
+// ============================================================
 
-function CheckIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-    </svg>
-  );
+const TIERS = [
+  {
+    id: 'signal',
+    name: 'Signal',
+    tagline: 'Validate the value',
+    price: 2500,
+    priceSuffix: '/mo',
+    priceNote: 'or $25,000/year (save 17%)',
+    description: 'For platforms validating whether emotional readiness scoring moves their metrics.',
+    features: [
+      '50K analyses per month included',
+      'All verticals unlocked',
+      'Standard ERS + vertical signal packs',
+      '$0.05 per analysis overage',
+      'Email support, 48-hour response',
+      '99.5% uptime SLA',
+      'Monthly or annual contract',
+    ],
+    cta: 'Start with Signal',
+    ctaHref: '#contact',
+  },
+  {
+    id: 'safeguard',
+    name: 'Safeguard',
+    tagline: 'Production infrastructure',
+    price: 12000,
+    priceSuffix: '/mo',
+    priceNote: 'annual contract, $144K billed upfront',
+    description: 'For platforms with active user safety, claims, or CX obligations. Most customers land here.',
+    launchPrice: 7200,
+    launchBadge: '2 of 5 slots remaining',
+    launchNote: 'First 5 customers. Rate locked for 12 months.',
+    features: [
+      '500K analyses per month included',
+      'All verticals + custom signal configuration',
+      'Conversation trajectory analysis',
+      'Advanced webhooks with retry logic',
+      '$0.03 per analysis overage',
+      'Dedicated Slack channel, 4-hour response SLA',
+      '99.9% uptime SLA',
+      'Quarterly business review',
+      'Annual contract only',
+    ],
+    cta: 'Claim a launch slot',
+    ctaHref: '#contact',
+    recommended: true,
+  },
+  {
+    id: 'sovereign',
+    name: 'Sovereign',
+    tagline: 'Enterprise and regulated',
+    price: 'From $40,000',
+    priceSuffix: '/mo',
+    priceNote: '2-year minimum, custom terms',
+    description: 'For regulated enterprises, platforms with 1M+ MAU, and TPAs serving multiple carriers.',
+    features: [
+      'Unlimited analyses',
+      'All verticals + custom vertical development',
+      'Private deployment (VPC or on-premise) available',
+      'SOC 2, HIPAA, and regulatory audit support',
+      'Named Customer Success Manager',
+      '99.99% uptime SLA with financial penalties',
+      '2-hour incident response',
+      'White-label options',
+      '2-year minimum contract',
+    ],
+    cta: 'Contact sales',
+    ctaHref: '#contact',
+  },
+];
+
+const FAQ = [
+  {
+    q: 'What counts as an "analysis"?',
+    a: 'One analysis is a single API call to /v1/analyze or /v1/analyze/[vertical]. Batch and conversation endpoints count each individual text evaluation as one analysis.',
+  },
+  {
+    q: 'Do verticals cost extra?',
+    a: 'No. Every tier includes access to all current verticals (Insurance, CX, Gambling, Dating, Healthcare) and any future verticals we launch. You pay for volume, not for SKUs unlocked.',
+  },
+  {
+    q: 'What if I need a custom vertical built for my use case?',
+    a: 'Custom vertical development is available to Sovereign-tier customers as a one-time engagement, typically priced between $50K and $150K depending on scope. You get full ownership of the custom configuration.',
+  },
+  {
+    q: 'Is raw text stored?',
+    a: 'Never. Paceful analyzes text in-memory and discards it immediately. Only hashed references and numerical scores are persisted. This policy applies to every tier.',
+  },
+  {
+    q: 'Can I start on Signal and upgrade later?',
+    a: 'Yes. Upgrades are prorated and take effect immediately. Your historical score data carries forward.',
+  },
+  {
+    q: 'What happens if I exceed my analysis limit?',
+    a: "Overages bill at the stated per-analysis rate for your tier. Your service is never interrupted. You can also prepay for a higher volume commitment and lock in a lower effective rate.",
+  },
+  {
+    q: 'Do you offer a free tier or trial?',
+    a: 'We do not run a free tier. We do offer Launch Pricing for the first 5 founding customers — $7,200/mo on Safeguard, rate locked for 12 months. See above for details.',
+  },
+  {
+    q: 'How long does onboarding take?',
+    a: 'Self-serve integration (Signal tier) is typically live in 30 minutes. Safeguard onboarding with custom configuration averages 5 business days. Sovereign enterprise deployments average 2-6 weeks depending on security review requirements.',
+  },
+];
+
+// ============================================================
+// COMPONENTS
+// ============================================================
+
+function formatPrice(price: number | string) {
+  if (typeof price === 'string') return price;
+  return `${price.toLocaleString()}`;
 }
 
-function ChevronDownIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+function Check({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} style={style} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-    </svg>
-  );
-}
-
-// ============================================================================
-// Feature List Item
-// ============================================================================
-
-function FeatureItem({ children }: { children: React.ReactNode }) {
-  return (
-    <li className="flex items-start gap-3">
-      <CheckIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
-      <span className="text-[15px]" style={{ color: 'var(--text-sec)' }}>{children}</span>
-    </li>
-  );
-}
-
-// ============================================================================
-// FAQ Item
-// ============================================================================
-
-function FAQItem({ question, answer }: { question: string; answer: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div
-      className="border-b"
-      style={{ borderColor: 'var(--border-light)' }}
+    <svg
+      className={`w-4 h-4 flex-shrink-0 mt-1 ${className}`}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
     >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-5 flex items-center justify-between text-left"
-      >
-        <span className="text-[16px] font-medium pr-4" style={{ color: 'var(--text)' }}>
-          {question}
-        </span>
-        <ChevronDownIcon
-          className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          style={{ color: 'var(--text-muted)' }}
-        />
-      </button>
-      <div
-        className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-40 pb-5' : 'max-h-0'}`}
-      >
-        <p className="text-[15px] leading-relaxed pr-8" style={{ color: 'var(--text-sec)' }}>
-          {answer}
-        </p>
-      </div>
-    </div>
+      <path
+        d="M3 8.5L6.5 12L13 4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
-// ============================================================================
-// Pricing Card
-// ============================================================================
-
-interface PricingCardProps {
-  title: string;
-  price: string;
+interface Tier {
+  id: string;
+  name: string;
+  tagline: string;
+  price: number | string;
   priceSuffix: string;
+  priceNote: string;
   description: string;
   features: string[];
-  ctaLabel: string;
+  cta: string;
   ctaHref: string;
-  highlighted?: boolean;
-  badge?: string;
+  recommended?: boolean;
+  launchPrice?: number;
+  launchBadge?: string;
+  launchNote?: string;
 }
 
-function PricingCard({
-  title,
-  price,
-  priceSuffix,
-  description,
-  features,
-  ctaLabel,
-  ctaHref,
-  highlighted = false,
-  badge,
-}: PricingCardProps) {
+function TierCard({ tier }: { tier: Tier }) {
+  const base = 'relative flex flex-col transition-all duration-300';
+  const border = tier.recommended
+    ? 'border border-stone-900 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.25)]'
+    : 'border border-stone-300';
+  const padding = 'p-8 lg:p-10';
+
   return (
-    <div
-      className={`relative rounded-3xl p-6 md:p-8 flex flex-col ${highlighted ? 'shadow-xl' : ''}`}
-      style={{
-        background: 'var(--bg-card)',
-        border: highlighted ? '2px solid var(--primary)' : '1px solid var(--border-light)',
-      }}
-    >
-      {/* Badge */}
-      {badge && (
-        <div
-          className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[12px] font-semibold text-white"
-          style={{ background: 'var(--primary)' }}
-        >
-          {badge}
+    <div className={`${base} ${border} ${padding}`}>
+      {tier.recommended && !tier.launchPrice && (
+        <div className="absolute -top-3 left-8 px-3 py-1 bg-stone-900 text-stone-50 text-[10px] font-medium tracking-[0.2em] uppercase">
+          Most chosen
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-6">
-        <h3
-          className="text-[24px] font-medium mb-2"
-          style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
-        >
-          {title}
-        </h3>
-        <div className="flex items-baseline gap-1 mb-2">
-          <span
-            className="text-[36px] font-medium"
-            style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
-          >
-            {price}
-          </span>
-          <span className="text-[14px]" style={{ color: 'var(--text-muted)' }}>
-            {priceSuffix}
-          </span>
+      {tier.launchPrice && (
+        <div className="mb-5 -mx-8 lg:-mx-10 -mt-8 lg:-mt-10 px-6 py-4 bg-amber-50 border-b border-amber-200">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-medium tracking-[0.2em] uppercase text-amber-700 mb-1">
+                Launch Pricing
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl text-stone-900" style={{ fontFamily: "var(--font-fraunces)" }}>
+                  ${tier.launchPrice.toLocaleString()}/mo
+                </span>
+                <span className="text-sm text-stone-400 line-through">
+                  ${(tier.price as number).toLocaleString()}/mo
+                </span>
+              </div>
+              <p className="text-xs text-amber-800 mt-1">{tier.launchNote}</p>
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-800 whitespace-nowrap pt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse flex-shrink-0" />
+              {tier.launchBadge}
+            </div>
+          </div>
         </div>
-        <p className="text-[14px]" style={{ color: 'var(--text-sec)' }}>
-          {description}
-        </p>
+      )}
+
+      <div className="mb-2">
+        <h3 className="text-2xl text-stone-900" style={{ fontFamily: "var(--font-fraunces)" }}>
+          {tier.name}
+        </h3>
+        <p className="text-sm text-stone-500 mt-1">{tier.tagline}</p>
       </div>
 
-      {/* Features */}
+      <div className="my-6 py-6 border-y border-stone-200">
+        {tier.launchPrice ? (
+          <>
+            <div className="flex items-baseline gap-1">
+              <span
+                className="text-5xl text-stone-900 tracking-tight"
+                style={{ fontFamily: "var(--font-fraunces)" }}
+              >
+                {formatPrice(tier.launchPrice)}
+              </span>
+              <span className="text-base text-stone-600 ml-1">{tier.priceSuffix}</span>
+            </div>
+            <p className="text-xs text-stone-500 mt-2">annual contract, $86,400 billed upfront</p>
+          </>
+        ) : (
+          <>
+            <div className="flex items-baseline gap-1">
+              <span
+                className="text-5xl text-stone-900 tracking-tight"
+                style={{ fontFamily: "var(--font-fraunces)" }}
+              >
+                {formatPrice(tier.price)}
+              </span>
+              <span className="text-base text-stone-600 ml-1">{tier.priceSuffix}</span>
+            </div>
+            <p className="text-xs text-stone-500 mt-2">{tier.priceNote}</p>
+          </>
+        )}
+      </div>
+
+      <p className="text-sm text-stone-700 leading-relaxed mb-6">{tier.description}</p>
+
       <ul className="space-y-3 mb-8 flex-1">
-        {features.map((feature, i) => (
-          <FeatureItem key={i}>{feature}</FeatureItem>
+        {tier.features.map((f, i) => (
+          <li key={i} className="flex items-start gap-3 text-sm text-stone-700">
+            <Check className="text-stone-900" />
+            <span>{f}</span>
+          </li>
         ))}
       </ul>
 
-      {/* CTA */}
-      <Link
-        href={ctaHref}
-        className={`block w-full py-3.5 rounded-full text-center text-[15px] font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] ${
-          highlighted ? 'text-white' : ''
+      <a
+        href={tier.ctaHref}
+        className={`block text-center py-3 px-6 text-sm font-medium tracking-wide transition-colors duration-200 ${
+          tier.recommended
+            ? 'bg-stone-900 text-stone-50 hover:bg-stone-800'
+            : 'border border-stone-900 text-stone-900 hover:bg-stone-900 hover:text-stone-50'
         }`}
-        style={{
-          background: highlighted ? 'var(--primary)' : 'transparent',
-          color: highlighted ? 'white' : 'var(--primary)',
-          border: highlighted ? 'none' : '2px solid var(--primary)',
-        }}
       >
-        {ctaLabel}
-      </Link>
+        {tier.cta}
+      </a>
     </div>
   );
 }
 
-// ============================================================================
-// Main Page
-// ============================================================================
+function FAQItem({
+  q,
+  a,
+  isOpen,
+  onClick,
+}: {
+  q: string;
+  a: string;
+  isOpen: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div className="border-b border-stone-200 py-6">
+      <button
+        onClick={onClick}
+        className="w-full flex items-start justify-between gap-8 text-left group"
+      >
+        <span
+          className="text-base lg:text-lg text-stone-900 font-medium"
+          style={{ fontFamily: "var(--font-fraunces)" }}
+        >
+          {q}
+        </span>
+        <span
+          className={`text-stone-400 text-xl leading-none transition-transform duration-300 flex-shrink-0 ${isOpen ? 'rotate-45' : ''}`}
+        >
+          +
+        </span>
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-out ${
+          isOpen ? 'max-h-96 mt-4' : 'max-h-0'
+        }`}
+      >
+        <p className="text-sm text-stone-600 leading-relaxed pr-12">{a}</p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
 
 export default function PricingPage() {
-  const faqItems = [
-    {
-      question: "What's included in the free plan?",
-      answer: "The free plan includes daily mood logging, basic journaling with prompts, your ERS (Emotional Readiness Score) tracking, and access to 3 guided exercises. It's everything you need to start your healing journey.",
-    },
-    {
-      question: "Can I cancel anytime?",
-      answer: "Yes, no commitment. Cancel anytime from your settings. If you cancel, you'll still have access to Pro features until the end of your billing period.",
-    },
-    {
-      question: "How does the API pricing work?",
-      answer: "API pricing is based on monthly active users and query volume. Contact us for a custom quote tailored to your platform's needs.",
-    },
-    {
-      question: "Is my data private?",
-      answer: "Always. We never sell your data and use industry-standard encryption. Your journal entries and mood data are yours alone. See our privacy policy for details.",
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer: "Coming soon — we're currently in early access. During the beta, all Pro features are available free of charge.",
-    },
-  ];
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       <MarketingNav />
 
-      {/* Header */}
-      <header className="text-center px-6 pt-[88px] pb-16">
-        <h1
-          className="text-[36px] md:text-[44px] font-medium mb-4 leading-tight"
-          style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
-        >
-          Simple, transparent pricing
-        </h1>
-        <p className="text-[17px] md:text-[18px]" style={{ color: 'var(--text-muted)' }}>
-          Start free. Upgrade when you're ready.
-        </p>
-      </header>
-
-      {/* Pricing Cards */}
-      <section className="px-6 pb-20">
-        <div className="max-w-5xl mx-auto">
-          {/* Mobile: Pro first, then Free, then API */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
-            {/* Pro Card - First on mobile */}
-            <div className="md:order-2">
-              <PricingCard
-                title="Pro"
-                price="$9.99"
-                priceSuffix="/month"
-                description="Unlock your full potential"
-                features={[
-                  "Everything in Free",
-                  "AI-powered insights",
-                  "Personalized journal prompts",
-                  "Unlimited guided exercises",
-                  "Recovery forecast & predictions",
-                  "Sentiment analysis",
-                  "Weekly AI recaps",
-                  "Priority support",
-                ]}
-                ctaLabel="Start free trial"
-                ctaHref="/auth/signup"
-                highlighted
-                badge="Most popular"
-              />
+      <div style={{ paddingTop: '72px' }}>
+        {/* ── HERO ── */}
+        <section className="max-w-7xl mx-auto px-6 lg:px-12 pt-20 pb-16 lg:pt-32 lg:pb-24">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] uppercase text-stone-500 mb-8">
+              <span className="w-8 h-px bg-stone-400" />
+              Pricing
             </div>
-
-            {/* Free Card */}
-            <div className="md:order-1">
-              <PricingCard
-                title="Free"
-                price="$0"
-                priceSuffix="forever"
-                description="Start your healing journey"
-                features={[
-                  "Daily mood logging",
-                  "Basic journaling",
-                  "ERS score tracking",
-                  "3 guided exercises",
-                ]}
-                ctaLabel="Get started"
-                ctaHref="/auth/signup"
-              />
-            </div>
-
-            {/* API Card */}
-            <div className="md:order-3">
-              <PricingCard
-                title="API"
-                price="Custom"
-                priceSuffix=""
-                description="For platforms and partners"
-                features={[
-                  "ERS scoring API",
-                  "Batch user queries",
-                  "Aggregate analytics",
-                  "Webhook notifications",
-                  "Dedicated support",
-                  "Custom integrations",
-                  "SLA guarantee",
-                ]}
-                ctaLabel="Contact us"
-                ctaHref="/design-partners"
-              />
+            <h1
+              className="text-5xl lg:text-7xl leading-[1.05] tracking-tight text-stone-900 mb-8"
+              style={{ fontFamily: "var(--font-fraunces)" }}
+            >
+              Pay for volume.
+              <br />
+              <em className="italic text-stone-600">Not for SKUs.</em>
+            </h1>
+            <p className="text-lg lg:text-xl text-stone-600 leading-relaxed max-w-2xl">
+              Every tier includes every vertical. Insurance, CX, gambling, dating, healthcare — and every
+              vertical we launch after. You pay for the analyses you run, not the endpoints you unlock.
+            </p>
+            <div className="mt-8">
+              <a
+                href="/roi"
+                className="inline-flex items-center gap-2 text-sm font-medium text-stone-700 border-b border-stone-400 pb-0.5 hover:text-stone-900 hover:border-stone-900 transition-colors"
+              >
+                Calculate your ROI →
+              </a>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Beta Notice */}
-      <section className="px-6 pb-16">
-        <div className="max-w-2xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
-            style={{ background: 'rgba(91,138,114,0.1)' }}
-          >
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--primary)' }} />
-            <span className="text-[13px] font-medium" style={{ color: 'var(--primary)' }}>
-              Currently in early access. All Pro features are free during the beta.
-            </span>
+        {/* ── PRICING GRID ── */}
+        <section className="max-w-7xl mx-auto px-6 lg:px-12 pb-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {TIERS.map((tier) => (
+              <TierCard key={tier.id} tier={tier} />
+            ))}
           </div>
-        </div>
-      </section>
 
-      {/* FAQ Section */}
-      <section className="px-6 pb-20">
-        <div className="max-w-2xl mx-auto">
-          <h2
-            className="text-[28px] font-medium mb-8 text-center"
-            style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
-          >
-            Questions?
-          </h2>
-          <div
-            className="rounded-3xl overflow-hidden"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}
-          >
-            <div className="px-6">
-              {faqItems.map((item, i) => (
-                <FAQItem key={i} question={item.question} answer={item.answer} />
+          <p className="mt-12 text-center text-sm text-stone-500">
+            All prices in USD. Annual contracts are invoiced upfront. Monthly contracts auto-renew.
+          </p>
+        </section>
+
+        {/* ── LAUNCH PROGRAM DETAIL ── */}
+        <section className="bg-stone-900 text-stone-50">
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24 lg:py-32">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+              <div>
+                <div className="inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] uppercase text-amber-400 mb-6">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Launch Program
+                </div>
+                <h2
+                  className="text-4xl lg:text-5xl leading-tight mb-8"
+                  style={{ fontFamily: "var(--font-fraunces)" }}
+                >
+                  Five companies lock in founding pricing.
+                </h2>
+                <p className="text-stone-400 text-lg leading-relaxed mb-8">
+                  We&apos;re accepting five founding customers in 2026. Get Safeguard at $7,200/mo —
+                  40% off the standard rate — locked for 12 months. No experimental program.
+                  Full production access from day one.
+                </p>
+                <p className="text-stone-400 text-lg leading-relaxed">
+                  Once these five slots fill, launch pricing closes permanently.
+                </p>
+              </div>
+
+              <div className="bg-stone-800 border border-stone-700 p-10">
+                <div className="mb-8">
+                  <div className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-500 mb-2">
+                    Launch Pricing
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-5xl" style={{ fontFamily: "var(--font-fraunces)" }}>
+                      $7,200
+                    </span>
+                    <span className="text-stone-400 ml-2">/mo</span>
+                  </div>
+                  <div className="mt-1 text-sm text-stone-500 line-through">Standard rate $12,000/mo</div>
+                </div>
+
+                <div className="space-y-4 mb-8 pb-8 border-b border-stone-700">
+                  {[
+                    'Full Safeguard production access',
+                    'All five verticals included',
+                    '500K analyses per month',
+                    'Founding customer status, rate locked 12 months',
+                    'Priority onboarding, dedicated Slack channel',
+                    'Direct access to the founding team',
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 text-stone-200">
+                      <Check className="text-amber-400 mt-1" />
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mb-8">
+                  <div className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-500 mb-3">
+                    After the 12-month lock-in
+                  </div>
+                  <p className="text-sm text-stone-300 leading-relaxed">
+                    Renews at standard Safeguard pricing. Lock in now and save{' '}
+                    <strong className="text-amber-400">$57,600</strong> over the first year compared to the
+                    standard rate.
+                  </p>
+                </div>
+
+                <a
+                  href="#contact"
+                  className="block text-center py-4 px-6 bg-amber-400 text-stone-900 font-medium hover:bg-amber-300 transition-colors"
+                >
+                  Claim a launch slot →
+                </a>
+                <p className="text-center text-xs text-stone-500 mt-3">2 of 5 slots remaining</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── WHAT'S INCLUDED ── */}
+        <section className="max-w-7xl mx-auto px-6 lg:px-12 py-24 lg:py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 lg:gap-24">
+            <div className="lg:col-span-1">
+              <div className="inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] uppercase text-stone-500 mb-6">
+                <span className="w-8 h-px bg-stone-400" />
+                What&apos;s included
+              </div>
+              <h2
+                className="text-3xl lg:text-4xl leading-tight text-stone-900"
+                style={{ fontFamily: "var(--font-fraunces)" }}
+              >
+                Every tier. Every vertical.
+              </h2>
+              <p className="mt-4 text-stone-600 leading-relaxed">
+                We don&apos;t believe in artificial scarcity. If we launch a new vertical in 2027, every
+                existing customer gets it automatically.
+              </p>
+            </div>
+
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+              {[
+                {
+                  label: 'Insurance Claims',
+                  desc: '14 signals: escalation risk, litigation intent, regulatory complaints, bereavement sensitivity, financial distress, and more.',
+                },
+                {
+                  label: 'Customer Experience',
+                  desc: '12 signals: churn risk, escalation risk, frustration trajectory, advocacy potential, VIP signals, and more.',
+                },
+                {
+                  label: 'Gambling Safeguarding',
+                  desc: '14 signals: harm risk, addiction indicators, financial distress, self-exclusion triggers, regulatory complaint risk, and more.',
+                },
+                {
+                  label: 'Dating Safety',
+                  desc: '13 signals: harassment escalation, coercion language, emotional manipulation, stalking indicators, minor safety risk, and more.',
+                },
+                {
+                  label: 'Healthcare & Therapy',
+                  desc: '11 signals: depressive symptoms, anxiety indicators, treatment adherence risk, distress trajectory, therapeutic alliance quality, and more.',
+                },
+                {
+                  label: 'Future Verticals',
+                  desc: 'Elder care, HR/employee wellbeing, family law, education — launched as market demand confirms, included in every tier.',
+                },
+              ].map((item, i) => (
+                <div key={i} className="border-l-2 border-stone-900 pl-6">
+                  <div className="text-xs font-medium tracking-[0.2em] uppercase text-stone-500 mb-2">
+                    Vertical
+                  </div>
+                  <h3
+                    className="text-xl text-stone-900 mb-3"
+                    style={{ fontFamily: "var(--font-fraunces)" }}
+                  >
+                    {item.label}
+                  </h3>
+                  <p className="text-sm text-stone-600 leading-relaxed">{item.desc}</p>
+                </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Bottom CTA */}
-      <section className="px-6 pb-24">
-        <div className="max-w-xl mx-auto text-center">
-          <h2
-            className="text-[28px] md:text-[32px] font-medium mb-6"
-            style={{ fontFamily: 'var(--font-fraunces), Fraunces, serif', color: 'var(--text)' }}
-          >
-            Start your healing journey today
-          </h2>
-          <Link
-            href="/auth/signup"
-            className="inline-block px-8 py-4 rounded-full text-[16px] font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={{ background: 'var(--primary)' }}
-          >
-            Get started free
-          </Link>
-          <p className="mt-4 text-[14px]" style={{ color: 'var(--text-muted)' }}>
-            No credit card required
-          </p>
-        </div>
-      </section>
+        {/* ── FAQ ── */}
+        <section className="bg-stone-100">
+          <div className="max-w-4xl mx-auto px-6 lg:px-12 py-24 lg:py-32">
+            <div className="mb-16">
+              <div className="inline-flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] uppercase text-stone-500 mb-6">
+                <span className="w-8 h-px bg-stone-400" />
+                Questions
+              </div>
+              <h2
+                className="text-4xl lg:text-5xl leading-tight text-stone-900"
+                style={{ fontFamily: "var(--font-fraunces)" }}
+              >
+                Honest answers.
+              </h2>
+            </div>
 
-      <MarketingFooter />
+            <div>
+              {FAQ.map((item, i) => (
+                <FAQItem
+                  key={i}
+                  q={item.q}
+                  a={item.a}
+                  isOpen={openFaq === i}
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FINAL CTA ── */}
+        <section id="contact" className="max-w-7xl mx-auto px-6 lg:px-12 py-24 lg:py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+            <div>
+              <h2
+                className="text-4xl lg:text-6xl leading-tight text-stone-900 mb-8"
+                style={{ fontFamily: "var(--font-fraunces)" }}
+              >
+                The best way to find out if Paceful fits is to try it.
+              </h2>
+              <p className="text-lg text-stone-600 leading-relaxed mb-10">
+                Play with the sandbox. Send a question to the founder. No gated demos, no discovery call
+                gatekeeping. When you&apos;re ready to integrate, we&apos;re here.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="/sandbox"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-stone-900 text-stone-50 text-sm font-medium tracking-wide hover:bg-stone-800 transition-colors"
+                >
+                  Try the sandbox →
+                </a>
+                <a
+                  href="mailto:hello@paceful.com"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-stone-900 text-stone-900 text-sm font-medium tracking-wide hover:bg-stone-900 hover:text-stone-50 transition-colors"
+                >
+                  Email the founder
+                </a>
+              </div>
+            </div>
+
+            <div className="bg-stone-50 border border-stone-200 p-10">
+              <div className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-500 mb-4">
+                For enterprise buyers
+              </div>
+              <h3
+                className="text-2xl text-stone-900 mb-4"
+                style={{ fontFamily: "var(--font-fraunces)" }}
+              >
+                Custom contracts available.
+              </h3>
+              <p className="text-sm text-stone-600 leading-relaxed mb-6">
+                Volume commitments, private deployment, SOC 2 documentation, custom vertical development,
+                and MSA-aligned terms are all negotiable at Sovereign tier. Typical enterprise onboarding:
+                2-6 weeks.
+              </p>
+              <a
+                href="mailto:enterprise@paceful.com"
+                className="inline-block text-sm font-medium text-stone-900 border-b border-stone-900 pb-0.5 hover:border-amber-700 hover:text-amber-900 transition-colors"
+              >
+                enterprise@paceful.com
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <MarketingFooter />
+      </div>
     </div>
   );
 }

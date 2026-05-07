@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 export default function Error({
   error,
@@ -14,100 +16,103 @@ export default function Error({
   }, [error]);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
-        textAlign: 'center',
-        fontFamily: "'DM Sans', sans-serif",
-        background: '#F9F6F2',
-      }}
-    >
-      <div
+    <>
+      <MarketingNav />
+      <main
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 16,
-          background: '#F3EFE9',
+          minHeight: '60vh',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 20,
+          padding: '80px 20px',
+          textAlign: 'center',
+          background: 'var(--bg)',
         }}
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#9A938A"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 8v4M12 16h.01" />
-        </svg>
-      </div>
-      <h1
-        style={{
-          fontSize: 28,
-          fontWeight: 700,
-          color: '#1F1D1A',
-          fontFamily: "'Fraunces', serif",
-          marginBottom: 8,
-        }}
-      >
-        Something went wrong
-      </h1>
-      <p
-        style={{
-          fontSize: 14,
-          color: '#9A938A',
-          maxWidth: 300,
-          lineHeight: 1.6,
-          marginBottom: 28,
-        }}
-      >
-        We hit an unexpected issue. Please try again.
-      </p>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button
-          onClick={reset}
+        <div
           style={{
-            background: '#5B8A72',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 50,
-            padding: '12px 28px',
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: 'pointer',
+            width: 48,
+            height: 48,
+            borderRadius: 4,
+            background: '#F0EBE4',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 24,
           }}
         >
-          Try again
-        </button>
-        <a
-          href="/dashboard"
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#9A938A"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+        </div>
+        <h1
           style={{
-            background: 'transparent',
-            color: '#5B8A72',
-            border: '1.5px solid #5B8A72',
-            borderRadius: 50,
-            padding: '12px 28px',
-            fontSize: 15,
-            fontWeight: 600,
-            textDecoration: 'none',
-            display: 'inline-block',
+            fontSize: 32,
+            fontWeight: 500,
+            color: '#1F1D1A',
+            fontFamily: 'var(--font-fraunces, Fraunces, serif)',
+            marginBottom: 10,
           }}
         >
-          Go home
-        </a>
-      </div>
-    </div>
+          Something went wrong.
+        </h1>
+        <p
+          style={{
+            fontSize: 15,
+            color: '#9A938A',
+            maxWidth: 320,
+            lineHeight: 1.6,
+            marginBottom: 32,
+          }}
+        >
+          We hit an unexpected issue. Try again or contact support if the problem persists.
+        </p>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            onClick={reset}
+            style={{
+              background: '#1C1917',
+              color: '#FAFAF9',
+              border: 'none',
+              borderRadius: 4,
+              padding: '11px 28px',
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            Try again
+          </button>
+          <a
+            href="/"
+            style={{
+              background: 'transparent',
+              color: '#1C1917',
+              border: '1px solid #C8C3BB',
+              borderRadius: 4,
+              padding: '11px 28px',
+              fontSize: 14,
+              fontWeight: 500,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Back to homepage
+          </a>
+        </div>
+      </main>
+      <MarketingFooter />
+    </>
   );
 }

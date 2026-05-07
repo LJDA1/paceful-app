@@ -1,0 +1,920 @@
+{
+  "vertical": "healthcare",
+  "version": "1.0.0",
+  "display_name": "Healthcare & Therapy Intelligence",
+  "description": "Emotional readiness signals for clinical platforms. Focuses on distress detection, treatment adherence, and patient engagement \u2014 calibrated to be clinically useful without attempting crisis detection. Signals are anchored to validated clinical frameworks where applicable.",
+  "ers_dimensions": [
+    "emotional_stability",
+    "self_reflection",
+    "coping_capacity",
+    "behavioral_engagement",
+    "social_readiness"
+  ],
+  "clinical_note": "This vertical pack INTENTIONALLY EXCLUDES signals for suicidal ideation, self-harm, or acute psychiatric crisis. Crisis detection requires validated clinical instruments (C-SSRS, PHQ-9 Item 9) administered under clinical supervision, not text-inference heuristics. Platforms requiring crisis detection should use validated screeners and human clinical review, and may engage Paceful separately for a clinically-reviewed 'Clinical Plus' pack once available. All signals below are decision-support for clinical workflows, not clinical verdicts.",
+  "signals": [
+    {
+      "id": "HLT-001",
+      "name": "depressive_symptom_language",
+      "display_name": "Depressive Symptom Language",
+      "category": "emotional_stability",
+      "description": "Language patterns consistent with depressive symptomatology (anhedonia, hopelessness, worthlessness, fatigue) as described in PHQ-9 Items 1-8. Does not include Item 9 (self-harm ideation).",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Minimal indicators",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Mild-moderate indicators",
+          "action": "Flag for clinician review, consider PHQ-9 administration"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Moderate-severe indicators",
+          "action": "Clinician outreach within 48h, consider session scheduling"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe symptom language",
+          "action": "Priority clinical review within 24h"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "hopeless",
+          "worthless",
+          "empty",
+          "numb",
+          "nothing matters",
+          "can't feel anything",
+          "don't enjoy",
+          "no interest",
+          "exhausted",
+          "always tired",
+          "can't get out of bed",
+          "sleeping all day",
+          "can't sleep",
+          "lost weight",
+          "no appetite",
+          "eating too much",
+          "foggy",
+          "can't concentrate",
+          "nothing works",
+          "what's the point",
+          "don't care anymore",
+          "heavy",
+          "weight on me",
+          "dragging myself"
+        ],
+        "behavioral_patterns": [
+          "emotional_vocabulary_density",
+          "shortening_response_length",
+          "sentence_shortening"
+        ]
+      },
+      "weight": 0.14
+    },
+    {
+      "id": "HLT-002",
+      "name": "anxiety_symptom_language",
+      "display_name": "Anxiety Symptom Language",
+      "category": "emotional_stability",
+      "description": "Language patterns consistent with generalized anxiety symptomatology (excessive worry, physical tension, restlessness) as described in GAD-7.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Minimal indicators",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Mild-moderate anxiety",
+          "action": "Flag for clinician review, consider GAD-7 administration"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Moderate-severe anxiety",
+          "action": "Clinician outreach, consider coping resources push"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe anxiety language",
+          "action": "Priority clinical review, grounding resources immediately"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "can't stop worrying",
+          "constantly anxious",
+          "panic attack",
+          "heart racing",
+          "can't breathe",
+          "chest tight",
+          "shaking",
+          "dizzy",
+          "lightheaded",
+          "something bad will happen",
+          "worst case",
+          "catastrophic",
+          "can't relax",
+          "on edge",
+          "jumpy",
+          "restless",
+          "tense",
+          "overwhelming",
+          "my mind won't stop",
+          "racing thoughts",
+          "spiraling",
+          "dread",
+          "impending doom"
+        ],
+        "behavioral_patterns": [
+          "emotional_vocabulary_density",
+          "repeated_questions_on_same_topic",
+          "urgency_language_density"
+        ]
+      },
+      "weight": 0.13
+    },
+    {
+      "id": "HLT-003",
+      "name": "treatment_adherence_risk",
+      "display_name": "Treatment Adherence Risk",
+      "category": "behavioral_engagement",
+      "description": "Language indicating missed sessions, medication non-adherence, therapy skepticism, or treatment dropout risk.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Engaged",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Adherence concerns",
+          "action": "Adherence check-in, address barriers"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Drop-out risk",
+          "action": "Clinician outreach, care coordinator intervention"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Imminent drop-out",
+          "action": "Immediate retention intervention, reduce friction barriers"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "not taking",
+          "stopped taking",
+          "skipped my meds",
+          "forgot my meds",
+          "don't want to come in",
+          "not sure therapy helps",
+          "wasting my time",
+          "not helping",
+          "pointless",
+          "tried everything",
+          "can't afford",
+          "too expensive",
+          "no time",
+          "cancel my session",
+          "reschedule again",
+          "miss another",
+          "drop therapy",
+          "quit therapy",
+          "stop treatment",
+          "side effects",
+          "doesn't work for me"
+        ],
+        "behavioral_patterns": [
+          "cooperative_language_decline",
+          "decreasing_cooperative_language"
+        ]
+      },
+      "weight": 0.12
+    },
+    {
+      "id": "HLT-004",
+      "name": "treatment_engagement_quality",
+      "display_name": "Treatment Engagement Quality",
+      "category": "self_reflection",
+      "description": "Positive indicators of therapeutic engagement \u2014 insight, self-reflection, homework compliance, openness to interventions.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Minimal engagement",
+          "action": "Explore engagement barriers"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Standard engagement",
+          "action": "Continue current approach"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Strong engagement",
+          "action": "Reinforce insights, deepen work"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Excellent engagement",
+          "action": "Consider progression, celebrate with patient"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "i noticed",
+          "i realized",
+          "i'm starting to see",
+          "the exercise helped",
+          "worked through",
+          "i tried",
+          "i practiced",
+          "made progress",
+          "feeling better",
+          "more hopeful",
+          "small win",
+          "breakthrough",
+          "understanding why",
+          "making sense",
+          "connecting dots",
+          "used the technique",
+          "applied what we discussed"
+        ],
+        "behavioral_patterns": []
+      },
+      "weight": 0.1
+    },
+    {
+      "id": "HLT-005",
+      "name": "distress_trajectory",
+      "display_name": "Distress Trajectory",
+      "category": "emotional_stability",
+      "description": "Rate of change in emotional distress across messages. Critical for identifying patients deteriorating between sessions even when current state isn't critical.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Stable/improving",
+          "action": "Continue current care plan"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Gradually rising",
+          "action": "Discuss trajectory at next session"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Significantly rising",
+          "action": "Between-session outreach, consider increased frequency"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Rapid deterioration",
+          "action": "Priority clinical outreach, consider safety check-in"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "getting worse",
+          "worse than before",
+          "backsliding",
+          "all the progress",
+          "going backwards",
+          "falling apart",
+          "can't hold it together",
+          "losing it",
+          "unraveling",
+          "spiraling down",
+          "sliding back",
+          "regressing",
+          "everything i worked for"
+        ],
+        "behavioral_patterns": [
+          "emotional_vocabulary_density"
+        ]
+      },
+      "weight": 0.1
+    },
+    {
+      "id": "HLT-006",
+      "name": "isolation_indicators",
+      "display_name": "Social Isolation Indicators",
+      "category": "social_readiness",
+      "description": "Language suggesting social withdrawal, loneliness, or loss of support network \u2014 a known risk factor for worsening mental health outcomes.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Connected",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Some isolation",
+          "action": "Discuss support network at session"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Significant isolation",
+          "action": "Prioritize connection work, group options"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe isolation",
+          "action": "Care coordinator outreach, connection support"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "no one",
+          "all alone",
+          "isolated",
+          "no friends",
+          "haven't talked to anyone",
+          "don't leave the house",
+          "canceled plans",
+          "pushing people away",
+          "everyone left",
+          "no support",
+          "have no one",
+          "family doesn't understand",
+          "no one would notice",
+          "no one would care",
+          "nobody checks on",
+          "withdrawn",
+          "avoiding everyone"
+        ],
+        "behavioral_patterns": [
+          "emotional_vocabulary_density"
+        ]
+      },
+      "weight": 0.09
+    },
+    {
+      "id": "HLT-007",
+      "name": "somatic_complaint_language",
+      "display_name": "Somatic Complaint Language",
+      "category": "coping_capacity",
+      "description": "Language focused on physical symptoms (pain, fatigue, sleep) which may indicate somatization of emotional distress or need for medical evaluation coordination.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Minimal",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Present somatic focus",
+          "action": "Discuss mind-body connection at session"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Significant somatic focus",
+          "action": "Consider medical coordination, integrated care"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Dominant somatic presentation",
+          "action": "Coordinate with PCP, integrated care review"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "chronic pain",
+          "constant headache",
+          "migraines",
+          "stomach problems",
+          "can't sleep",
+          "insomnia",
+          "exhausted",
+          "no energy",
+          "body aches",
+          "muscle tension",
+          "back pain",
+          "fibromyalgia",
+          "chronic fatigue",
+          "brain fog",
+          "can't function",
+          "physically drained",
+          "nausea",
+          "dizzy",
+          "numb hands",
+          "racing heart"
+        ],
+        "behavioral_patterns": []
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "HLT-008",
+      "name": "substance_use_concern",
+      "display_name": "Substance Use Concern",
+      "category": "coping_capacity",
+      "description": "Language suggesting problematic substance use, relapse risk, or substance-related coping \u2014 calibrated to trigger clinical review, not automated judgment.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Minimal",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Use mentioned",
+          "action": "Brief screening at next session"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Concerning use patterns",
+          "action": "Substance use screening + clinician review"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Relapse or severe use",
+          "action": "Priority clinical outreach, SUD resources"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "drinking more",
+          "drank too much",
+          "needed a drink",
+          "hungover",
+          "blacked out",
+          "can't stop drinking",
+          "using again",
+          "relapsed",
+          "slipped",
+          "fell off the wagon",
+          "getting high",
+          "self medicating",
+          "numb myself",
+          "take the edge off",
+          "pills to cope",
+          "need something stronger",
+          "tolerance",
+          "withdrawal"
+        ],
+        "behavioral_patterns": []
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "HLT-009",
+      "name": "stress_load",
+      "display_name": "Acute Stress Load",
+      "category": "coping_capacity",
+      "description": "Language indicating acute situational stressors (financial, relational, occupational) that may be driving current symptoms.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Minimal stressors",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Manageable stress",
+          "action": "Explore coping strategies"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "High stress load",
+          "action": "Stress-focused session, resource referrals"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Acute stress crisis",
+          "action": "Prioritize immediate stressor triage, social work referral"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "lost my job",
+          "getting fired",
+          "laid off",
+          "evicted",
+          "divorce",
+          "breakup",
+          "separation",
+          "custody",
+          "bankruptcy",
+          "foreclosure",
+          "can't pay rent",
+          "homeless",
+          "about to lose",
+          "emergency",
+          "crisis",
+          "overwhelmed by everything",
+          "too much at once",
+          "death in the family",
+          "funeral",
+          "health scare",
+          "diagnosis",
+          "car accident"
+        ],
+        "behavioral_patterns": [
+          "urgency_language_density"
+        ]
+      },
+      "weight": 0.07
+    },
+    {
+      "id": "HLT-010",
+      "name": "therapeutic_alliance_quality",
+      "display_name": "Therapeutic Alliance Quality",
+      "category": "social_readiness",
+      "description": "Signals about the patient's perception of the therapeutic relationship \u2014 positive alliance predicts better outcomes; rupture predicts dropout.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Weak alliance",
+          "action": "Alliance repair priority, consider therapist match review"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Neutral alliance",
+          "action": "Build rapport, explore needs"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Strong alliance",
+          "action": "Leverage alliance for deeper work"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Excellent alliance",
+          "action": "Document strengths, consider complexity progression"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "thank you for listening",
+          "you really get it",
+          "feel heard",
+          "feel seen",
+          "trust you",
+          "first person who",
+          "this helps",
+          "looking forward to session",
+          "safe space",
+          "don't feel judged",
+          "don't feel heard",
+          "not listening",
+          "don't understand me",
+          "feels wrong",
+          "not a fit",
+          "want a different",
+          "trying someone new"
+        ],
+        "behavioral_patterns": []
+      },
+      "weight": 0.05
+    },
+    {
+      "id": "HLT-011",
+      "name": "functional_impairment",
+      "display_name": "Functional Impairment Indicators",
+      "category": "behavioral_engagement",
+      "description": "Language suggesting impairment in daily functioning \u2014 work, relationships, self-care, basic activities of daily living.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Functioning well",
+          "action": "Continue standard care"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Some impairment",
+          "action": "Assess functional goals at session"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Significant impairment",
+          "action": "Treatment plan review, consider higher level of care"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe impairment",
+          "action": "Urgent care plan review, IOP/PHP assessment"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "can't work",
+          "missed work",
+          "on leave",
+          "sick leave",
+          "can't function",
+          "can't take care of",
+          "haven't showered",
+          "haven't eaten",
+          "haven't left my room",
+          "haven't gotten dressed",
+          "falling behind",
+          "failing at",
+          "can't focus",
+          "can't keep up",
+          "losing control of",
+          "everything is slipping",
+          "can't remember",
+          "missing appointments",
+          "forgetting"
+        ],
+        "behavioral_patterns": [
+          "shortening_response_length",
+          "sentence_shortening"
+        ]
+      },
+      "weight": 0.04
+    }
+  ],
+  "composite_scores": {
+    "overall_risk": {
+      "description": "Weighted composite of all clinical signals \u2014 overall clinical concern level",
+      "calculation": "weighted_average",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "high": [
+          0.5,
+          0.7
+        ],
+        "critical": [
+          0.7,
+          1.0
+        ]
+      }
+    },
+    "escalation_composite": {
+      "description": "Signals that warrant clinical escalation (between-session outreach or priority review). When critical, triggers signal.escalation webhook.",
+      "signals": [
+        "HLT-001",
+        "HLT-002",
+        "HLT-005",
+        "HLT-008",
+        "HLT-009",
+        "HLT-011"
+      ],
+      "calculation": "max_weighted",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "high": [
+          0.5,
+          0.7
+        ],
+        "critical": [
+          0.7,
+          1.0
+        ]
+      }
+    },
+    "symptom_severity": {
+      "description": "Composite symptom burden across depression, anxiety, and somatic presentations",
+      "signals": [
+        "HLT-001",
+        "HLT-002",
+        "HLT-007"
+      ],
+      "calculation": "weighted_average",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "high": [
+          0.5,
+          0.7
+        ],
+        "critical": [
+          0.7,
+          1.0
+        ]
+      }
+    },
+    "retention_risk": {
+      "description": "Likelihood of treatment dropout \u2014 combines adherence risk and alliance weakness",
+      "signals": [
+        "HLT-003",
+        "HLT-010"
+      ],
+      "calculation": "max_weighted",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "high": [
+          0.5,
+          0.7
+        ],
+        "critical": [
+          0.7,
+          1.0
+        ]
+      }
+    },
+    "engagement_quality": {
+      "description": "Positive indicators of therapeutic engagement and alliance",
+      "signals": [
+        "HLT-004",
+        "HLT-010"
+      ],
+      "calculation": "weighted_average",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "good": [
+          0.5,
+          0.7
+        ],
+        "excellent": [
+          0.7,
+          1.0
+        ]
+      }
+    }
+  },
+  "api_config": {
+    "endpoint_prefix": "/v1/analyze/healthcare",
+    "rate_limit": {
+      "requests_per_minute": 240,
+      "requests_per_day": 150000
+    },
+    "response_format": {
+      "include_signal_details": true,
+      "include_ers_dimensions": true,
+      "include_composite_scores": true,
+      "include_recommended_actions": true,
+      "verbosity_levels": [
+        "minimal",
+        "standard",
+        "detailed"
+      ]
+    },
+    "clinical_disclaimers": {
+      "decision_support_only": "All Paceful healthcare signals are decision-support tools for licensed clinicians and care teams. They are not diagnostic instruments and do not replace validated clinical screeners (PHQ-9, GAD-7, C-SSRS) administered under clinical supervision.",
+      "no_crisis_detection": "This vertical pack does NOT include crisis detection (suicidal ideation, self-harm, acute psychiatric emergency). Platforms requiring crisis detection must use validated screeners with human clinical oversight. Paceful's 'Clinical Plus' pack for crisis signals will be released only after clinical advisor review.",
+      "phi_handling": "Paceful does not store raw text. Only hashed references and numerical scores are persisted. Partners are responsible for HIPAA-compliant data handling on their side, including BAA execution."
+    }
+  }
+}

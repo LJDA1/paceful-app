@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 const sections = [
   {
@@ -33,71 +34,50 @@ const sections = [
 
 export default function SecurityPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#F9F6F2', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-
-      {/* Logo Bar */}
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid #E8E2DA', background: '#FFFFFF' }}>
-        <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="16" fill="#5B8A72" />
-            <path d="M10 16C10 12.686 12.686 10 16 10C19.314 10 22 12.686 22 16" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-            <circle cx="16" cy="19" r="3" fill="white" />
-          </svg>
-          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 500, color: '#1F1D1A' }}>
-            Paceful
-          </span>
-        </Link>
-      </div>
-
+    <>
+      <MarketingNav />
       <main style={{ maxWidth: '640px', margin: '0 auto', padding: '56px 24px 80px' }}>
-
-        <h1 style={{
-          fontFamily: "'Fraunces', serif",
-          fontSize: '36px',
-          fontWeight: 500,
-          color: '#1F1D1A',
-          marginBottom: '48px',
-        }}>
+        <h1
+          style={{
+            fontFamily: 'var(--font-fraunces, Fraunces, serif)',
+            fontSize: '36px',
+            fontWeight: 500,
+            color: '#1F1D1A',
+            marginBottom: '48px',
+          }}
+        >
           Security
         </h1>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
           {sections.map(({ heading, body }) => (
             <section key={heading}>
-              <h2 style={{
-                fontFamily: "'Fraunces', serif",
-                fontSize: '18px',
-                fontWeight: 500,
-                color: '#1F1D1A',
-                marginBottom: '10px',
-              }}>
+              <h2
+                style={{
+                  fontFamily: 'var(--font-fraunces, Fraunces, serif)',
+                  fontSize: '18px',
+                  fontWeight: 500,
+                  color: '#1F1D1A',
+                  marginBottom: '10px',
+                }}
+              >
                 {heading}
               </h2>
-              <p style={{
-                fontSize: '15px',
-                lineHeight: 1.75,
-                color: '#5C574F',
-                margin: 0,
-              }}>
+              <p
+                style={{
+                  fontSize: '15px',
+                  lineHeight: 1.75,
+                  color: '#5C574F',
+                  margin: 0,
+                }}
+              >
                 {body}
               </p>
             </section>
           ))}
         </div>
-
       </main>
-
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid #E8E2DA', padding: '24px', textAlign: 'center' }}>
-        <p style={{ fontSize: '14px', color: '#9A938A' }}>
-          <Link href="/terms" style={{ color: '#5B8A72' }}>Terms</Link>
-          {' · '}
-          <Link href="/privacy" style={{ color: '#5B8A72' }}>Privacy</Link>
-          {' · '}
-          <Link href="/status" style={{ color: '#5B8A72' }}>Status</Link>
-        </p>
-      </footer>
-
-    </div>
+      <MarketingFooter />
+    </>
   );
 }

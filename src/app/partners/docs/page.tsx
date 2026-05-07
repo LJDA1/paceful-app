@@ -38,7 +38,7 @@ function CodeBlock({ code, language }: CodeBlockProps) {
     <div style={{
       position: 'relative',
       backgroundColor: '#2D2D2D',
-      borderRadius: '8px',
+      borderRadius: '4px',
       marginBottom: '16px',
     }}>
       {isMultiLang && (
@@ -74,7 +74,7 @@ function CodeBlock({ code, language }: CodeBlockProps) {
           right: '8px',
           padding: '4px 8px',
           fontSize: '11px',
-          backgroundColor: copied ? '#5B8A72' : '#3D3D3A',
+          backgroundColor: '#3D3D3A',
           color: '#FFFFFF',
           border: 'none',
           borderRadius: '4px',
@@ -87,7 +87,7 @@ function CodeBlock({ code, language }: CodeBlockProps) {
         style={{
           padding: '16px',
           margin: 0,
-          fontFamily: 'monospace',
+          fontFamily: 'var(--font-mono, "SF Mono", Monaco, Consolas, monospace)',
           fontSize: '13px',
           lineHeight: 1.6,
           color: '#E5E0D9',
@@ -101,10 +101,10 @@ function CodeBlock({ code, language }: CodeBlockProps) {
 
 function MethodBadge({ method }: { method: 'GET' | 'POST' | 'PUT' | 'DELETE' }) {
   const colors = {
-    GET: '#5B8A72',
-    POST: '#5B7FB5',
-    PUT: '#C4973B',
-    DELETE: '#B56B6B',
+    GET: '#3D6B54',
+    POST: '#44526E',
+    PUT: '#92661A',
+    DELETE: '#8B3D3D',
   };
   return (
     <span style={{
@@ -141,7 +141,7 @@ function ParamsTable({ params }: { params: { name: string; type: string; require
       <tbody>
         {params.map((p) => (
           <tr key={p.name} style={{ borderBottom: '1px solid #E5E0D9' }}>
-            <td style={{ padding: '8px 0' }}><code style={{ color: '#5B8A72' }}>{p.name}</code></td>
+            <td style={{ padding: '8px 0' }}><code style={{ color: '#1C1917' }}>{p.name}</code></td>
             <td style={{ padding: '8px 0', color: '#6B6560' }}>{p.type}</td>
             <td style={{ padding: '8px 0' }}>
               {p.required ? <span style={{ color: '#B56B6B' }}>Yes</span> : <span style={{ color: '#9A938A' }}>No</span>}
@@ -255,13 +255,13 @@ export default function PartnerDocs() {
     page: {
       display: 'flex',
       minHeight: '100vh',
-      backgroundColor: '#F9F6F2',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      backgroundColor: 'var(--color-canvas, #FAF8F3)',
+      fontFamily: 'var(--font-dm-sans, "DM Sans", sans-serif)',
     } as React.CSSProperties,
     sidebar: {
       width: '250px',
-      backgroundColor: '#FFFFFF',
-      borderRight: '1px solid #E5E0D9',
+      backgroundColor: '#FAFAF9',
+      borderRight: '1px solid #E7E5E4',
       position: 'fixed' as const,
       top: 0,
       left: 0,
@@ -286,11 +286,11 @@ export default function PartnerDocs() {
       display: 'block',
       padding: isChild ? '6px 0 6px 16px' : '8px 0',
       fontSize: isChild ? '13px' : '14px',
-      color: active ? '#5B8A72' : '#6B6560',
+      color: active ? '#1C1917' : '#6B6560',
       fontWeight: active ? 600 : 400,
       textDecoration: 'none',
       cursor: 'pointer',
-      borderLeft: active ? '2px solid #5B8A72' : '2px solid transparent',
+      borderLeft: active ? '2px solid #FBBF24' : '2px solid transparent',
       marginLeft: isChild ? '0' : '0',
     }) as React.CSSProperties,
     main: {
@@ -303,15 +303,17 @@ export default function PartnerDocs() {
       marginBottom: '64px',
     } as React.CSSProperties,
     sectionTitle: {
+      fontFamily: 'var(--font-fraunces, Fraunces, serif)',
       fontSize: '28px',
-      fontWeight: 700,
+      fontWeight: 500,
       color: '#1F1D1A',
       marginBottom: '16px',
       paddingTop: '24px',
     } as React.CSSProperties,
     subsectionTitle: {
+      fontFamily: 'var(--font-fraunces, Fraunces, serif)',
       fontSize: '20px',
-      fontWeight: 600,
+      fontWeight: 500,
       color: '#1F1D1A',
       marginBottom: '12px',
       paddingTop: '16px',
@@ -323,15 +325,15 @@ export default function PartnerDocs() {
       marginBottom: '16px',
     } as React.CSSProperties,
     endpoint: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: '8px',
+      backgroundColor: '#FAFAF9',
+      borderRadius: '4px',
       padding: '24px',
       marginBottom: '24px',
-      border: '1px solid #E5E0D9',
+      border: '1px solid #E7E5E4',
     } as React.CSSProperties,
     endpointPath: {
       fontSize: '16px',
-      fontFamily: 'monospace',
+      fontFamily: 'var(--font-mono, "SF Mono", Monaco, Consolas, monospace)',
       color: '#1F1D1A',
       marginBottom: '12px',
     } as React.CSSProperties,
@@ -339,7 +341,7 @@ export default function PartnerDocs() {
       display: 'inline-flex',
       alignItems: 'center',
       gap: '4px',
-      color: '#5B8A72',
+      color: '#6B6560',
       textDecoration: 'none',
       fontSize: '14px',
       marginBottom: '24px',
@@ -352,7 +354,7 @@ export default function PartnerDocs() {
       <nav style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <div style={styles.sidebarTitle}>Paceful API Docs</div>
-          <Link href="/partners/changelog" style={{ fontSize: '12px', color: '#5B8A72', textDecoration: 'none' }}>
+          <Link href="/partners/changelog" style={{ fontSize: '12px', color: '#9A938A', textDecoration: 'none' }}>
             v1.0.0 changelog →
           </Link>
         </div>
@@ -376,10 +378,10 @@ export default function PartnerDocs() {
           </div>
         ))}
         <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #E5E0D9' }}>
-          <Link href="/partners" style={{ ...styles.navItem(false, false), color: '#5B8A72' }}>
+          <Link href="/partners" style={{ ...styles.navItem(false, false), color: '#9A938A' }}>
             ← Back to Partners
           </Link>
-          <Link href="/partners/dashboard" style={{ ...styles.navItem(false, false), color: '#5B8A72' }}>
+          <Link href="/partners/dashboard" style={{ ...styles.navItem(false, false), color: '#9A938A' }}>
             Dashboard
           </Link>
         </div>
@@ -434,7 +436,7 @@ console.log(ers.ersScore, ers.stage);`} />
 
           <p style={styles.paragraph}>
             Need an API key?{' '}
-            <a href="mailto:partners@paceful.com?subject=API Key Request" style={{ color: '#5B8A72' }}>
+            <a href="mailto:partners@paceful.com?subject=API Key Request" style={{ color: '#1C1917' }}>
               Contact partners@paceful.com
             </a>
           </p>
@@ -449,13 +451,13 @@ console.log(ers.ersScore, ers.stage);`} />
           </p>
 
           <div style={{
-            backgroundColor: '#E8F5E9',
-            borderRadius: '8px',
+            backgroundColor: 'rgba(251,191,36,0.07)',
+            borderRadius: '4px',
             padding: '16px 20px',
             marginBottom: '24px',
-            borderLeft: '4px solid #5B8A72',
+            borderLeft: '4px solid #FBBF24',
           }}>
-            <p style={{ ...styles.paragraph, marginBottom: 0, color: '#2E7D32' }}>
+            <p style={{ ...styles.paragraph, marginBottom: 0, color: '#92400E' }}>
               <strong>Sandbox API Key:</strong>{' '}
               <code style={{ backgroundColor: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                 pk_sandbox_paceful_demo
@@ -750,11 +752,11 @@ response = requests.get(
           </p>
 
           <div style={{
-            backgroundColor: '#FFF8E1',
-            borderRadius: '8px',
+            backgroundColor: 'rgba(212,151,59,0.08)',
+            borderRadius: '4px',
             padding: '16px 20px',
             marginBottom: '24px',
-            borderLeft: '4px solid #C4973B',
+            borderLeft: '4px solid #D4973B',
           }}>
             <p style={{ ...styles.paragraph, marginBottom: 0, color: '#8D6E24' }}>
               <strong>Rate Limiting:</strong> Batch endpoints count as <strong>1 request</strong> against your rate limit,
@@ -2249,7 +2251,7 @@ data = response.json()`
                   <tr key={s.id} style={{ borderBottom: '1px solid #E5E0D9' }}>
                     <td style={{ padding: '6px 0' }}><code>{s.id}</code></td>
                     <td style={{ padding: '6px 0', color: '#6B6560' }}>{s.desc}</td>
-                    <td style={{ padding: '6px 0', textAlign: 'center', color: s.weight < 0 ? '#5B8A72' : '#6B6560' }}>
+                    <td style={{ padding: '6px 0', textAlign: 'center', color: s.weight < 0 ? '#3D6B54' : '#6B6560' }}>
                       {s.weight}
                     </td>
                   </tr>
@@ -2868,7 +2870,7 @@ Link: </api/v2/partner/users>; rel="successor-version"`} />
           <h3 style={styles.subsectionTitle}>Changelog</h3>
           <p style={styles.paragraph}>
             View the full changelog at{' '}
-            <Link href="/partners/changelog" style={{ color: '#5B8A72', textDecoration: 'none', fontWeight: 600 }}>
+            <Link href="/partners/changelog" style={{ color: '#1C1917', textDecoration: 'none', fontWeight: 600 }}>
               /partners/changelog
             </Link>{' '}
             or fetch it programmatically:
@@ -2904,7 +2906,7 @@ Link: </api/v2/partner/users>; rel="successor-version"`} />
         <footer style={{ paddingTop: '48px', borderTop: '1px solid #E5E0D9', marginTop: '48px' }}>
           <p style={{ fontSize: '14px', color: '#9A938A' }}>
             Need help? Contact{' '}
-            <a href="mailto:partners@paceful.com" style={{ color: '#5B8A72' }}>partners@paceful.com</a>
+            <a href="mailto:partners@paceful.com" style={{ color: '#1C1917' }}>partners@paceful.com</a>
           </p>
           <p style={{ fontSize: '14px', color: '#9A938A' }}>
             © 2026 Paceful · Built by LJ

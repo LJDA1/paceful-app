@@ -2,14 +2,14 @@ import IntegrationPage, { IntegrationPageConfig } from '@/components/Integration
 
 const config: IntegrationPageConfig = {
   title: 'Employee Wellbeing Signals for HR Platforms',
-  subtitle: 'Turn pulse survey responses and weekly check-in notes into aggregate ERS scores — giving HR teams an early signal on burnout, attrition risk, and team health.',
+  subtitle: 'Turn pulse survey responses and weekly check-in notes into aggregate Emotional Readiness Scores — giving HR teams an early signal on burnout, attrition risk, and team health.',
   endpoint: '/api/v1/assess/analyze',
 
   archFlow: [
     { label: 'Employee pulse survey / check-in', detail: 'Weekly or monthly response' },
     { label: 'Your backend', detail: 'Collects anonymized responses' },
     { label: 'POST /assess/analyze', detail: 'Paceful scores the text' },
-    { label: 'ERS score per employee', detail: 'Individual + aggregated' },
+    { label: 'Score per employee', detail: 'Individual + aggregated' },
     { label: 'HR wellbeing dashboard', detail: 'Team trends, alerts, benchmarks' },
   ],
 
@@ -51,7 +51,7 @@ const config: IntegrationPageConfig = {
   useCases: [
     {
       title: 'Burnout detection',
-      description: 'Spot sustained low ERS scores across a team before they become attrition events or medical leave.',
+      description: 'Spot sustained low scores across a team before they become attrition events or medical leave.',
     },
     {
       title: 'Return-to-work readiness',
@@ -59,11 +59,11 @@ const config: IntegrationPageConfig = {
     },
     {
       title: 'Team wellbeing benchmarks',
-      description: 'Compare department-level ERS aggregates over quarters to identify which teams need structural support.',
+      description: 'Compare department-level score aggregates over quarters to identify which teams need structural support.',
     },
   ],
 
-  expectedResults: 'HR platforms with ERS integration identify at-risk employees an average of 3–4 weeks earlier than traditional survey signals, giving people teams time to intervene before acute burnout or voluntary exit.',
+  expectedResults: 'HR platforms using the Paceful API identify at-risk employees an average of 3–4 weeks earlier than traditional survey signals, giving people teams time to intervene before acute burnout or voluntary exit.',
 };
 
 export default function WorkplaceIntegrationPage() {

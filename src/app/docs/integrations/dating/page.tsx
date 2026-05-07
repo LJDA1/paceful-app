@@ -9,7 +9,7 @@ const config: IntegrationPageConfig = {
     { label: 'User writes bio & prompts', detail: 'Profile setup or daily prompt' },
     { label: 'Your backend', detail: 'Collects and forwards text' },
     { label: 'POST /assess/analyze', detail: 'Paceful scores the text' },
-    { label: 'ERS score returned', detail: '0–100 + dimension breakdown' },
+    { label: 'Score returned', detail: '0–100 Emotional Readiness Score + dimension breakdown' },
     { label: 'Gate matching / badge', detail: 'Filter, rank, or annotate profiles' },
   ],
 
@@ -51,7 +51,7 @@ const config: IntegrationPageConfig = {
   useCases: [
     {
       title: 'Readiness-gated matching',
-      description: "Only surface matches once a user's ERS score clears a threshold — reducing low-intent interactions.",
+      description: "Only surface matches once a user's Emotional Readiness Score clears a threshold — reducing low-intent interactions.",
     },
     {
       title: 'Recovery badges',
@@ -63,7 +63,7 @@ const config: IntegrationPageConfig = {
     },
   ],
 
-  expectedResults: 'Partners integrating ERS-based readiness filters report measurable improvement in reported match quality and a reduction in early unmatches, as users are better aligned on emotional availability before connecting.',
+  expectedResults: 'Partners integrating readiness score filters report measurable improvement in reported match quality and a reduction in early unmatches, as users are better aligned on emotional availability before connecting.',
 };
 
 export default function DatingIntegrationPage() {

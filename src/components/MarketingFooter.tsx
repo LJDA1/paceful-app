@@ -6,8 +6,9 @@ const FOOTER_COLUMNS = [
   {
     title: 'Product',
     links: [
-      { href: '/', label: 'How it works' },
+      { href: '/sandbox', label: 'Sandbox' },
       { href: '/pricing', label: 'Pricing' },
+      { href: '/roi', label: 'ROI Calculator' },
       { href: '/api-docs', label: 'API Docs' },
     ],
   },
@@ -88,7 +89,7 @@ export default function MarketingFooter() {
               Paceful
             </span>
             <span className="text-[14px]" style={{ color: '#9A938A' }}>
-              Heal at your pace.
+              Emotional readiness infrastructure.
             </span>
           </div>
 

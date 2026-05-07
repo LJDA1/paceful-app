@@ -2,15 +2,15 @@ import IntegrationPage, { IntegrationPageConfig } from '@/components/Integration
 
 const config: IntegrationPageConfig = {
   title: 'Between-Session Monitoring for Therapy Platforms',
-  subtitle: 'Analyze patient journal entries between sessions to surface ERS trends, flag score drops, and give therapists a real-time window into progress.',
+  subtitle: 'Analyze patient journal entries between sessions to surface Emotional Readiness Score trends, flag score drops, and give therapists a real-time window into progress.',
   endpoint: '/api/v1/assess/analyze',
 
   archFlow: [
     { label: 'Patient journals between sessions', detail: 'In-app journal entry' },
     { label: 'Your backend', detail: 'Stores and forwards entry' },
     { label: 'POST /assess/analyze', detail: 'Paceful scores the text' },
-    { label: 'ERS trend updated', detail: 'Score stored against user history' },
-    { label: 'Therapist dashboard', detail: 'ERS chart + alert on decline' },
+    { label: 'Score trend updated', detail: 'Score stored against user history' },
+    { label: 'Therapist dashboard', detail: 'Score chart + alert on decline' },
   ],
 
   codeExample: `async function analyzeJournal(patientId, journalText) {
@@ -51,19 +51,19 @@ const config: IntegrationPageConfig = {
   useCases: [
     {
       title: 'Session prep for therapists',
-      description: "Therapists open the session with a view of the patient's ERS trend since the last appointment — no cold starts.",
+      description: "Therapists open the session with a view of the patient's score trend since the last appointment — no cold starts.",
     },
     {
       title: 'Early warning on declining scores',
-      description: "Automatically alert clinicians when a patient's ERS drops more than 15 points between entries.",
+      description: "Automatically alert clinicians when a patient's score drops more than 15 points between entries.",
     },
     {
       title: 'Treatment efficacy tracking',
-      description: 'Show rising ERS curves over weeks to validate therapeutic approaches and motivate patients.',
+      description: 'Show rising score curves over weeks to validate therapeutic approaches and motivate patients.',
     },
   ],
 
-  expectedResults: 'Therapy platforms using between-session ERS monitoring report earlier identification of crisis risk, improved therapist preparedness, and higher patient retention as users see measurable progress reflected in their trend line.',
+  expectedResults: 'Therapy platforms using between-session score monitoring report earlier identification of crisis risk, improved therapist preparedness, and higher patient retention as users see measurable progress reflected in their trend line.',
 };
 
 export default function MentalHealthIntegrationPage() {

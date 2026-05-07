@@ -212,10 +212,10 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
     <div
       className={className}
       style={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '12px',
+        backgroundColor: '#FAFAF9',
+        border: '1px solid #E7E5E4',
+        borderRadius: '4px',
         padding: '24px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
       }}
     >
       {children}
@@ -506,29 +506,12 @@ const ers = await paceful.ers.get('user-123');`;
   const styles = {
     page: {
       minHeight: '100vh',
-      backgroundColor: '#F9F6F2',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    } as React.CSSProperties,
-    header: {
-      backgroundColor: '#FFFFFF',
-      borderBottom: '1px solid #E5E0D9',
-      padding: '16px 24px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    } as React.CSSProperties,
-    logo: {
-      fontSize: '20px',
-      fontWeight: 600,
-      color: '#1F1D1A',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
+      backgroundColor: 'var(--color-canvas, #FAF8F3)',
+      fontFamily: 'var(--font-dm-sans, "DM Sans", sans-serif)',
     } as React.CSSProperties,
     container: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '32px 24px',
+      maxWidth: '1100px',
+      padding: '32px',
     } as React.CSSProperties,
     loginContainer: {
       maxWidth: '400px',
@@ -537,10 +520,11 @@ const ers = await paceful.ers.get('user-123');`;
     } as React.CSSProperties,
     welcomeTitle: {
       fontSize: '28px',
-      fontWeight: 600,
-      color: '#1F1D1A',
+      fontWeight: 500,
+      color: '#1C1917',
       marginBottom: '8px',
       textAlign: 'center' as const,
+      fontFamily: 'var(--font-fraunces, Fraunces, serif)',
     } as React.CSSProperties,
     welcomeSubtitle: {
       fontSize: '16px',
@@ -551,25 +535,26 @@ const ers = await paceful.ers.get('user-123');`;
     input: {
       width: '100%',
       padding: '12px 16px',
-      fontSize: '15px',
-      border: '1px solid #E5E0D9',
-      borderRadius: '8px',
+      fontSize: '14px',
+      border: '1px solid #E7E5E4',
+      borderRadius: '4px',
       outline: 'none',
       boxSizing: 'border-box' as const,
-      fontFamily: 'monospace',
+      fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)',
+      background: '#FFFFFF',
+      color: '#1C1917',
     } as React.CSSProperties,
     button: {
       width: '100%',
       padding: '12px 24px',
-      fontSize: '15px',
+      fontSize: '14px',
       fontWeight: 500,
-      backgroundColor: '#5B8A72',
-      color: '#FFFFFF',
+      backgroundColor: '#1C1917',
+      color: '#FAFAF9',
       border: 'none',
-      borderRadius: '8px',
+      borderRadius: '4px',
       cursor: 'pointer',
       marginTop: '16px',
-      transition: 'background-color 0.15s ease',
     } as React.CSSProperties,
     buttonDisabled: {
       backgroundColor: '#9A938A',
@@ -596,16 +581,18 @@ const ers = await paceful.ers.get('user-123');`;
       marginBottom: '16px',
     } as React.CSSProperties,
     cardTitle: {
-      fontSize: '16px',
-      fontWeight: 600,
-      color: '#1F1D1A',
+      fontSize: '15px',
+      fontWeight: 500,
+      color: '#1C1917',
       marginBottom: '16px',
+      fontFamily: 'var(--font-fraunces, Fraunces, serif)',
     } as React.CSSProperties,
     statNumber: {
       fontSize: '32px',
-      fontWeight: 700,
-      color: '#1F1D1A',
+      fontWeight: 500,
+      color: '#1C1917',
       lineHeight: 1,
+      fontFamily: 'var(--font-fraunces, Fraunces, serif)',
     } as React.CSSProperties,
     statLabel: {
       fontSize: '14px',
@@ -613,11 +600,11 @@ const ers = await paceful.ers.get('user-123');`;
       marginTop: '4px',
     } as React.CSSProperties,
     codeBlock: {
-      backgroundColor: '#1F1D1A',
-      color: '#E5E0D9',
-      borderRadius: '8px',
+      backgroundColor: '#1C1917',
+      color: '#E7E5E4',
+      borderRadius: '4px',
       padding: '16px',
-      fontFamily: 'monospace',
+      fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)',
       fontSize: '13px',
       lineHeight: 1.6,
       overflow: 'auto',
@@ -637,19 +624,19 @@ const ers = await paceful.ers.get('user-123');`;
     } as React.CSSProperties,
     tag: {
       display: 'inline-block',
-      padding: '4px 8px',
+      padding: '3px 8px',
       fontSize: '12px',
-      borderRadius: '4px',
+      borderRadius: '2px',
       marginRight: '4px',
       marginBottom: '4px',
     } as React.CSSProperties,
     tagActive: {
-      backgroundColor: '#E8F5E9',
-      color: '#2E7D32',
+      backgroundColor: 'rgba(91,138,114,0.12)',
+      color: '#3D6B54',
     } as React.CSSProperties,
     tagInactive: {
-      backgroundColor: '#FFF3E0',
-      color: '#E65100',
+      backgroundColor: 'rgba(212,151,59,0.12)',
+      color: '#92400E',
     } as React.CSSProperties,
     progressBar: {
       height: '8px',
@@ -666,33 +653,33 @@ const ers = await paceful.ers.get('user-123');`;
       transition: 'width 0.3s ease',
     }) as React.CSSProperties,
     link: {
-      color: '#5B8A72',
+      color: '#1C1917',
       textDecoration: 'none',
       fontWeight: 500,
     } as React.CSSProperties,
     logoutButton: {
       padding: '8px 16px',
-      fontSize: '14px',
+      fontSize: '13px',
       backgroundColor: 'transparent',
-      color: '#6B6560',
-      border: '1px solid #E5E0D9',
-      borderRadius: '6px',
+      color: '#78716C',
+      border: '1px solid #E7E5E4',
+      borderRadius: '4px',
       cursor: 'pointer',
     } as React.CSSProperties,
     statusBadge: (status: string) => {
       const colors: Record<string, { bg: string; text: string }> = {
-        delivered: { bg: '#E8F5E9', text: '#2E7D32' },
-        failed: { bg: '#FFEBEE', text: '#C62828' },
-        retrying: { bg: '#FFF3E0', text: '#E65100' },
-        pending: { bg: '#E3F2FD', text: '#1565C0' },
+        delivered: { bg: 'rgba(91,138,114,0.12)', text: '#3D6B54' },
+        failed: { bg: 'rgba(184,107,100,0.12)', text: '#8B3D3D' },
+        retrying: { bg: 'rgba(212,151,59,0.12)', text: '#92400E' },
+        pending: { bg: '#F4F1ED', text: '#6B6560' },
       };
       const color = colors[status] || colors.pending;
       return {
         display: 'inline-block',
-        padding: '4px 8px',
+        padding: '3px 8px',
         fontSize: '12px',
         fontWeight: 500,
-        borderRadius: '4px',
+        borderRadius: '2px',
         backgroundColor: color.bg,
         color: color.text,
         textTransform: 'capitalize' as const,
@@ -701,18 +688,17 @@ const ers = await paceful.ers.get('user-123');`;
     filterButton: (isActive: boolean) => ({
       padding: '6px 12px',
       fontSize: '13px',
-      backgroundColor: isActive ? '#5B8A72' : 'transparent',
-      color: isActive ? '#FFFFFF' : '#6B6560',
-      border: isActive ? 'none' : '1px solid #E5E0D9',
-      borderRadius: '6px',
+      backgroundColor: isActive ? '#1C1917' : 'transparent',
+      color: isActive ? '#FAFAF9' : '#78716C',
+      border: isActive ? 'none' : '1px solid #E7E5E4',
+      borderRadius: '4px',
       cursor: 'pointer',
-      transition: 'all 0.15s ease',
     }) as React.CSSProperties,
     retryButton: {
-      padding: '4px 8px',
+      padding: '4px 10px',
       fontSize: '12px',
-      backgroundColor: '#5B8A72',
-      color: '#FFFFFF',
+      backgroundColor: '#1C1917',
+      color: '#FAFAF9',
       border: 'none',
       borderRadius: '4px',
       cursor: 'pointer',
@@ -721,26 +707,6 @@ const ers = await paceful.ers.get('user-123');`;
       backgroundColor: '#9A938A',
       cursor: 'not-allowed',
     } as React.CSSProperties,
-    tabContainer: {
-      display: 'flex',
-      gap: '4px',
-      backgroundColor: '#F4F1ED',
-      padding: '4px',
-      borderRadius: '8px',
-      marginBottom: '24px',
-    } as React.CSSProperties,
-    tab: (isActive: boolean) => ({
-      padding: '10px 20px',
-      fontSize: '14px',
-      fontWeight: 500,
-      backgroundColor: isActive ? '#FFFFFF' : 'transparent',
-      color: isActive ? '#1F1D1A' : '#6B6560',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      transition: 'all 0.15s ease',
-      boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-    }) as React.CSSProperties,
     benchmarkBar: {
       display: 'flex',
       alignItems: 'center',
@@ -788,56 +754,41 @@ const ers = await paceful.ers.get('user-123');`;
     } as React.CSSProperties,
     percentileBadge: (percentile: number) => ({
       display: 'inline-block',
-      padding: '4px 10px',
+      padding: '3px 10px',
       fontSize: '13px',
-      fontWeight: 600,
-      borderRadius: '12px',
-      backgroundColor: percentile >= 75 ? '#E8F5E9' : percentile >= 50 ? '#FFF3E0' : '#FFEBEE',
-      color: percentile >= 75 ? '#2E7D32' : percentile >= 50 ? '#E65100' : '#C62828',
+      fontWeight: 500,
+      borderRadius: '2px',
+      backgroundColor: percentile >= 75 ? 'rgba(91,138,114,0.12)' : percentile >= 50 ? 'rgba(212,151,59,0.12)' : 'rgba(184,107,100,0.12)',
+      color: percentile >= 75 ? '#3D6B54' : percentile >= 50 ? '#92400E' : '#8B3D3D',
     }) as React.CSSProperties,
     trendBadge: (trend: string) => ({
       display: 'inline-flex',
       alignItems: 'center',
       gap: '4px',
-      padding: '4px 8px',
+      padding: '3px 8px',
       fontSize: '12px',
       fontWeight: 500,
-      borderRadius: '4px',
-      backgroundColor: trend === 'improving' ? '#E8F5E9' : trend === 'declining' ? '#FFEBEE' : '#F4F1ED',
-      color: trend === 'improving' ? '#2E7D32' : trend === 'declining' ? '#C62828' : '#6B6560',
+      borderRadius: '2px',
+      backgroundColor: trend === 'improving' ? 'rgba(91,138,114,0.12)' : trend === 'declining' ? 'rgba(184,107,100,0.12)' : '#F4F1ED',
+      color: trend === 'improving' ? '#3D6B54' : trend === 'declining' ? '#8B3D3D' : '#78716C',
     }) as React.CSSProperties,
     insightCard: {
       padding: '12px 16px',
-      backgroundColor: '#F9F6F2',
-      borderRadius: '8px',
-      borderLeft: '3px solid #5B8A72',
-      marginBottom: '12px',
+      backgroundColor: '#F4F1ED',
+      borderRadius: '0',
+      borderLeft: '3px solid #FBBF24',
+      marginBottom: '8px',
       fontSize: '14px',
-      color: '#1F1D1A',
-      lineHeight: 1.5,
+      color: '#1C1917',
+      lineHeight: 1.6,
     } as React.CSSProperties,
   };
 
   // Loading session check
   if (checkingSession) {
     return (
-      <div style={styles.page}>
-        <header style={styles.header}>
-          <div style={styles.logo}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#5B8A72" />
-              <path d="M8 12 L11 15 L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Paceful Partners
-          </div>
-        </header>
-        <div style={styles.loginContainer}>
-          <Card>
-            <div style={{ textAlign: 'center', padding: '40px 0' }}>
-              <p style={{ color: '#6B6560' }}>Loading...</p>
-            </div>
-          </Card>
-        </div>
+      <div style={{ minHeight: '100vh', background: 'var(--color-canvas, #FAF8F3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#78716C', fontSize: '14px' }}>Loading...</p>
       </div>
     );
   }
@@ -845,22 +796,23 @@ const ers = await paceful.ers.get('user-123');`;
   // Login screen
   if (!isAuthenticated) {
     return (
-      <div style={styles.page}>
+      <div style={{ minHeight: '100vh', background: 'var(--color-canvas, #FAF8F3)', fontFamily: 'var(--font-dm-sans, "DM Sans", sans-serif)' }}>
         <style>{`
           @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
           }
         `}</style>
-        <header style={styles.header}>
-          <div style={styles.logo}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#5B8A72" />
-              <path d="M8 12 L11 15 L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Paceful Partners
-          </div>
-        </header>
+        <div style={{ borderBottom: '1px solid #E7E5E4', background: '#FAFAF9', padding: '16px 24px' }}>
+          <a href="/" style={{ textDecoration: 'none' }}>
+            <span style={{ fontFamily: 'var(--font-fraunces, Fraunces, serif)', fontSize: '18px', fontWeight: 500, color: '#1C1917' }}>
+              Paceful
+            </span>
+            <span style={{ fontSize: '12px', color: '#78716C', marginLeft: '8px', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>
+              Partners
+            </span>
+          </a>
+        </div>
         <div style={styles.loginContainer}>
           <Card>
             <h1 style={styles.welcomeTitle}>Partner Dashboard</h1>
@@ -886,18 +838,13 @@ const ers = await paceful.ers.get('user-123');`;
               </button>
             </form>
             {authError && <p style={styles.errorText}>{authError}</p>}
-            <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #E5E0D9' }}>
-              <p style={{ fontSize: '14px', color: '#6B6560', marginBottom: '8px' }}>
+            <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #E7E5E4' }}>
+              <p style={{ fontSize: '14px', color: '#78716C', marginBottom: '8px' }}>
                 Or log in with email
               </p>
               <a
                 href="/partners/login"
-                style={{
-                  color: '#5B8A72',
-                  fontWeight: 500,
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                }}
+                style={{ color: '#1C1917', fontWeight: 500, textDecoration: 'underline', fontSize: '14px' }}
               >
                 Use magic link instead
               </a>
@@ -908,9 +855,17 @@ const ers = await paceful.ers.get('user-123');`;
     );
   }
 
+  const tabLabel: Record<DashboardTab, string> = {
+    overview: 'Overview',
+    webhooks: 'Webhooks',
+    benchmarks: 'Benchmarks',
+    analytics: 'Analytics',
+    keys: 'API Keys',
+  };
+
   // Dashboard
   return (
-    <div style={styles.page}>
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'var(--font-dm-sans, "DM Sans", sans-serif)' }}>
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
@@ -918,76 +873,118 @@ const ers = await paceful.ers.get('user-123');`;
         }
       `}</style>
 
-      {/* Header */}
-      <header style={styles.header}>
-        <div style={styles.logo}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" fill="#5B8A72" />
-            <path d="M8 12 L11 15 L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Paceful Partners
-          {(partnerInfo || sessionData) && (
-            <span style={{ color: '#6B6560', fontWeight: 400, marginLeft: '8px' }}>
-              — {partnerInfo?.partnerName || sessionData?.companyName}
+      {/* Sidebar */}
+      <nav style={{
+        width: '200px',
+        flexShrink: 0,
+        background: 'var(--color-inverted, #1C1917)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflowY: 'auto',
+      }}>
+        {/* Logo */}
+        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(250,250,249,0.08)' }}>
+          <a href="/" style={{ textDecoration: 'none', display: 'block' }}>
+            <span style={{ fontFamily: 'var(--font-fraunces, Fraunces, serif)', fontSize: '18px', fontWeight: 500, color: '#FAFAF9' }}>
+              Paceful
             </span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {authMethod === 'session' && sessionData && (
-            <span style={{ fontSize: '13px', color: '#6B6560' }}>
-              {sessionData.email}
-            </span>
-          )}
-          <a href="/docs/api" style={{
-            fontSize: '13px',
-            color: '#5B8A72',
-            fontWeight: 500,
-            textDecoration: 'none',
-          }}>
-            API Reference
           </a>
-          <button onClick={handleLogout} style={styles.logoutButton}>
-            Log out
+          <div style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'rgba(250,250,249,0.35)', marginTop: '3px' }}>
+            Partners
+          </div>
+        </div>
+
+        {/* Nav items */}
+        <div style={{ flex: 1, paddingTop: '8px' }}>
+          {(
+            [
+              { key: 'overview' as DashboardTab, label: 'Overview' },
+              { key: 'webhooks' as DashboardTab, label: 'Webhooks' },
+              { key: 'benchmarks' as DashboardTab, label: 'Benchmarks' },
+              { key: 'analytics' as DashboardTab, label: 'Analytics' },
+              ...(authMethod === 'session' && keysData ? [{ key: 'keys' as DashboardTab, label: 'API Keys' }] : []),
+            ]
+          ).map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setActiveTab(item.key)}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '10px 20px',
+                fontSize: '14px',
+                fontWeight: activeTab === item.key ? 500 : 400,
+                background: activeTab === item.key ? 'rgba(250,250,249,0.07)' : 'transparent',
+                color: activeTab === item.key ? '#FAFAF9' : 'rgba(250,250,249,0.5)',
+                border: 'none',
+                borderLeft: `3px solid ${activeTab === item.key ? '#FBBF24' : 'transparent'}`,
+                cursor: 'pointer',
+                textAlign: 'left' as const,
+                fontFamily: 'var(--font-dm-sans, "DM Sans", sans-serif)',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Sidebar footer */}
+        <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(250,250,249,0.08)' }}>
+          <a href="/partners/docs" style={{ display: 'block', fontSize: '13px', color: 'rgba(250,250,249,0.4)', textDecoration: 'none', marginBottom: '14px' }}>
+            API Reference →
+          </a>
+          {authMethod === 'session' && sessionData && (
+            <div style={{ fontSize: '12px', color: 'rgba(250,250,249,0.3)', marginBottom: '12px', wordBreak: 'break-all' as const }}>
+              {sessionData.email}
+            </div>
+          )}
+          <button onClick={handleLogout} style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(250,250,249,0.4)',
+            fontSize: '13px',
+            cursor: 'pointer',
+            padding: 0,
+            fontFamily: 'var(--font-dm-sans, "DM Sans", sans-serif)',
+          }}>
+            Sign out
           </button>
         </div>
-      </header>
+      </nav>
+
+      {/* Main content */}
+      <div style={{ flex: 1, background: 'var(--color-canvas, #FAF8F3)', overflow: 'auto' }}>
+        {/* Top bar */}
+        <div style={{
+          padding: '18px 32px',
+          borderBottom: '1px solid #E7E5E4',
+          background: '#FAFAF9',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div>
+            <h1 style={{
+              fontFamily: 'var(--font-fraunces, Fraunces, serif)',
+              fontSize: '20px',
+              fontWeight: 500,
+              color: '#1C1917',
+              margin: 0,
+            }}>
+              {tabLabel[activeTab]}
+            </h1>
+            {(partnerInfo || sessionData) && (
+              <div style={{ fontSize: '12px', color: '#78716C', marginTop: '2px' }}>
+                {partnerInfo?.partnerName || sessionData?.companyName}
+              </div>
+            )}
+          </div>
+        </div>
 
       <div style={styles.container}>
-        {/* Tab Navigation */}
-        <div style={styles.tabContainer}>
-          <button
-            onClick={() => setActiveTab('overview')}
-            style={styles.tab(activeTab === 'overview')}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('webhooks')}
-            style={styles.tab(activeTab === 'webhooks')}
-          >
-            Webhooks
-          </button>
-          <button
-            onClick={() => setActiveTab('benchmarks')}
-            style={styles.tab(activeTab === 'benchmarks')}
-          >
-            Benchmarks
-          </button>
-          <button
-            onClick={() => setActiveTab('analytics')}
-            style={styles.tab(activeTab === 'analytics')}
-          >
-            Analytics
-          </button>
-          {authMethod === 'session' && keysData && (
-            <button
-              onClick={() => setActiveTab('keys')}
-              style={styles.tab(activeTab === 'keys')}
-            >
-              API Keys
-            </button>
-          )}
-        </div>
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
@@ -1094,7 +1091,7 @@ const ers = await paceful.ers.get('user-123');`;
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {usageStats?.topEndpoints.map((ep, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <code style={{ fontSize: '14px', color: '#1F1D1A', fontFamily: 'monospace' }}>
+                    <code style={{ fontSize: '14px', color: '#1F1D1A', fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)' }}>
                       {ep.endpoint}
                     </code>
                     <span style={{ fontSize: '14px', color: '#6B6560' }}>
@@ -1163,7 +1160,7 @@ const ers = await paceful.ers.get('user-123');`}
                     style={{
                       padding: '16px',
                       backgroundColor: '#F9F6F2',
-                      borderRadius: '8px',
+                      borderRadius: '4px',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1251,18 +1248,18 @@ const ers = await paceful.ers.get('user-123');`}
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
-                      <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Event</th>
-                      <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Status</th>
-                      <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Response</th>
-                      <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Attempts</th>
-                      <th style={{ textAlign: 'left', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Time</th>
-                      <th style={{ textAlign: 'right', padding: '8px 12px', color: '#6B6560', fontWeight: 500 }}>Actions</th>
+                      <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Event</th>
+                      <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Status</th>
+                      <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Response</th>
+                      <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Attempts</th>
+                      <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Time</th>
+                      <th style={{ textAlign: 'right', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {deliveries.map((delivery) => (
                       <tr key={delivery.id} style={{ borderBottom: '1px solid #F4F1ED' }}>
-                        <td style={{ padding: '12px', color: '#1F1D1A' }}>
+                        <td style={{ padding: '16px', color: '#1C1917' }}>
                           <code style={{ fontSize: '13px' }}>{delivery.eventType}</code>
                         </td>
                         <td style={{ padding: '12px' }}>
@@ -1270,7 +1267,7 @@ const ers = await paceful.ers.get('user-123');`}
                         </td>
                         <td style={{ padding: '12px', color: '#6B6560' }}>
                           {delivery.httpStatusCode ? (
-                            <span style={{ fontFamily: 'monospace' }}>
+                            <span style={{ fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)' }}>
                               HTTP {delivery.httpStatusCode}
                               {delivery.durationMs && ` (${delivery.durationMs}ms)`}
                             </span>
@@ -1380,7 +1377,7 @@ const ers = await paceful.ers.get('user-123');`}
               </div>
               <div>
                 <div style={{ fontSize: '12px', color: '#9A938A', marginBottom: '4px' }}>API Key</div>
-                <code style={{ fontSize: '14px', color: '#1F1D1A', fontFamily: 'monospace' }}>{partnerInfo?.apiKey}</code>
+                <code style={{ fontSize: '14px', color: '#1F1D1A', fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)' }}>{partnerInfo?.apiKey}</code>
               </div>
               <div>
                 <div style={{ fontSize: '12px', color: '#9A938A', marginBottom: '4px' }}>Rate Limit</div>
@@ -1430,7 +1427,7 @@ const ers = await paceful.ers.get('user-123');`}
                         style={{
                           padding: '16px',
                           backgroundColor: '#F9F6F2',
-                          borderRadius: '8px',
+                          borderRadius: '4px',
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1525,7 +1522,7 @@ const ers = await paceful.ers.get('user-123');`}
                     <tbody>
                       {deliveries.map((delivery) => (
                         <tr key={delivery.id} style={{ borderBottom: '1px solid #F4F1ED' }}>
-                          <td style={{ padding: '12px', color: '#1F1D1A' }}>
+                          <td style={{ padding: '16px', color: '#1C1917' }}>
                             <code style={{ fontSize: '13px' }}>{delivery.eventType}</code>
                           </td>
                           <td style={{ padding: '12px' }}>
@@ -1533,7 +1530,7 @@ const ers = await paceful.ers.get('user-123');`}
                           </td>
                           <td style={{ padding: '12px', color: '#6B6560' }}>
                             {delivery.httpStatusCode ? (
-                              <span style={{ fontFamily: 'monospace' }}>
+                              <span style={{ fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)' }}>
                                 HTTP {delivery.httpStatusCode}
                                 {delivery.durationMs && ` (${delivery.durationMs}ms)`}
                               </span>
@@ -1633,7 +1630,7 @@ const ers = await paceful.ers.get('user-123');`}
 
                   {/* Overall ERS Comparison */}
                   {benchmarkData.summary.overallErsVerticalAvg !== null && (
-                    <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#F9F6F2', borderRadius: '8px' }}>
+                    <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#F9F6F2', borderRadius: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                           <div style={{ fontSize: '14px', color: '#6B6560', marginBottom: '4px' }}>Vertical Average Score</div>
@@ -1810,7 +1807,7 @@ const ers = await paceful.ers.get('user-123');`}
                               contentStyle={{
                                 backgroundColor: '#FFFFFF',
                                 border: '1px solid #E5E0D9',
-                                borderRadius: '8px',
+                                borderRadius: '4px',
                                 fontSize: '13px',
                               }}
                               labelFormatter={(value) => new Date(value).toLocaleDateString()}
@@ -1818,10 +1815,10 @@ const ers = await paceful.ers.get('user-123');`}
                             <Line
                               type="monotone"
                               dataKey="count"
-                              stroke="#5B8A72"
+                              stroke="#1C1917"
                               strokeWidth={2}
-                              dot={{ fill: '#5B8A72', strokeWidth: 0, r: 3 }}
-                              activeDot={{ fill: '#5B8A72', strokeWidth: 0, r: 5 }}
+                              dot={{ fill: '#1C1917', strokeWidth: 0, r: 3 }}
+                              activeDot={{ fill: '#1C1917', strokeWidth: 0, r: 5 }}
                             />
                           </LineChart>
                         </ResponsiveContainer>
@@ -1848,7 +1845,7 @@ const ers = await paceful.ers.get('user-123');`}
                               contentStyle={{
                                 backgroundColor: '#FFFFFF',
                                 border: '1px solid #E5E0D9',
-                                borderRadius: '8px',
+                                borderRadius: '4px',
                                 fontSize: '13px',
                               }}
                               formatter={(value, name) => [
@@ -1909,7 +1906,7 @@ const ers = await paceful.ers.get('user-123');`}
                                 contentStyle={{
                                   backgroundColor: '#FFFFFF',
                                   border: '1px solid #E5E0D9',
-                                  borderRadius: '8px',
+                                  borderRadius: '4px',
                                   fontSize: '13px',
                                 }}
                                 formatter={(value, name) => [`${value} (${analyticsData.stageFunnel.stages.find(s => s.stage === name)?.percentage || 0}%)`, name]}
@@ -1918,7 +1915,7 @@ const ers = await paceful.ers.get('user-123');`}
                             </PieChart>
                           </ResponsiveContainer>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px', padding: '12px', backgroundColor: '#F9F6F2', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px', padding: '12px', backgroundColor: '#F9F6F2', borderRadius: '4px' }}>
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '12px', color: '#6B6560' }}>Healing → Rebuilding</div>
                             <div style={{ fontSize: '18px', fontWeight: 600, color: '#1F1D1A' }}>
@@ -1949,7 +1946,7 @@ const ers = await paceful.ers.get('user-123');`}
                           <div key={dim.dimension} style={{
                             padding: '16px',
                             backgroundColor: '#F9F6F2',
-                            borderRadius: '8px',
+                            borderRadius: '4px',
                             borderLeft: `4px solid ${dim.average >= 70 ? '#5B8A72' : dim.average >= 40 ? '#C4973B' : '#B56B6B'}`
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -2009,13 +2006,13 @@ const ers = await paceful.ers.get('user-123');`}
                               contentStyle={{
                                 backgroundColor: '#FFFFFF',
                                 border: '1px solid #E5E0D9',
-                                borderRadius: '8px',
+                                borderRadius: '4px',
                                 fontSize: '13px',
                               }}
                             />
                             <Legend />
-                            <Bar dataKey="verticalAvg" name="Vertical Avg" fill="#E5E0D9" radius={[0, 4, 4, 0]} />
-                            <Bar dataKey="partnerAvg" name="Your Avg" fill="#5B8A72" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="verticalAvg" name="Vertical Avg" fill="#E7E5E4" radius={[0, 2, 2, 0]} />
+                            <Bar dataKey="partnerAvg" name="Your Avg" fill="#1C1917" radius={[0, 2, 2, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
@@ -2024,7 +2021,7 @@ const ers = await paceful.ers.get('user-123');`}
                           marginTop: '16px',
                           padding: '12px 16px',
                           backgroundColor: '#F9F6F2',
-                          borderRadius: '8px',
+                          borderRadius: '4px',
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center'
@@ -2056,17 +2053,17 @@ const ers = await paceful.ers.get('user-123');`}
                       <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                           <thead>
-                            <tr style={{ borderBottom: '1px solid #E5E0D9' }}>
-                              <th style={{ textAlign: 'left', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Signal</th>
-                              <th style={{ textAlign: 'left', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Dimension</th>
-                              <th style={{ textAlign: 'left', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Sentiment</th>
-                              <th style={{ textAlign: 'right', padding: '12px', color: '#6B6560', fontWeight: 500 }}>Frequency</th>
+                            <tr>
+                              <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Signal</th>
+                              <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Dimension</th>
+                              <th style={{ textAlign: 'left', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Sentiment</th>
+                              <th style={{ textAlign: 'right', padding: '10px 16px', color: '#78716C', fontWeight: 600, fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', background: '#F4F1ED' }}>Frequency</th>
                             </tr>
                           </thead>
                           <tbody>
                             {analyticsData.topSignals.map((signal, i) => (
                               <tr key={i} style={{ borderBottom: '1px solid #F4F1ED' }}>
-                                <td style={{ padding: '12px', color: '#1F1D1A', fontWeight: 500 }}>
+                                <td style={{ padding: '16px', color: '#1C1917', fontWeight: 500 }}>
                                   {signal.signal}
                                 </td>
                                 <td style={{ padding: '12px', color: '#6B6560' }}>
@@ -2079,8 +2076,8 @@ const ers = await paceful.ers.get('user-123');`}
                                     fontSize: '12px',
                                     fontWeight: 500,
                                     borderRadius: '4px',
-                                    backgroundColor: signal.sentiment === 'positive' ? '#E8F5E9' : signal.sentiment === 'negative' ? '#FFEBEE' : '#F4F1ED',
-                                    color: signal.sentiment === 'positive' ? '#2E7D32' : signal.sentiment === 'negative' ? '#C62828' : '#6B6560',
+                                    backgroundColor: signal.sentiment === 'positive' ? 'rgba(91,138,114,0.12)' : signal.sentiment === 'negative' ? 'rgba(184,107,100,0.12)' : '#F4F1ED',
+                                    color: signal.sentiment === 'positive' ? '#3D6B54' : signal.sentiment === 'negative' ? '#8B3D3D' : '#78716C',
                                     textTransform: 'capitalize',
                                   }}>
                                     {signal.sentiment}
@@ -2118,16 +2115,16 @@ const ers = await paceful.ers.get('user-123');`}
             {/* Verification Status */}
             {!keysData.emailVerified && !keysData.isPersonalEmail && (
               <div style={{
-                backgroundColor: '#E3F2FD',
-                borderRadius: '8px',
+                backgroundColor: 'rgba(251,191,36,0.08)',
+                borderRadius: '4px',
                 padding: '16px',
                 marginBottom: '24px',
-                borderLeft: '3px solid #1976D2',
+                borderLeft: '3px solid #D4973B',
               }}>
-                <p style={{ margin: 0, color: '#1565C0', fontWeight: 600 }}>
+                <p style={{ margin: 0, color: '#92400E', fontWeight: 600 }}>
                   Verify your email to activate your live key
                 </p>
-                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#1565C0' }}>
+                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#92400E' }}>
                   Check your inbox for the verification email, or contact partners@paceful.com if you need help.
                 </p>
               </div>
@@ -2136,7 +2133,7 @@ const ers = await paceful.ers.get('user-123');`}
             {keysData.isPersonalEmail && (
               <div style={{
                 backgroundColor: '#FEF9E7',
-                borderRadius: '8px',
+                borderRadius: '4px',
                 padding: '16px',
                 marginBottom: '24px',
                 borderLeft: '3px solid #D4973B',
@@ -2162,19 +2159,19 @@ const ers = await paceful.ers.get('user-123');`}
                   </div>
                   <span style={{
                     display: 'inline-block',
-                    padding: '4px 10px',
-                    borderRadius: '12px',
+                    padding: '3px 8px',
+                    borderRadius: '2px',
                     fontSize: '12px',
-                    fontWeight: 600,
-                    backgroundColor: '#E8F5E9',
-                    color: '#2E7D32',
+                    fontWeight: 500,
+                    backgroundColor: 'rgba(91,138,114,0.12)',
+                    color: '#3D6B54',
                   }}>
                     Active
                   </span>
                 </div>
                 <div style={{
                   backgroundColor: '#F9F6F2',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   padding: '12px 16px',
                   display: 'flex',
                   alignItems: 'center',
@@ -2182,7 +2179,7 @@ const ers = await paceful.ers.get('user-123');`}
                   gap: '12px',
                 }}>
                   <code style={{
-                    fontFamily: 'monospace',
+                    fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)',
                     fontSize: '14px',
                     color: '#1F1D1A',
                     wordBreak: 'break-all',
@@ -2195,11 +2192,11 @@ const ers = await paceful.ers.get('user-123');`}
                     style={{
                       padding: '8px 16px',
                       fontSize: '13px',
-                      fontWeight: 600,
-                      backgroundColor: '#5B8A72',
-                      color: '#FFFFFF',
+                      fontWeight: 500,
+                      backgroundColor: '#1C1917',
+                      color: '#FAFAF9',
                       border: 'none',
-                      borderRadius: '6px',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       whiteSpace: 'nowrap',
                     }}
@@ -2220,12 +2217,12 @@ const ers = await paceful.ers.get('user-123');`}
                   </div>
                   <span style={{
                     display: 'inline-block',
-                    padding: '4px 10px',
-                    borderRadius: '12px',
+                    padding: '3px 8px',
+                    borderRadius: '2px',
                     fontSize: '12px',
-                    fontWeight: 600,
-                    backgroundColor: keysData.liveKeyActive ? '#E8F5E9' : '#FEF9E7',
-                    color: keysData.liveKeyActive ? '#2E7D32' : '#92400E',
+                    fontWeight: 500,
+                    backgroundColor: keysData.liveKeyActive ? 'rgba(91,138,114,0.12)' : 'rgba(212,151,59,0.12)',
+                    color: keysData.liveKeyActive ? '#3D6B54' : '#92400E',
                   }}>
                     {keysData.liveKeyActive ? 'Active' : keysData.isPersonalEmail ? 'Requires Business Email' : 'Pending Verification'}
                   </span>
@@ -2233,7 +2230,7 @@ const ers = await paceful.ers.get('user-123');`}
                 {keysData.liveApiKey ? (
                   <div style={{
                     backgroundColor: '#F9F6F2',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     padding: '12px 16px',
                     display: 'flex',
                     alignItems: 'center',
@@ -2242,7 +2239,7 @@ const ers = await paceful.ers.get('user-123');`}
                     opacity: keysData.liveKeyActive ? 1 : 0.6,
                   }}>
                     <code style={{
-                      fontFamily: 'monospace',
+                      fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)',
                       fontSize: '14px',
                       color: '#1F1D1A',
                       wordBreak: 'break-all',
@@ -2256,11 +2253,11 @@ const ers = await paceful.ers.get('user-123');`}
                       style={{
                         padding: '8px 16px',
                         fontSize: '13px',
-                        fontWeight: 600,
-                        backgroundColor: keysData.liveKeyActive ? '#5B8A72' : '#9A938A',
-                        color: '#FFFFFF',
+                        fontWeight: 500,
+                        backgroundColor: keysData.liveKeyActive ? '#1C1917' : '#9A938A',
+                        color: '#FAFAF9',
                         border: 'none',
-                        borderRadius: '6px',
+                        borderRadius: '4px',
                         cursor: keysData.liveKeyActive ? 'pointer' : 'not-allowed',
                         whiteSpace: 'nowrap',
                       }}
@@ -2271,7 +2268,7 @@ const ers = await paceful.ers.get('user-123');`}
                 ) : (
                   <div style={{
                     backgroundColor: '#F9F6F2',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     padding: '16px',
                     textAlign: 'center',
                     color: '#6B6560',
@@ -2289,9 +2286,9 @@ const ers = await paceful.ers.get('user-123');`}
                 <div style={styles.cardTitle}>Using Your Keys</div>
                 <div style={{
                   backgroundColor: '#1F1D1A',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   padding: '16px',
-                  fontFamily: 'monospace',
+                  fontFamily: 'var(--font-mono, "SF Mono", Monaco, monospace)',
                   fontSize: '13px',
                   lineHeight: 1.6,
                   color: '#E5E0D9',
@@ -2312,6 +2309,7 @@ const ers = await paceful.ers.get('user-123');`}
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );

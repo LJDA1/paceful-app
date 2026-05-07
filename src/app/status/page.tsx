@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import MarketingNav from '@/components/MarketingNav';
+import MarketingFooter from '@/components/MarketingFooter';
 
 type ServiceStatus = 'operational' | 'degraded' | 'slow' | 'down' | 'checking';
 
@@ -129,33 +131,19 @@ export default function StatusPage() {
   const overall = OVERALL_CONFIG[overallStatus] ?? OVERALL_CONFIG.checking;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F9F6F2', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <>
       <style>{`
         @keyframes ping {
           75%, 100% { transform: scale(2); opacity: 0; }
         }
       `}</style>
-
-      {/* Logo Bar */}
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid #E8E2DA', background: '#FFFFFF' }}>
-        <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="16" fill="#5B8A72" />
-            <path d="M10 16C10 12.686 12.686 10 16 10C19.314 10 22 12.686 22 16" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-            <circle cx="16" cy="19" r="3" fill="white" />
-          </svg>
-          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 500, color: '#1F1D1A' }}>
-            Paceful
-          </span>
-        </Link>
-      </div>
-
+      <MarketingNav />
       <main style={{ maxWidth: '720px', margin: '0 auto', padding: '48px 24px' }}>
 
         {/* Page title + last-checked */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: '32px', fontWeight: 500, color: '#1F1D1A', marginBottom: '4px' }}>
+            <h1 style={{ fontFamily: 'var(--font-fraunces, Fraunces, serif)', fontSize: '32px', fontWeight: 500, color: '#1F1D1A', marginBottom: '4px' }}>
               System Status
             </h1>
             {lastChecked && (
@@ -171,7 +159,7 @@ export default function StatusPage() {
               padding: '8px 18px',
               background: '#FFFFFF',
               border: '1px solid #E8E2DA',
-              borderRadius: '8px',
+              borderRadius: '4px',
               fontSize: '13px',
               fontWeight: 600,
               color: checking ? '#9A938A' : '#1F1D1A',
@@ -191,17 +179,17 @@ export default function StatusPage() {
           padding: '20px 24px',
           background: overall.bg,
           border: `1px solid ${overall.dot}33`,
-          borderRadius: '12px',
+          borderRadius: '4px',
           marginBottom: '32px',
         }}>
           <Dot color={overall.dot} pulse={overallStatus === 'operational'} />
-          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: 500, color: overall.color }}>
+          <span style={{ fontFamily: 'var(--font-fraunces, Fraunces, serif)', fontSize: '20px', fontWeight: 500, color: overall.color }}>
             {overall.label}
           </span>
         </div>
 
         {/* Services table */}
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8E2DA', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid #E8E2DA', borderRadius: '4px', overflow: 'hidden' }}>
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr auto auto auto',
@@ -266,16 +254,7 @@ export default function StatusPage() {
         </p>
 
       </main>
-
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid #E8E2DA', padding: '24px', textAlign: 'center', marginTop: '48px' }}>
-        <p style={{ fontSize: '14px', color: '#9A938A' }}>
-          Built by Paceful ·{' '}
-          <Link href="/security" style={{ color: '#5B8A72' }}>Security</Link>
-          {' · '}
-          <Link href="/docs/api" style={{ color: '#5B8A72' }}>API Docs</Link>
-        </p>
-      </footer>
-    </div>
+      <MarketingFooter />
+    </>
   );
 }

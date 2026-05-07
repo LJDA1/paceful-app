@@ -9,7 +9,7 @@ const config: IntegrationPageConfig = {
     { label: 'Player chat / support log', detail: 'In-app messages or support tickets' },
     { label: 'Your backend', detail: 'Forwards text on trigger events' },
     { label: 'POST /assess/gambling', detail: 'Paceful vertical risk engine' },
-    { label: 'Risk score + ERS', detail: 'Combined risk & readiness output' },
+    { label: 'Risk score + readiness', detail: 'Combined risk & readiness output' },
     { label: 'Intervention triggers', detail: 'Soft prompts, limits, or escalation' },
   ],
 
@@ -70,7 +70,7 @@ const config: IntegrationPageConfig = {
     },
   ],
 
-  expectedResults: 'Operators using the ERS gambling vertical report earlier identification of at-risk players compared to behaviour-only signals, enabling proportionate interventions that reduce harmful play while maintaining a compliant audit trail.',
+  expectedResults: 'Operators using the gambling vertical report earlier identification of at-risk players compared to behaviour-only signals, enabling proportionate interventions that reduce harmful play while maintaining a compliant audit trail.',
 };
 
 export default function GamblingIntegrationPage() {

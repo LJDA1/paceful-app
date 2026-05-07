@@ -1,0 +1,380 @@
+{
+  "vertical": "cx",
+  "version": "1.0.0",
+  "display_name": "Customer Experience Intelligence",
+  "description": "Emotional readiness and risk signals for contact centers, customer support, and CX teams. Predicts escalation, churn, and identifies customers requiring specialized handling.",
+  "ers_dimensions": ["emotional_stability", "self_reflection", "coping_capacity", "behavioral_engagement", "social_readiness"],
+  "signals": [
+    {
+      "id": "CX-001",
+      "name": "churn_risk",
+      "display_name": "Churn Risk",
+      "category": "behavioral_engagement",
+      "description": "Probability that the customer will cancel, downgrade, or switch to a competitor based on emotional state and language patterns.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Loyal", "action": "Standard support" },
+        "medium": { "range": [0.3, 0.6], "label": "At risk", "action": "Proactive follow-up after resolution" },
+        "high": { "range": [0.6, 0.8], "label": "High risk", "action": "Retention specialist handoff" },
+        "critical": { "range": [0.8, 1.0], "label": "Churning", "action": "Immediate retention intervention + save offer" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "cancel", "cancellation", "unsubscribe", "downgrade",
+          "switching to", "looking at alternatives", "competitor",
+          "not worth it", "waste of money", "overpriced",
+          "done with", "leaving", "moving on", "last straw"
+        ],
+        "behavioral_patterns": [
+          "mentioning_competitor_by_name",
+          "asking_about_cancellation_process",
+          "referencing_contract_terms",
+          "declining_engagement_over_time"
+        ]
+      },
+      "weight": 0.15
+    },
+    {
+      "id": "CX-002",
+      "name": "escalation_risk",
+      "display_name": "Escalation Risk",
+      "category": "behavioral_engagement",
+      "description": "Likelihood that the customer will request a supervisor, file a formal complaint, or escalate beyond the current support channel.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Contained", "action": "Continue current approach" },
+        "medium": { "range": [0.3, 0.6], "label": "Elevated", "action": "Proactively offer additional help" },
+        "high": { "range": [0.6, 0.8], "label": "High", "action": "Warm transfer to senior agent" },
+        "critical": { "range": [0.8, 1.0], "label": "Critical", "action": "Manager intervention + priority resolution" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "supervisor", "manager", "someone in charge",
+          "escalate", "complaint", "unacceptable",
+          "speak to a real person", "this is ridiculous",
+          "how many times", "I've already explained"
+        ],
+        "behavioral_patterns": [
+          "repeated_contact_same_issue",
+          "increasing_message_intensity",
+          "rejecting_offered_solutions",
+          "demanding_specific_outcomes"
+        ]
+      },
+      "weight": 0.12
+    },
+    {
+      "id": "CX-003",
+      "name": "frustration_intensity",
+      "display_name": "Frustration Intensity",
+      "category": "emotional_stability",
+      "description": "Current level of customer frustration based on language analysis. Unlike anger trajectory, this measures the instantaneous state.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Calm", "action": "Standard tone" },
+        "medium": { "range": [0.3, 0.6], "label": "Frustrated", "action": "Acknowledge frustration explicitly" },
+        "high": { "range": [0.6, 0.8], "label": "Very frustrated", "action": "Lead with empathy, avoid scripts" },
+        "critical": { "range": [0.8, 1.0], "label": "Furious", "action": "De-escalation protocol, human-only handling" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "frustrated", "annoyed", "irritated", "angry",
+          "furious", "fed up", "sick of", "tired of",
+          "can't believe", "seriously", "honestly",
+          "for the hundredth time", "once again"
+        ],
+        "behavioral_patterns": [
+          "exclamation_mark_density",
+          "capitalization_patterns",
+          "sentence_shortening",
+          "profanity_presence"
+        ]
+      },
+      "weight": 0.10
+    },
+    {
+      "id": "CX-004",
+      "name": "frustration_trajectory",
+      "display_name": "Frustration Trajectory",
+      "category": "emotional_stability",
+      "description": "Rate of change in frustration across the conversation. A rapidly rising trajectory is more actionable than high static frustration.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Stable/improving", "action": "Current approach is working" },
+        "medium": { "range": [0.3, 0.6], "label": "Slowly rising", "action": "Adjust approach, offer concrete next steps" },
+        "high": { "range": [0.6, 0.8], "label": "Rapidly rising", "action": "Change approach immediately" },
+        "critical": { "range": [0.8, 1.0], "label": "Spike detected", "action": "Pause automation, immediate human takeover" }
+      },
+      "indicators": {
+        "behavioral_patterns": [
+          "sentiment_delta_between_messages",
+          "increasing_negative_word_density",
+          "decreasing_politeness_markers",
+          "accelerating_response_demands"
+        ]
+      },
+      "weight": 0.10
+    },
+    {
+      "id": "CX-005",
+      "name": "public_exposure_risk",
+      "display_name": "Public Exposure Risk",
+      "category": "social_readiness",
+      "description": "Risk that the customer will share their negative experience publicly on social media, review sites, or other public forums.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Private", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "May share", "action": "Ensure positive resolution" },
+        "high": { "range": [0.6, 0.8], "label": "Likely to post", "action": "Priority resolution + follow-up" },
+        "critical": { "range": [0.8, 1.0], "label": "Actively posting/threatening", "action": "Social media team + priority resolution" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "post", "tweet", "review", "reddit",
+          "going public", "everyone should know", "warn others",
+          "followers", "viral", "expose", "share my experience",
+          "tiktok", "youtube video about this"
+        ],
+        "behavioral_patterns": [
+          "mentioning_audience_size",
+          "referencing_similar_viral_complaints",
+          "threatening_public_documentation"
+        ]
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "CX-006",
+      "name": "confusion_level",
+      "display_name": "Customer Confusion Level",
+      "category": "coping_capacity",
+      "description": "Degree to which the customer is confused by the product, process, or support interaction. High confusion predicts repeat contacts and dissatisfaction.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Clear understanding", "action": "Proceed normally" },
+        "medium": { "range": [0.3, 0.6], "label": "Some confusion", "action": "Simplify language, offer step-by-step guidance" },
+        "high": { "range": [0.6, 0.8], "label": "Significantly confused", "action": "Visual aids, screen share offer, written summary" },
+        "critical": { "range": [0.8, 1.0], "label": "Completely lost", "action": "Live walkthrough, phone call offer, dedicated onboarding" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "I don't understand", "confused", "what do you mean",
+          "lost", "makes no sense", "unclear", "can you explain",
+          "I thought", "isn't it supposed to", "why would",
+          "huh", "what", "I'm not following"
+        ],
+        "behavioral_patterns": [
+          "repeated_questions_on_same_topic",
+          "contradictory_actions_described",
+          "misusing_product_terminology",
+          "describing_wrong_workflow"
+        ]
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "CX-007",
+      "name": "repeat_contact_frustration",
+      "display_name": "Repeat Contact Frustration",
+      "category": "coping_capacity",
+      "description": "Signals that the customer has contacted support multiple times for the same issue and is losing patience with the process.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "First contact", "action": "Standard resolution" },
+        "medium": { "range": [0.3, 0.6], "label": "Returning", "action": "Acknowledge prior contacts, show continuity" },
+        "high": { "range": [0.6, 0.8], "label": "Multiple unresolved", "action": "Senior agent + case ownership assignment" },
+        "critical": { "range": [0.8, 1.0], "label": "Chronic unresolved", "action": "Escalation to team lead + root cause investigation" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "again", "still not fixed", "third time", "keep having to",
+          "every time I call", "nobody helps", "going in circles",
+          "already told", "last person said", "was promised",
+          "ticket number", "reference number", "case number"
+        ],
+        "behavioral_patterns": [
+          "citing_previous_interaction_details",
+          "providing_ticket_references",
+          "expressing_fatigue_with_process",
+          "preemptive_frustration_at_start"
+        ]
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "CX-008",
+      "name": "resolution_receptivity",
+      "display_name": "Resolution Receptivity",
+      "category": "self_reflection",
+      "description": "How receptive the customer is to proposed solutions. Low receptivity may indicate they want validation more than resolution, or that offered solutions are inadequate.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Open to solutions", "action": "Propose options confidently" },
+        "medium": { "range": [0.3, 0.6], "label": "Selective", "action": "Validate feelings before proposing solutions" },
+        "high": { "range": [0.6, 0.8], "label": "Resistant", "action": "Ask what resolution would look like to them" },
+        "critical": { "range": [0.8, 1.0], "label": "Rejecting all options", "action": "Stop proposing, listen and validate, then co-create solution" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "that won't work", "already tried that", "no",
+          "that's not good enough", "not acceptable",
+          "you're not listening", "that's not what I asked",
+          "I don't want", "stop suggesting"
+        ],
+        "behavioral_patterns": [
+          "rapid_rejection_of_options",
+          "not_engaging_with_proposed_steps",
+          "restating_problem_after_solution_offered",
+          "emotional_response_to_logical_solutions"
+        ]
+      },
+      "weight": 0.06
+    },
+    {
+      "id": "CX-009",
+      "name": "vip_behavior_signals",
+      "display_name": "High-Value Customer Signals",
+      "category": "social_readiness",
+      "description": "Language patterns indicating the customer may be high-value, influential, or have significant business impact if lost.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Standard customer", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Possibly high-value", "action": "Verify account status, adjust service level" },
+        "high": { "range": [0.6, 0.8], "label": "Likely high-value", "action": "VIP handling protocol" },
+        "critical": { "range": [0.8, 1.0], "label": "Confirmed high-value/influencer", "action": "Executive-level attention" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "enterprise plan", "how much I pay", "long-time customer",
+          "years with you", "multiple accounts", "our team",
+          "company-wide", "organization", "deploy across",
+          "annual contract", "renewal coming up"
+        ],
+        "behavioral_patterns": [
+          "referencing_contract_value",
+          "mentioning_team_size",
+          "referencing_tenure_length",
+          "enterprise_vocabulary"
+        ]
+      },
+      "weight": 0.05
+    },
+    {
+      "id": "CX-010",
+      "name": "positive_recovery_opportunity",
+      "display_name": "Positive Recovery Opportunity",
+      "category": "self_reflection",
+      "description": "Identifies moments where a frustrated customer shows openness to resolution — the window for service recovery.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "No recovery signals", "action": "Focus on de-escalation first" },
+        "medium": { "range": [0.3, 0.6], "label": "Slight opening", "action": "Test with a small win or gesture" },
+        "high": { "range": [0.6, 0.8], "label": "Open to recovery", "action": "Offer concrete resolution + goodwill gesture" },
+        "critical": { "range": [0.8, 1.0], "label": "Active willingness", "action": "Deliver exceptional recovery, ask for feedback" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "I just want", "all I need is", "if you could just",
+          "that would be great", "I appreciate", "thank you for trying",
+          "I understand it's not your fault", "I know you're trying",
+          "look, I just need", "can we just"
+        ],
+        "behavioral_patterns": [
+          "softening_language_after_frustration",
+          "specific_outcome_requests",
+          "acknowledging_agent_effort",
+          "cooperative_language_return"
+        ]
+      },
+      "weight": 0.05
+    },
+    {
+      "id": "CX-011",
+      "name": "urgency_level",
+      "display_name": "Situational Urgency",
+      "category": "coping_capacity",
+      "description": "How urgently the customer needs resolution based on situational context — business-critical issues require different handling than convenience issues.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Low urgency", "action": "Standard SLA" },
+        "medium": { "range": [0.3, 0.6], "label": "Moderate urgency", "action": "Set clear timeline, proactive updates" },
+        "high": { "range": [0.6, 0.8], "label": "High urgency", "action": "Priority queue, real-time updates" },
+        "critical": { "range": [0.8, 1.0], "label": "Business-critical", "action": "Emergency protocol, dedicated resource" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "urgent", "emergency", "ASAP", "right now",
+          "deadline", "presentation tomorrow", "client waiting",
+          "demo in", "launch today", "can't wait",
+          "blocking", "production down", "revenue impact"
+        ],
+        "behavioral_patterns": [
+          "rapid_follow_up_messages",
+          "business_impact_descriptions",
+          "deadline_references",
+          "escalation_threats_tied_to_timeline"
+        ]
+      },
+      "weight": 0.05
+    },
+    {
+      "id": "CX-012",
+      "name": "advocacy_potential",
+      "display_name": "Advocacy Potential",
+      "category": "social_readiness",
+      "description": "Identifies customers who, if handled well, are likely to become advocates — referrers, reviewers, and promoters. The flip side of public exposure risk.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Neutral", "action": "Standard close" },
+        "medium": { "range": [0.3, 0.6], "label": "Satisfied", "action": "Ask for feedback" },
+        "high": { "range": [0.6, 0.8], "label": "Impressed", "action": "Invite to review or case study" },
+        "critical": { "range": [0.8, 1.0], "label": "Delighted advocate", "action": "Referral program invitation + personal thank you" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "amazing", "incredible", "best support", "impressed",
+          "I'll recommend", "telling my friends", "love this",
+          "finally someone who", "above and beyond", "wow",
+          "exactly what I needed", "you just made my day"
+        ],
+        "behavioral_patterns": [
+          "expressing_surprise_at_quality",
+          "volunteering_positive_feedback",
+          "asking_about_referral_programs",
+          "mentioning_sharing_with_network"
+        ]
+      },
+      "weight": 0.03
+    }
+  ],
+  "composite_scores": {
+    "overall_risk": {
+      "description": "Weighted composite of all risk-oriented signals",
+      "calculation": "weighted_average",
+      "thresholds": {
+        "low": [0, 0.3],
+        "moderate": [0.3, 0.5],
+        "high": [0.5, 0.7],
+        "critical": [0.7, 1.0]
+      }
+    },
+    "escalation_composite": {
+      "description": "Combined escalation and churn risk",
+      "signals": ["CX-001", "CX-002", "CX-005", "CX-007"],
+      "calculation": "max_weighted"
+    },
+    "emotional_state": {
+      "description": "Current emotional temperature of the interaction",
+      "signals": ["CX-003", "CX-004", "CX-006"],
+      "calculation": "weighted_average"
+    },
+    "opportunity_score": {
+      "description": "Positive outcome potential — recovery and advocacy signals",
+      "signals": ["CX-010", "CX-012"],
+      "calculation": "weighted_average"
+    }
+  },
+  "api_config": {
+    "endpoint_prefix": "/v1/analyze/cx",
+    "rate_limit": {
+      "requests_per_minute": 200,
+      "requests_per_day": 100000
+    },
+    "response_format": {
+      "include_signal_details": true,
+      "include_ers_dimensions": true,
+      "include_composite_scores": true,
+      "include_recommended_actions": true,
+      "include_opportunity_signals": true,
+      "verbosity_levels": ["minimal", "standard", "detailed"]
+    }
+  }
+}

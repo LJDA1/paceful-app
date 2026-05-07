@@ -1,0 +1,999 @@
+{
+  "vertical": "dating",
+  "version": "1.0.0",
+  "display_name": "Dating Platform Intelligence",
+  "description": "Emotional readiness and safety signals for dating platforms. Detects coercion, harassment escalation, emotional manipulation, and identifies positive connection quality. Signals are decision-support tools for trust & safety teams, not automated actions against users.",
+  "ers_dimensions": [
+    "emotional_stability",
+    "self_reflection",
+    "coping_capacity",
+    "behavioral_engagement",
+    "social_readiness"
+  ],
+  "signals": [
+    {
+      "id": "DAT-001",
+      "name": "harassment_escalation",
+      "display_name": "Harassment Escalation",
+      "category": "behavioral_engagement",
+      "description": "Detection of language patterns that suggest escalating harassment, persistent unwanted contact, or refusal to accept rejection.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "No indicators",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Persistent contact",
+          "action": "Flag for T&S review"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Escalating harassment",
+          "action": "Priority T&S review + intervention options to recipient"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe harassment",
+          "action": "Immediate T&S action + safety resources to recipient"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "answer me",
+          "why are you ignoring",
+          "respond",
+          "stop ignoring",
+          "you owe me",
+          "after everything",
+          "i know where",
+          "i saw you",
+          "don't ignore me",
+          "pick up",
+          "call me back",
+          "i deserve"
+        ],
+        "behavioral_patterns": [
+          "uppercase_usage_increase",
+          "exclamation_mark_density",
+          "repeated_questions_on_same_topic",
+          "ultimatum_frequency"
+        ]
+      },
+      "weight": 0.15
+    },
+    {
+      "id": "DAT-002",
+      "name": "coercion_language",
+      "display_name": "Coercive Pressure",
+      "category": "behavioral_engagement",
+      "description": "Language patterns indicating sexual coercion, pressure tactics, or manipulation designed to overcome a 'no'.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "No indicators",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Pressure tactics",
+          "action": "Educational prompt to sender, support resources to recipient"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Coercive pressure",
+          "action": "T&S review + intervention on sender, safety resources to recipient"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe coercion",
+          "action": "Account restriction + safety resources"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "just this once",
+          "no one will know",
+          "you'll like it",
+          "prove you love me",
+          "if you really",
+          "be a good girl",
+          "don't be like that",
+          "stop playing games",
+          "you know you want",
+          "other girls would",
+          "other guys would",
+          "come on",
+          "loosen up",
+          "you led me on",
+          "you owe me"
+        ],
+        "behavioral_patterns": [
+          "ultimatum_frequency",
+          "specific_outcome_requests",
+          "demanding_specific_outcomes"
+        ]
+      },
+      "weight": 0.14
+    },
+    {
+      "id": "DAT-003",
+      "name": "emotional_manipulation",
+      "display_name": "Emotional Manipulation",
+      "category": "self_reflection",
+      "description": "Patterns consistent with gaslighting, guilt-tripping, love-bombing, or DARVO tactics used to destabilize or control.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Healthy range",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Concerning patterns",
+          "action": "Flag for T&S, soft resources to recipient"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Manipulation detected",
+          "action": "T&S review + relationship health resources to recipient"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe manipulation",
+          "action": "Safety resources + potential account action"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "you're overreacting",
+          "you're crazy",
+          "that never happened",
+          "you're imagining",
+          "you're too sensitive",
+          "no one else would",
+          "lucky to have me",
+          "you'd be nothing without",
+          "you made me",
+          "look what you did",
+          "this is your fault",
+          "always so dramatic",
+          "you're ruining everything",
+          "i'm the only one who"
+        ],
+        "behavioral_patterns": [
+          "cooperative_language_decline",
+          "decreasing_cooperative_language"
+        ]
+      },
+      "weight": 0.12
+    },
+    {
+      "id": "DAT-004",
+      "name": "aggression_trajectory",
+      "display_name": "Aggression Trajectory",
+      "category": "emotional_stability",
+      "description": "Rate of escalating hostility, anger, or aggressive language across messages. Flags rising aggression even when current state is not yet critical.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Stable/cooling",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Warming",
+          "action": "Monitor for continued escalation"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Rising aggression",
+          "action": "T&S review, potential intervention"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Rapid escalation",
+          "action": "Immediate T&S action + safety intervention"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "furious",
+          "pissed",
+          "fuck you",
+          "hate you",
+          "disgusting",
+          "pathetic",
+          "worthless",
+          "bitch",
+          "whore",
+          "slut",
+          "ugly",
+          "useless",
+          "retarded",
+          "shut up"
+        ],
+        "behavioral_patterns": [
+          "uppercase_usage_increase",
+          "exclamation_mark_density",
+          "profanity_presence",
+          "sentence_shortening"
+        ]
+      },
+      "weight": 0.12
+    },
+    {
+      "id": "DAT-005",
+      "name": "boundary_violation",
+      "display_name": "Boundary Violation",
+      "category": "social_readiness",
+      "description": "Unsolicited sexual content, unwanted intimacy requests, or pressure to move off-platform prematurely.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "No indicators",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Forward advances",
+          "action": "Soft intervention on sender, recipient prompt"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Boundary violations",
+          "action": "T&S review + sender guidance"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Severe violations",
+          "action": "Immediate action, account review"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "send me",
+          "show me",
+          "pics",
+          "nudes",
+          "naked",
+          "body pic",
+          "what are you wearing",
+          "send a pic",
+          "dtf",
+          "move to whatsapp",
+          "move to snap",
+          "let's meet tonight",
+          "come over",
+          "my place",
+          "your place",
+          "hotel",
+          "what's your number",
+          "text me",
+          "call me instead"
+        ],
+        "behavioral_patterns": [
+          "specific_outcome_requests",
+          "demanding_specific_outcomes",
+          "urgency_language_density"
+        ]
+      },
+      "weight": 0.1
+    },
+    {
+      "id": "DAT-006",
+      "name": "stalking_indicators",
+      "display_name": "Stalking Indicators",
+      "category": "behavioral_engagement",
+      "description": "Language suggesting surveillance, tracking, or unwanted persistent attention beyond normal dating behavior.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "No indicators",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Concerning awareness",
+          "action": "Flag for T&S review"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Surveillance language",
+          "action": "Priority T&S action + recipient safety resources"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Active stalking indicators",
+          "action": "Immediate T&S escalation, external safety resources"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "i saw you at",
+          "i know where you",
+          "i drove by",
+          "i watched you",
+          "i followed you",
+          "i found your",
+          "your address",
+          "your workplace",
+          "your car",
+          "your friends",
+          "your family",
+          "i've been watching",
+          "i know you were",
+          "i can see you"
+        ],
+        "behavioral_patterns": [
+          "repeated_questions_on_same_topic"
+        ]
+      },
+      "weight": 0.1
+    },
+    {
+      "id": "DAT-007",
+      "name": "vulnerability_indicators",
+      "display_name": "Recipient Vulnerability",
+      "category": "coping_capacity",
+      "description": "Detects language from a user indicating they're in a vulnerable state (recent breakup, loneliness, low self-esteem) that may inform context-appropriate platform responses.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Stable",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Some vulnerability",
+          "action": "Soft resources available in UI"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Heightened vulnerability",
+          "action": "Proactive wellbeing resources, adjust match recommendations"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Acute vulnerability",
+          "action": "Active wellbeing check-in, support resources prominent"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "just got out of",
+          "going through a breakup",
+          "lonely",
+          "no one loves me",
+          "hate being single",
+          "desperate",
+          "i need someone",
+          "can't be alone",
+          "nobody wants me",
+          "broken",
+          "damaged",
+          "unlovable",
+          "starting over",
+          "just turned",
+          "birthday alone",
+          "holidays alone"
+        ],
+        "behavioral_patterns": [
+          "emotional_vocabulary_density"
+        ]
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "DAT-008",
+      "name": "catfishing_indicators",
+      "display_name": "Catfishing / Deception Risk",
+      "category": "self_reflection",
+      "description": "Patterns consistent with deceptive identity behaviors \u2014 inconsistent narratives, avoiding photos or calls, scripted language.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Consistent narrative",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Minor inconsistencies",
+          "action": "Prompt photo verification"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Significant red flags",
+          "action": "T&S review + verification required"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Likely deception",
+          "action": "Account hold pending verification"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "camera is broken",
+          "can't video call",
+          "phone is broken",
+          "lost my phone",
+          "working overseas",
+          "deployed overseas",
+          "oil rig",
+          "military mission",
+          "widow",
+          "widower",
+          "lost my wife",
+          "lost my husband",
+          "inheritance",
+          "temporarily in",
+          "can't meet yet",
+          "trust me",
+          "no pictures",
+          "don't have recent"
+        ],
+        "behavioral_patterns": [
+          "formal_language_shift"
+        ]
+      },
+      "weight": 0.07
+    },
+    {
+      "id": "DAT-009",
+      "name": "financial_request_risk",
+      "display_name": "Financial Request / Scam Indicators",
+      "category": "behavioral_engagement",
+      "description": "Language patterns consistent with romance scams \u2014 financial requests, investment pitches, emergency money requests.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "No indicators",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Financial topics",
+          "action": "Scam awareness prompt to recipient"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Financial pressure",
+          "action": "Scam warning to recipient + T&S review"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Likely scam",
+          "action": "Account restriction, fraud team escalation"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "send money",
+          "wire transfer",
+          "western union",
+          "gift cards",
+          "bitcoin",
+          "crypto investment",
+          "emergency money",
+          "hospital bill",
+          "plane ticket",
+          "customs fee",
+          "unlock my account",
+          "help me pay",
+          "need cash",
+          "venmo me",
+          "cashapp",
+          "paypal me",
+          "zelle",
+          "investment opportunity",
+          "double your money",
+          "trading platform"
+        ],
+        "behavioral_patterns": [
+          "urgency_language_density"
+        ]
+      },
+      "weight": 0.07
+    },
+    {
+      "id": "DAT-010",
+      "name": "minor_safety_risk",
+      "display_name": "Minor Safety Risk",
+      "category": "social_readiness",
+      "description": "Language suggesting one party may be underage or that there's predatory interest toward minors. Triggers immediate review regardless of other signals.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "No indicators",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Age concerns",
+          "action": "Immediate T&S review + age verification"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Significant age concerns",
+          "action": "Account hold + verification required"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Minor safety risk",
+          "action": "Immediate account action + legal reporting review"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "in high school",
+          "sophomore",
+          "junior year",
+          "senior year",
+          "my teacher",
+          "my principal",
+          "don't tell my parents",
+          "my mom doesn't know",
+          "my dad doesn't know",
+          "i'm 15",
+          "i'm 16",
+          "i'm 17",
+          "too young for",
+          "old enough",
+          "before graduation",
+          "prom date",
+          "sneak out"
+        ],
+        "behavioral_patterns": []
+      },
+      "weight": 0.06
+    },
+    {
+      "id": "DAT-011",
+      "name": "positive_connection",
+      "display_name": "Positive Connection Quality",
+      "category": "social_readiness",
+      "description": "Identifies conversations showing healthy mutual engagement \u2014 the positive counterpart to risk signals. Useful for match quality metrics.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Limited engagement",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Healthy exchange",
+          "action": "Positive match metric"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Strong connection",
+          "action": "Prompt continued engagement, surface in match quality"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Excellent match quality",
+          "action": "High-value engagement indicator for recommendation algorithm"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "tell me more about",
+          "what do you think about",
+          "how was your",
+          "that's interesting",
+          "i love that",
+          "i feel the same",
+          "haha",
+          "lol",
+          "that's funny",
+          "you're funny",
+          "i respect",
+          "i appreciate",
+          "thank you for sharing",
+          "would love to",
+          "looking forward to",
+          "can't wait to"
+        ],
+        "behavioral_patterns": []
+      },
+      "weight": 0.03
+    },
+    {
+      "id": "DAT-012",
+      "name": "ghosting_risk",
+      "display_name": "Conversation Disengagement",
+      "category": "behavioral_engagement",
+      "description": "Signals that a user is emotionally or behaviorally disengaging from a conversation \u2014 short replies, flat tone, lack of questions back.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Active engagement",
+          "action": "Standard handling"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Cooling",
+          "action": "Match quality monitoring"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Disengaging",
+          "action": "Signal for match algorithm calibration"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Fully disengaged",
+          "action": "Close conversation loop, gather match feedback"
+        }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "k",
+          "ok",
+          "sure",
+          "cool",
+          "yeah",
+          "nah",
+          "busy",
+          "maybe later",
+          "we'll see",
+          "whatever",
+          "idk",
+          "i guess",
+          "if you want"
+        ],
+        "behavioral_patterns": [
+          "sentence_shortening",
+          "shortening_response_length",
+          "cooperative_language_decline"
+        ]
+      },
+      "weight": 0.03
+    },
+    {
+      "id": "DAT-013",
+      "name": "help_seeking_ratio",
+      "display_name": "Help-Seeking vs Aggressive Ratio",
+      "category": "coping_capacity",
+      "description": "Balance between constructive curiosity / openness and demanding / aggressive language. A low ratio predicts conversation failure or escalation.",
+      "severity_levels": {
+        "low": {
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Primarily curious",
+          "action": "Healthy dynamic"
+        },
+        "medium": {
+          "range": [
+            0.3,
+            0.6
+          ],
+          "label": "Mixed",
+          "action": "Monitor for shift"
+        },
+        "high": {
+          "range": [
+            0.6,
+            0.8
+          ],
+          "label": "Primarily demanding",
+          "action": "T&S monitoring + relationship resources"
+        },
+        "critical": {
+          "range": [
+            0.8,
+            1.0
+          ],
+          "label": "Hostile dynamic",
+          "action": "T&S review + intervention"
+        }
+      },
+      "indicators": {
+        "help_seeking_markers": [
+          "what do you think",
+          "how do you feel",
+          "tell me about",
+          "i'd love to know",
+          "i'm curious",
+          "can we talk about",
+          "what's your take",
+          "i wonder",
+          "help me understand",
+          "i appreciate",
+          "that makes sense"
+        ],
+        "threat_markers": [
+          "you better",
+          "or i will",
+          "you don't want to",
+          "i'm warning you",
+          "last chance",
+          "you'll regret",
+          "watch yourself",
+          "don't make me"
+        ],
+        "behavioral_patterns": [
+          "ultimatum_frequency"
+        ]
+      },
+      "weight": 0.03
+    }
+  ],
+  "composite_scores": {
+    "overall_risk": {
+      "description": "Weighted composite of all 13 signals indicating overall safety risk in the conversation",
+      "calculation": "weighted_average",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "high": [
+          0.5,
+          0.7
+        ],
+        "critical": [
+          0.7,
+          1.0
+        ]
+      }
+    },
+    "escalation_composite": {
+      "description": "Combined score from escalation-oriented safety signals. When critical, triggers signal.escalation webhook.",
+      "signals": [
+        "DAT-001",
+        "DAT-002",
+        "DAT-003",
+        "DAT-004",
+        "DAT-006",
+        "DAT-013"
+      ],
+      "calculation": "max_weighted",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "high": [
+          0.5,
+          0.7
+        ],
+        "critical": [
+          0.7,
+          1.0
+        ]
+      }
+    },
+    "safety_composite": {
+      "description": "Critical-path safety signals (harassment, coercion, stalking, minor safety, scam risk)",
+      "signals": [
+        "DAT-001",
+        "DAT-002",
+        "DAT-005",
+        "DAT-006",
+        "DAT-009",
+        "DAT-010"
+      ],
+      "calculation": "max_weighted",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "high": [
+          0.5,
+          0.7
+        ],
+        "critical": [
+          0.7,
+          1.0
+        ]
+      }
+    },
+    "match_quality": {
+      "description": "Positive indicators of healthy mutual engagement",
+      "signals": [
+        "DAT-011",
+        "DAT-013"
+      ],
+      "calculation": "weighted_average",
+      "thresholds": {
+        "low": [
+          0,
+          0.3
+        ],
+        "moderate": [
+          0.3,
+          0.5
+        ],
+        "good": [
+          0.5,
+          0.7
+        ],
+        "excellent": [
+          0.7,
+          1.0
+        ]
+      }
+    }
+  },
+  "api_config": {
+    "endpoint_prefix": "/v1/analyze/dating",
+    "rate_limit": {
+      "requests_per_minute": 300,
+      "requests_per_day": 200000
+    },
+    "response_format": {
+      "include_signal_details": true,
+      "include_ers_dimensions": true,
+      "include_composite_scores": true,
+      "include_recommended_actions": true,
+      "verbosity_levels": [
+        "minimal",
+        "standard",
+        "detailed"
+      ]
+    },
+    "decision_support_notice": "Paceful dating signals are decision-support tools for trust & safety teams. They should inform human review workflows, not drive automated punitive actions against users. All signal outputs should be paired with platform-appropriate context."
+  }
+}

@@ -1,0 +1,431 @@
+{
+  "vertical": "insurance",
+  "version": "1.0.0",
+  "display_name": "Insurance Claims Intelligence",
+  "description": "Emotional readiness and risk signals for insurance claims handling, escalation prediction, and compliance monitoring.",
+  "ers_dimensions": ["emotional_stability", "self_reflection", "coping_capacity", "behavioral_engagement", "social_readiness"],
+  "signals": [
+    {
+      "id": "INS-001",
+      "name": "escalation_risk",
+      "display_name": "Escalation Risk",
+      "category": "behavioral_engagement",
+      "description": "Likelihood that the claimant will escalate beyond the current handler to supervisors, regulators, or legal channels.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Contained", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Elevated", "action": "Flag for senior adjuster review" },
+        "high": { "range": [0.6, 0.8], "label": "High", "action": "Immediate supervisor notification" },
+        "critical": { "range": [0.8, 1.0], "label": "Critical", "action": "Escalate to claims manager + compliance" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "supervisor", "manager", "speak to someone else", "escalate",
+          "unacceptable", "demand", "insist", "immediately",
+          "this is the last time", "final warning", "had enough"
+        ],
+        "behavioral_patterns": [
+          "increasing_message_frequency",
+          "shortening_response_length",
+          "uppercase_usage_increase",
+          "punctuation_intensity"
+        ]
+      },
+      "weight": 0.15
+    },
+    {
+      "id": "INS-002",
+      "name": "litigation_intent",
+      "display_name": "Litigation Intent",
+      "category": "behavioral_engagement",
+      "description": "Detection of language indicating the claimant is considering or pursuing legal action.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "No indicators", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Exploratory", "action": "Document all interactions carefully" },
+        "high": { "range": [0.6, 0.8], "label": "Active consideration", "action": "Alert legal liaison + claims manager" },
+        "critical": { "range": [0.8, 1.0], "label": "Imminent/active", "action": "Transfer to litigation-aware handler" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "lawyer", "attorney", "legal action", "sue", "lawsuit",
+          "court", "litigate", "bad faith", "breach of contract",
+          "my rights", "legal obligation", "statute", "damages",
+          "negligence", "malpractice", "deposition", "discovery"
+        ],
+        "behavioral_patterns": [
+          "formal_language_shift",
+          "citing_policy_numbers",
+          "referencing_regulations",
+          "requesting_written_confirmation"
+        ]
+      },
+      "weight": 0.12
+    },
+    {
+      "id": "INS-003",
+      "name": "regulatory_complaint_risk",
+      "display_name": "Regulatory Complaint Risk",
+      "category": "behavioral_engagement",
+      "description": "Indicators that the claimant may file a complaint with state insurance regulators or consumer protection agencies.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "No indicators", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Awareness", "action": "Ensure compliance documentation is current" },
+        "high": { "range": [0.6, 0.8], "label": "Threatening", "action": "Priority resolution attempt" },
+        "critical": { "range": [0.8, 1.0], "label": "Filing imminent", "action": "Compliance team notification + expedited review" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "department of insurance", "state regulator", "file a complaint",
+          "commissioner", "consumer protection", "BBB", "better business bureau",
+          "ombudsman", "NAIC", "report you", "regulatory",
+          "insurance board", "compliance violation", "unfair practices"
+        ],
+        "behavioral_patterns": [
+          "requesting_supervisor_names",
+          "requesting_complaint_procedures",
+          "documenting_interactions_explicitly"
+        ]
+      },
+      "weight": 0.10
+    },
+    {
+      "id": "INS-004",
+      "name": "media_exposure_risk",
+      "display_name": "Media / Social Exposure Risk",
+      "category": "social_readiness",
+      "description": "Risk that the claimant will publicize their experience through social media, news outlets, or public forums.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Private", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Venting potential", "action": "Prioritize empathetic resolution" },
+        "high": { "range": [0.6, 0.8], "label": "Public threat", "action": "Fast-track to resolution team" },
+        "critical": { "range": [0.8, 1.0], "label": "Active/imminent posting", "action": "PR + claims manager joint review" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "post this everywhere", "going viral", "social media", "twitter",
+          "facebook", "reddit", "news", "journalist", "reporter",
+          "public", "expose", "everyone will know", "review",
+          "yelp", "google review", "tiktok", "youtube"
+        ],
+        "behavioral_patterns": [
+          "threatening_public_disclosure",
+          "mentioning_follower_count",
+          "referencing_similar_viral_stories"
+        ]
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "INS-005",
+      "name": "acute_distress",
+      "display_name": "Acute Emotional Distress",
+      "category": "emotional_stability",
+      "description": "Detection of acute emotional distress markers indicating the claimant is in a crisis state requiring sensitive handling.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Composed", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Stressed", "action": "Empathetic tone, avoid technical jargon" },
+        "high": { "range": [0.6, 0.8], "label": "Distressed", "action": "Trained handler, no scripted responses" },
+        "critical": { "range": [0.8, 1.0], "label": "Crisis", "action": "Crisis-trained adjuster + wellbeing resources" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "can't cope", "breaking down", "falling apart", "desperate",
+          "lost everything", "don't know what to do", "helpless",
+          "overwhelmed", "terrified", "panic", "anxiety",
+          "can't sleep", "crying", "devastated", "ruined"
+        ],
+        "behavioral_patterns": [
+          "erratic_message_timing",
+          "incoherent_sentence_structure",
+          "emotional_vocabulary_density",
+          "repeated_distress_expressions"
+        ]
+      },
+      "weight": 0.10
+    },
+    {
+      "id": "INS-006",
+      "name": "anger_trajectory",
+      "display_name": "Anger Escalation Trajectory",
+      "category": "emotional_stability",
+      "description": "Measures the rate of anger escalation across sequential communications, not just current anger level.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Stable/cooling", "action": "Current approach is working" },
+        "medium": { "range": [0.3, 0.6], "label": "Warming", "action": "Adjust tone, acknowledge frustration explicitly" },
+        "high": { "range": [0.6, 0.8], "label": "Accelerating", "action": "Change handler or approach immediately" },
+        "critical": { "range": [0.8, 1.0], "label": "Rapid escalation", "action": "Pause automated responses, human intervention required" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "furious", "outraged", "disgusted", "appalled", "livid",
+          "incompetent", "ridiculous", "absurd", "pathetic",
+          "worst experience", "never again", "disgraceful"
+        ],
+        "behavioral_patterns": [
+          "increasing_negative_sentiment_across_messages",
+          "escalating_language_intensity",
+          "decreasing_cooperative_language",
+          "increasing_demands_per_message"
+        ]
+      },
+      "weight": 0.10
+    },
+    {
+      "id": "INS-007",
+      "name": "financial_distress",
+      "display_name": "Financial Distress Indicators",
+      "category": "coping_capacity",
+      "description": "Language suggesting the claimant is experiencing financial hardship that may affect decision-making and urgency.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Financially stable", "action": "Standard timeline acceptable" },
+        "medium": { "range": [0.3, 0.6], "label": "Under pressure", "action": "Expedite where possible, set clear timeline expectations" },
+        "high": { "range": [0.6, 0.8], "label": "Significant hardship", "action": "Priority processing, explore advance payment options" },
+        "critical": { "range": [0.8, 1.0], "label": "Crisis-level financial distress", "action": "Emergency processing pathway + financial support resources" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "can't afford", "rent", "mortgage", "eviction", "bills",
+          "paycheck to paycheck", "savings depleted", "debt",
+          "borrowing money", "can't pay", "behind on payments",
+          "financial ruin", "bankrupt", "no income", "laid off"
+        ],
+        "behavioral_patterns": [
+          "urgency_language_density",
+          "repeated_timeline_inquiries",
+          "mentions_of_dependents",
+          "references_to_basic_needs"
+        ]
+      },
+      "weight": 0.08
+    },
+    {
+      "id": "INS-008",
+      "name": "blame_externalization",
+      "display_name": "Blame Externalization Intensity",
+      "category": "self_reflection",
+      "description": "Degree to which the claimant attributes all responsibility externally, which correlates with escalation probability and resolution difficulty.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Balanced perspective", "action": "Standard negotiation approach" },
+        "medium": { "range": [0.3, 0.6], "label": "Moderate externalization", "action": "Acknowledge their perspective before presenting alternatives" },
+        "high": { "range": [0.6, 0.8], "label": "High externalization", "action": "Avoid any language that implies shared responsibility" },
+        "critical": { "range": [0.8, 1.0], "label": "Total externalization", "action": "De-escalation specialist, do not challenge narrative" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "your fault", "you caused", "you did this", "your mistake",
+          "your company", "you people", "your negligence",
+          "not my problem", "your responsibility", "you owe me",
+          "I did nothing wrong", "this is on you"
+        ],
+        "behavioral_patterns": [
+          "zero_self_reference_in_causation",
+          "repeated_accusatory_statements",
+          "rejection_of_any_shared_responsibility"
+        ]
+      },
+      "weight": 0.07
+    },
+    {
+      "id": "INS-009",
+      "name": "narrative_coherence",
+      "display_name": "Narrative Coherence",
+      "category": "self_reflection",
+      "description": "Consistency and logical flow of the claimant's account across communications. Low coherence may indicate confusion, distress, cognitive impairment, or potential fabrication.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Highly coherent", "action": "Standard processing" },
+        "medium": { "range": [0.3, 0.6], "label": "Minor inconsistencies", "action": "Gentle clarification questions" },
+        "high": { "range": [0.6, 0.8], "label": "Significant inconsistencies", "action": "Flag for SIU review or cognitive assessment" },
+        "critical": { "range": [0.8, 1.0], "label": "Major contradictions", "action": "SIU referral + sensitive investigation" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "actually", "what I meant was", "let me correct",
+          "I think", "I'm not sure", "maybe it was",
+          "approximately", "around that time"
+        ],
+        "behavioral_patterns": [
+          "contradicting_previous_statements",
+          "changing_timeline_details",
+          "inconsistent_damage_descriptions",
+          "varying_witness_accounts"
+        ]
+      },
+      "weight": 0.07
+    },
+    {
+      "id": "INS-010",
+      "name": "support_system_references",
+      "display_name": "External Support Mobilization",
+      "category": "social_readiness",
+      "description": "References to external support being mobilized — lawyers, family members, advocates, media contacts — indicating organized opposition.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "No external support", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Informal support", "action": "Ensure documentation is thorough" },
+        "high": { "range": [0.6, 0.8], "label": "Professional support engaged", "action": "Prepare for formal proceedings" },
+        "critical": { "range": [0.8, 1.0], "label": "Multi-channel mobilization", "action": "Legal + PR + claims leadership coordination" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "my lawyer said", "my attorney advised", "legal counsel",
+          "public adjuster", "my family", "we all agree",
+          "advocacy group", "consumer rights", "class action",
+          "other policyholders", "same thing happened to"
+        ],
+        "behavioral_patterns": [
+          "introducing_new_parties_to_communication",
+          "referencing_professional_advice",
+          "coordinated_complaint_language"
+        ]
+      },
+      "weight": 0.05
+    },
+    {
+      "id": "INS-011",
+      "name": "channel_escalation",
+      "display_name": "Communication Channel Escalation",
+      "category": "behavioral_engagement",
+      "description": "Pattern of escalating from low-effort to high-effort communication channels, indicating increasing seriousness.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Single channel", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Multi-channel", "action": "Consolidate and acknowledge all channels" },
+        "high": { "range": [0.6, 0.8], "label": "Formal channels added", "action": "Priority response across all channels" },
+        "critical": { "range": [0.8, 1.0], "label": "Formal letter/legal communication", "action": "Compliance + legal review" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "certified mail", "formal complaint", "written notice",
+          "on the record", "documented", "for the record",
+          "registered letter", "notarized", "cc'd"
+        ],
+        "behavioral_patterns": [
+          "chat_to_email_transition",
+          "email_to_phone_transition",
+          "phone_to_formal_letter_transition",
+          "copying_additional_recipients"
+        ]
+      },
+      "weight": 0.03
+    },
+    {
+      "id": "INS-012",
+      "name": "cancellation_intent",
+      "display_name": "Policy Cancellation Intent",
+      "category": "behavioral_engagement",
+      "description": "Signals that the claimant intends to cancel their policy or switch carriers, relevant for retention teams.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Loyal", "action": "Standard service" },
+        "medium": { "range": [0.3, 0.6], "label": "Considering alternatives", "action": "Proactive retention outreach" },
+        "high": { "range": [0.6, 0.8], "label": "Actively shopping", "action": "Retention specialist + offer review" },
+        "critical": { "range": [0.8, 1.0], "label": "Cancellation imminent", "action": "Senior retention + save offer authorization" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "cancel", "switching", "leaving", "moving to",
+          "competitor", "better rate", "quoted by", "looking elsewhere",
+          "done with you", "last claim", "not renewing",
+          "terminating", "end my policy"
+        ],
+        "behavioral_patterns": [
+          "requesting_policy_documents",
+          "asking_about_cancellation_fees",
+          "mentioning_competitor_names"
+        ]
+      },
+      "weight": 0.05
+    },
+    {
+      "id": "INS-013",
+      "name": "bereavement_sensitivity",
+      "display_name": "Bereavement / Loss Sensitivity",
+      "category": "emotional_stability",
+      "description": "Detection of grief and bereavement indicators requiring specialized, trauma-informed handling.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "No indicators", "action": "Standard handling" },
+        "medium": { "range": [0.3, 0.6], "label": "Recent loss mentioned", "action": "Empathetic language, avoid transactional tone" },
+        "high": { "range": [0.6, 0.8], "label": "Active grief", "action": "Bereavement-trained handler, extended timelines" },
+        "critical": { "range": [0.8, 1.0], "label": "Acute grief crisis", "action": "Grief-specialist handler + support resources" }
+      },
+      "indicators": {
+        "linguistic_markers": [
+          "passed away", "died", "death", "funeral", "deceased",
+          "lost my", "mourning", "grieving", "widow", "widower",
+          "orphan", "survived by", "memorial", "burial",
+          "life insurance claim", "beneficiary"
+        ],
+        "behavioral_patterns": [
+          "difficulty_completing_forms",
+          "long_gaps_between_responses",
+          "emotional_language_spikes",
+          "confusion_about_processes"
+        ]
+      },
+      "weight": 0.05
+    },
+    {
+      "id": "INS-014",
+      "name": "help_seeking_ratio",
+      "display_name": "Help-Seeking vs Threat-Making Ratio",
+      "category": "coping_capacity",
+      "description": "The balance between constructive help-seeking language and adversarial threat-making language. A low ratio (more threats than help-seeking) predicts escalation.",
+      "severity_levels": {
+        "low": { "range": [0, 0.3], "label": "Primarily help-seeking", "action": "Respond with solutions and resources" },
+        "medium": { "range": [0.3, 0.6], "label": "Mixed", "action": "Address concerns while offering constructive paths" },
+        "high": { "range": [0.6, 0.8], "label": "Primarily adversarial", "action": "De-escalation language, avoid defensiveness" },
+        "critical": { "range": [0.8, 1.0], "label": "Exclusively adversarial", "action": "Senior handler, de-escalation protocol" }
+      },
+      "indicators": {
+        "help_seeking_markers": [
+          "can you help", "what are my options", "how do I",
+          "please assist", "I need guidance", "what should I do",
+          "is there a way", "could you explain", "I'd appreciate"
+        ],
+        "threat_markers": [
+          "I will", "you'll regret", "consequences", "or else",
+          "I'm warning you", "mark my words", "this won't end well",
+          "you haven't seen the last", "I'll make sure"
+        ],
+        "behavioral_patterns": [
+          "ratio_shift_across_messages",
+          "cooperative_language_decline",
+          "ultimatum_frequency"
+        ]
+      },
+      "weight": 0.05
+    }
+  ],
+  "composite_scores": {
+    "overall_risk": {
+      "description": "Weighted composite of all 14 signals producing an overall claims risk score",
+      "calculation": "weighted_average",
+      "thresholds": {
+        "low": [0, 0.3],
+        "moderate": [0.3, 0.5],
+        "high": [0.5, 0.7],
+        "critical": [0.7, 1.0]
+      }
+    },
+    "escalation_composite": {
+      "description": "Combined score from escalation-specific signals",
+      "signals": ["INS-001", "INS-002", "INS-003", "INS-004", "INS-010", "INS-011"],
+      "calculation": "max_weighted"
+    },
+    "emotional_vulnerability": {
+      "description": "Combined score from emotional state signals",
+      "signals": ["INS-005", "INS-006", "INS-007", "INS-013"],
+      "calculation": "weighted_average"
+    }
+  },
+  "api_config": {
+    "endpoint_prefix": "/v1/analyze/insurance",
+    "rate_limit": {
+      "requests_per_minute": 120,
+      "requests_per_day": 50000
+    },
+    "response_format": {
+      "include_signal_details": true,
+      "include_ers_dimensions": true,
+      "include_composite_scores": true,
+      "include_recommended_actions": true,
+      "verbosity_levels": ["minimal", "standard", "detailed"]
+    }
+  }
+}

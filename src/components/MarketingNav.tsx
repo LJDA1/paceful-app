@@ -21,7 +21,8 @@ function CloseIcon({ className, style }: { className?: string; style?: React.CSS
 }
 
 const NAV_LINKS = [
-  { href: '/#how-it-works', label: 'How it works' },
+  { href: '/sandbox', label: 'Sandbox' },
+  { href: '/roi', label: 'ROI Calculator' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/design-partners', label: 'Partners' },
   { href: '/api-docs', label: 'API' },
@@ -106,6 +107,22 @@ export default function MarketingNav() {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-4">
+            <a
+              href="mailto:hello@paceful.com"
+              className="text-[14px] transition-colors"
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                color: '#5C574F',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#1F1D1A';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#5C574F';
+              }}
+            >
+              Contact
+            </a>
             <Link
               href="/auth/login"
               className="text-[14px] transition-colors"
