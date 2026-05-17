@@ -954,7 +954,7 @@ export default function DesignPartnersPage() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="https://cal.com/paceful/design-partner"
+                href="https://cal.com/lewisjohnson"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-8 py-4 text-[16px] font-semibold text-white rounded-full transition-opacity hover:opacity-90 text-center"
