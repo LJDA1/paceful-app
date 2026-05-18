@@ -17,7 +17,7 @@
       "name": "financial_harm_language",
       "display_name": "Financial Harm Language",
       "category": "coping_capacity",
-      "description": "Language indicating financial distress directly linked to gambling activity \u2014 chasing losses, gambling money needed for bills, borrowing to gamble.",
+      "description": "Language indicating financial distress directly linked to gambling activity — chasing losses, gambling money needed for bills, borrowing to gamble.",
       "severity_levels": {
         "low": {
           "range": [
@@ -46,7 +46,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe financial harm",
           "action": "Mandatory intervention, block deposits, signpost GamCare"
@@ -73,7 +73,27 @@
           "wiped out",
           "behind on bills",
           "can't pay rent",
-          "overdraft"
+          "overdraft",
+          "cant afford to lose",
+          "cant pay rent",
+          "borrowed from my",
+          "borrowed money to",
+          "took money from",
+          "maxed out my card",
+          "maxed my card",
+          "no money left",
+          "spent my wages",
+          "spent my paycheck",
+          "gambling debt",
+          "in debt because",
+          "tapped out",
+          "skint",
+          "flat broke",
+          "cleaned out",
+          "drained my account",
+          "wiped my account",
+          "payday loan",
+          "loan shark"
         ],
         "behavioral_patterns": [
           "urgency_language_density"
@@ -86,7 +106,7 @@
       "name": "loss_chasing",
       "display_name": "Loss Chasing Behavior",
       "category": "behavioral_engagement",
-      "description": "Language indicating active loss chasing \u2014 a primary DSM-5 indicator of gambling disorder and a leading predictor of severe harm.",
+      "description": "Language indicating active loss chasing — a primary DSM-5 indicator of gambling disorder and a leading predictor of severe harm.",
       "severity_levels": {
         "low": {
           "range": [
@@ -115,7 +135,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe loss chasing",
           "action": "Account restriction review, RG team intervention"
@@ -136,7 +156,22 @@
           "martingale",
           "increase my stake",
           "bigger bet this time",
-          "need a big win"
+          "need a big win",
+          "earn it back",
+          "get back to even",
+          "recover what i lost",
+          "win back my losses",
+          "just need to break even",
+          "chasing my money",
+          "cant stop chasing",
+          "in the hole",
+          "too far in the hole",
+          "on tilt",
+          "tilting",
+          "just need one win",
+          "one good session",
+          "make up for my losses",
+          "make my money back"
         ],
         "behavioral_patterns": [
           "urgency_language_density",
@@ -150,7 +185,7 @@
       "name": "control_loss_language",
       "display_name": "Loss of Control",
       "category": "self_reflection",
-      "description": "Language indicating the player feels they have lost control over their gambling \u2014 unable to stop, gambling more than intended.",
+      "description": "Language indicating the player feels they have lost control over their gambling — unable to stop, gambling more than intended.",
       "severity_levels": {
         "low": {
           "range": [
@@ -179,7 +214,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Complete control loss",
           "action": "Self-exclusion options presented, RG team outreach"
@@ -203,7 +238,27 @@
           "tried to stop",
           "promised myself",
           "keep coming back",
-          "pulled back in"
+          "pulled back in",
+          "cant stop",
+          "couldnt stop",
+          "cant help myself",
+          "cant walk away",
+          "couldnt walk away",
+          "cant quit",
+          "couldnt quit",
+          "said id stop",
+          "promised id stop",
+          "lost control",
+          "no willpower",
+          "out of hand",
+          "got out of hand",
+          "unable to stop",
+          "keep going back",
+          "always go back",
+          "cant control it",
+          "beyond my control",
+          "spinning out",
+          "told myself never again"
         ],
         "behavioral_patterns": [
           "emotional_vocabulary_density"
@@ -216,7 +271,7 @@
       "name": "emotional_distress_gambling_linked",
       "display_name": "Gambling-Linked Emotional Distress",
       "category": "emotional_stability",
-      "description": "Emotional distress language specifically linked to gambling activity \u2014 shame, guilt, anxiety about gambling behavior.",
+      "description": "Emotional distress language specifically linked to gambling activity — shame, guilt, anxiety about gambling behavior.",
       "severity_levels": {
         "low": {
           "range": [
@@ -245,7 +300,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe distress",
           "action": "Priority RG outreach, mental health resources prominent"
@@ -269,7 +324,24 @@
           "can't tell anyone",
           "so stupid",
           "what have i done",
-          "ruined my life"
+          "ruined my life",
+          "ashamed",
+          "so ashamed",
+          "embarrassed about my gambling",
+          "feel sick about",
+          "disgusted with my gambling",
+          "disappointed in myself",
+          "let myself down",
+          "let my family down",
+          "feel so guilty",
+          "cant live with myself",
+          "hate what ive become",
+          "not the person i used to be",
+          "living a lie",
+          "double life",
+          "nobody knows",
+          "keeping it from",
+          "im a gambling addict"
         ],
         "behavioral_patterns": [
           "emotional_vocabulary_density"
@@ -311,7 +383,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Urgent exclusion intent",
           "action": "Mandatory presentation of self-exclusion, GAMSTOP, GamCare"
@@ -336,7 +408,23 @@
           "can't do this anymore",
           "done gambling",
           "last bet ever",
-          "quitting for good"
+          "quitting for good",
+          "exclude myself",
+          "want to be banned",
+          "please ban me",
+          "delete my account",
+          "deactivate my account",
+          "freeze my account",
+          "suspend my account",
+          "make me stop",
+          "please stop me",
+          "voluntary ban",
+          "national exclusion",
+          "permanent exclusion",
+          "how do i self exclude",
+          "how to self exclude",
+          "five year exclusion",
+          "lifetime ban"
         ],
         "behavioral_patterns": []
       },
@@ -347,7 +435,7 @@
       "name": "relationship_harm",
       "display_name": "Relationship Harm Indicators",
       "category": "social_readiness",
-      "description": "Language indicating gambling is causing relationship damage \u2014 hiding from family, lying to partners, relationship breakdown.",
+      "description": "Language indicating gambling is causing relationship damage — hiding from family, lying to partners, relationship breakdown.",
       "severity_levels": {
         "low": {
           "range": [
@@ -376,7 +464,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe relationship harm",
           "action": "GamAnon/GamFam resources, RG team engagement"
@@ -400,7 +488,24 @@
           "secret account",
           "family doesn't know",
           "if they knew",
-          "before my partner finds"
+          "before my partner finds",
+          "girlfriend found out",
+          "boyfriend found out",
+          "mum found out",
+          "dad found out",
+          "parents found out",
+          "relationship over",
+          "kicked out",
+          "sleeping on the sofa",
+          "lost my family",
+          "family dont trust me",
+          "lost her trust",
+          "lost his trust",
+          "she found my",
+          "he found my",
+          "saw my bank statement",
+          "found my history",
+          "stole from my"
         ],
         "behavioral_patterns": []
       },
@@ -411,7 +516,7 @@
       "name": "irrational_cognition",
       "display_name": "Gambling Cognitive Distortions",
       "category": "self_reflection",
-      "description": "Language indicating cognitive distortions common in gambling disorder \u2014 gambler's fallacy, illusion of control, superstitious thinking.",
+      "description": "Language indicating cognitive distortions common in gambling disorder — gambler's fallacy, illusion of control, superstitious thinking.",
       "severity_levels": {
         "low": {
           "range": [
@@ -440,7 +545,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe distortions",
           "action": "RG intervention, strong cognitive intervention"
@@ -465,7 +570,26 @@
           "next one",
           "feeling lucky",
           "god wants me to win",
-          "meant to be"
+          "meant to be",
+          "im due",
+          "must be due",
+          "its gotta come",
+          "law of averages",
+          "it evens out",
+          "have a system",
+          "my method",
+          "i can beat",
+          "beat the house",
+          "feel lucky today",
+          "its my day",
+          "today is my day",
+          "on a run",
+          "going on a run",
+          "machine is due",
+          "feel it coming",
+          "just had a run",
+          "so close last time",
+          "nearly had it last time"
         ],
         "behavioral_patterns": []
       },
@@ -476,7 +600,7 @@
       "name": "time_harm_indicators",
       "display_name": "Time-Based Harm",
       "category": "coping_capacity",
-      "description": "Language indicating gambling time is causing harm \u2014 sleep deprivation, neglecting responsibilities, all-night sessions.",
+      "description": "Language indicating gambling time is causing harm — sleep deprivation, neglecting responsibilities, all-night sessions.",
       "severity_levels": {
         "low": {
           "range": [
@@ -505,7 +629,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe time harm",
           "action": "Cooling-off period suggested, RG intervention"
@@ -528,7 +652,21 @@
           "couldn't stop to",
           "been playing for hours",
           "lost track of time",
-          "hours have passed"
+          "hours have passed",
+          "playing all night",
+          "been on all day",
+          "played all day",
+          "whole day gone",
+          "1am",
+          "2am",
+          "5am",
+          "havent eaten",
+          "didnt sleep",
+          "barely slept",
+          "no sleep",
+          "dinner got cold",
+          "missed school run",
+          "glued to the screen"
         ],
         "behavioral_patterns": []
       },
@@ -568,7 +706,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Minor gambling risk",
           "action": "Immediate account action, regulatory reporting review"
@@ -590,7 +728,18 @@
           "not 18 yet",
           "not 21 yet",
           "fake id",
-          "borrowed id"
+          "borrowed id",
+          "parents dont know",
+          "my dads account",
+          "my mums account",
+          "my sisters account",
+          "my mates account",
+          "borrowed someones account",
+          "lied about my age",
+          "said i was 18",
+          "said i was 21",
+          "created a fake account",
+          "im only"
         ],
         "behavioral_patterns": []
       },
@@ -599,9 +748,9 @@
     {
       "id": "GMB-010",
       "name": "suicidal_distress_signposting",
-      "display_name": "Crisis Language \u2014 Signpost Only",
+      "display_name": "Crisis Language — Signpost Only",
       "category": "emotional_stability",
-      "description": "Detects language indicating severe distress that may warrant crisis signposting. Does NOT attempt crisis diagnosis \u2014 flags for immediate human review and resource provision. Critical compliance signal.",
+      "description": "Detects language indicating severe distress that may warrant crisis signposting. Does NOT attempt crisis diagnosis — flags for immediate human review and resource provision. Critical compliance signal.",
       "severity_levels": {
         "low": {
           "range": [
@@ -630,7 +779,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Critical distress language",
           "action": "IMMEDIATE human review, National Gambling Helpline + Samaritans resources, mandatory intervention logging"
@@ -649,7 +798,41 @@
           "kill myself",
           "end my life",
           "not worth living",
-          "everyone better off"
+          "everyone better off",
+          "cant go on",
+          "cant carry on",
+          "cant do this anymore",
+          "dont want to go on",
+          "dont want to be here",
+          "dont want to be here anymore",
+          "just ending it",
+          "thinking of ending it",
+          "thinking about ending it",
+          "want to end things",
+          "want to end it",
+          "done with life",
+          "no point anymore",
+          "whats the point",
+          "no point in living",
+          "no reason to live",
+          "nothing to live for",
+          "rather be dead",
+          "wish i was dead",
+          "wish i wasnt here",
+          "wish i could disappear",
+          "make the pain stop",
+          "no other option",
+          "cant see a future",
+          "no future",
+          "lost everything worth living for",
+          "world better off without me",
+          "family better off without me",
+          "kids better off without me",
+          "everyone better off",
+          "cant cope",
+          "at breaking point",
+          "hit rock bottom",
+          "rock bottom"
         ],
         "behavioral_patterns": []
       },
@@ -660,7 +843,7 @@
       "name": "bet_frequency_escalation",
       "display_name": "Stake Escalation Language",
       "category": "behavioral_engagement",
-      "description": "Language indicating increasing stakes or bet frequency \u2014 a core DSM-5 indicator of disordered gambling (tolerance).",
+      "description": "Language indicating increasing stakes or bet frequency — a core DSM-5 indicator of disordered gambling (tolerance).",
       "severity_levels": {
         "low": {
           "range": [
@@ -689,7 +872,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe escalation",
           "action": "Account review, stake limits review"
@@ -710,7 +893,21 @@
           "more spins",
           "more hands",
           "placing more bets",
-          "every night now"
+          "every night now",
+          "upping my stakes",
+          "raised my bets",
+          "increasing my bets",
+          "going bigger",
+          "bet more",
+          "needed bigger wins",
+          "minimum doesnt cut it",
+          "chase the high",
+          "chasing the feeling",
+          "need the adrenaline",
+          "thrill of the bet",
+          "low bets dont feel like anything",
+          "staking more each time",
+          "going all in more"
         ],
         "behavioral_patterns": []
       },
@@ -721,7 +918,7 @@
       "name": "help_seeking_gambling",
       "display_name": "Gambling Help-Seeking",
       "category": "coping_capacity",
-      "description": "Positive signal \u2014 player is actively seeking help, asking about tools, engaging with RG resources. Critical to recognize and support, not gate.",
+      "description": "Positive signal — player is actively seeking help, asking about tools, engaging with RG resources. Critical to recognize and support, not gate.",
       "severity_levels": {
         "low": {
           "range": [
@@ -750,7 +947,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Strong help-seeking",
           "action": "White-glove RG support, active outreach from team"
@@ -771,7 +968,19 @@
           "gamcare",
           "gamban",
           "gamblers anonymous",
-          "can you help me"
+          "can you help me",
+          "where can i get help",
+          "how do i stop gambling",
+          "i want to stop gambling",
+          "need support with gambling",
+          "gambling counselling",
+          "gambling counseling",
+          "gambling therapy",
+          "support groups",
+          "debt advice",
+          "financial counselling",
+          "step one",
+          "national gambling helpline"
         ],
         "threat_markers": [],
         "behavioral_patterns": []
@@ -783,7 +992,7 @@
       "name": "employment_impact",
       "display_name": "Employment Impact Language",
       "category": "behavioral_engagement",
-      "description": "Language indicating gambling is impacting work or employment \u2014 missing work, stealing from employer, job loss risk.",
+      "description": "Language indicating gambling is impacting work or employment — missing work, stealing from employer, job loss risk.",
       "severity_levels": {
         "low": {
           "range": [
@@ -812,7 +1021,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Severe work harm",
           "action": "Urgent RG intervention, employment support resources"
@@ -832,7 +1041,21 @@
           "money from petty cash",
           "expense account",
           "from my employer",
-          "caught at work"
+          "caught at work",
+          "gambling during work",
+          "cant focus at work",
+          "work is suffering",
+          "almost lost my job",
+          "on a warning at work",
+          "final warning",
+          "disciplinary at work",
+          "sick leave",
+          "took from the till",
+          "company credit card",
+          "boss found out",
+          "resigned because of gambling",
+          "left my job to gamble",
+          "coworkers know"
         ],
         "behavioral_patterns": []
       },
@@ -872,7 +1095,7 @@
         "critical": {
           "range": [
             0.8,
-            1.0
+            1
           ],
           "label": "Filing imminent",
           "action": "Compliance team notification, expedited review"
@@ -895,7 +1118,23 @@
           "mga",
           "unlicensed operator",
           "press",
-          "media"
+          "media",
+          "take this further",
+          "escalate this",
+          "formal complaint",
+          "solicitor",
+          "lawyer",
+          "legal action",
+          "trading standards",
+          "citizens advice",
+          "watchdog",
+          "rigged",
+          "its rigged",
+          "this is a scam",
+          "false advertising",
+          "bet regret",
+          "ifo",
+          "licensing authority"
         ],
         "behavioral_patterns": []
       },
@@ -904,7 +1143,7 @@
   ],
   "composite_scores": {
     "overall_risk": {
-      "description": "Weighted composite of all 14 signals \u2014 overall gambling harm risk",
+      "description": "Weighted composite of all 14 signals — overall gambling harm risk",
       "calculation": "weighted_average",
       "thresholds": {
         "low": [
@@ -921,7 +1160,7 @@
         ],
         "critical": [
           0.7,
-          1.0
+          1
         ]
       }
     },
@@ -950,7 +1189,7 @@
         ],
         "critical": [
           0.7,
-          1.0
+          1
         ]
       }
     },
@@ -980,12 +1219,12 @@
         ],
         "critical": [
           0.7,
-          1.0
+          1
         ]
       }
     },
     "intervention_opportunity": {
-      "description": "Positive indicator \u2014 player is help-seeking or considering self-exclusion. Critical to support, not gate.",
+      "description": "Positive indicator — player is help-seeking or considering self-exclusion. Critical to support, not gate.",
       "signals": [
         "GMB-005",
         "GMB-012"
@@ -1006,7 +1245,7 @@
         ],
         "critical": [
           0.7,
-          1.0
+          1
         ]
       }
     }
