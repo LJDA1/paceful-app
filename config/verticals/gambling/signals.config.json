@@ -341,7 +341,25 @@
           "double life",
           "nobody knows",
           "keeping it from",
-          "im a gambling addict"
+          "im a gambling addict",
+          "family doesnt know",
+          "family dont know",
+          "they dont know",
+          "no one knows",
+          "havent told",
+          "havent told my",
+          "wife doesnt know",
+          "husband doesnt know",
+          "partner doesnt know",
+          "girlfriend doesnt know",
+          "boyfriend doesnt know",
+          "mum doesnt know",
+          "dad doesnt know",
+          "parents dont know",
+          "she doesnt know",
+          "he doesnt know",
+          "hidden from",
+          "behind their back"
         ],
         "behavioral_patterns": [
           "emotional_vocabulary_density"
@@ -505,7 +523,17 @@
           "he found my",
           "saw my bank statement",
           "found my history",
-          "stole from my"
+          "stole from my",
+          "family doesnt know yet",
+          "wife doesnt know",
+          "husband doesnt know",
+          "partner doesnt know",
+          "havent told my wife",
+          "havent told my husband",
+          "havent told my partner",
+          "havent told my family",
+          "hiding from my",
+          "keeping secrets from"
         ],
         "behavioral_patterns": []
       },
