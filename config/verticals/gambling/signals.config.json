@@ -776,7 +776,7 @@
         "threat_markers": [],
         "behavioral_patterns": []
       },
-      "weight": 0.03
+      "weight": 0.02
     },
     {
       "id": "GMB-013",
@@ -836,7 +836,7 @@
         ],
         "behavioral_patterns": []
       },
-      "weight": 0.03
+      "weight": 0.02
     },
     {
       "id": "GMB-014",
@@ -899,7 +899,7 @@
         ],
         "behavioral_patterns": []
       },
-      "weight": 0.03
+      "weight": 0.02
     }
   ],
   "composite_scores": {
