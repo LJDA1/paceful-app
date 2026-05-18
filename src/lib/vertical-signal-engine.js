@@ -417,9 +417,42 @@ class SignalScorer {
         if (score >= 1.0) severity = Object.keys(config.thresholds).pop();
       }
 
+      // Tier-override: for weighted_average composites, escalate tier if any
+      // contributing signal has a higher tier than the weighted score implies.
+      // Individual signals use 'medium'; composites use 'moderate' — both rank 1.
+      let tier = severity;
+      let tier_reason = 'Weighted aggregation';
+
+      if (config.calculation === 'weighted_average') {
+        const TIER_RANK = { low: 0, moderate: 1, medium: 1, high: 2, critical: 3 };
+        const RANK_TO_TIER = ['low', 'moderate', 'high', 'critical'];
+
+        const scoredTierRank = TIER_RANK[severity] ?? 0;
+        const firingSignals = relevantSignals.filter(s => s.score > 0);
+
+        if (firingSignals.length > 0) {
+          let maxSignalRank = 0;
+          let maxSignal = null;
+          for (const s of firingSignals) {
+            const rank = TIER_RANK[s.severity] ?? 0;
+            if (rank > maxSignalRank) {
+              maxSignalRank = rank;
+              maxSignal = s;
+            }
+          }
+
+          if (maxSignalRank > scoredTierRank) {
+            tier = RANK_TO_TIER[maxSignalRank];
+            tier_reason = `Escalated from ${severity}: ${maxSignal.display_name} (${maxSignal.id}) is ${maxSignal.severity}`;
+          }
+        }
+      }
+
       composites[name] = {
         score,
-        severity,
+        severity: tier,
+        tier,
+        tier_reason,
         description: config.description,
         contributing_signals: relevantSignals.map(s => ({
           id: s.id,

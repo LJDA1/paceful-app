@@ -35,6 +35,7 @@ const VERTICALS = [
 
 const SEV: Record<string, { color: string; bg: string; border: string; label: string }> = {
   low: { color: '#84CC16', bg: 'rgba(132,204,22,0.08)', border: 'rgba(132,204,22,0.3)', label: '#365314' },
+  moderate: { color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.3)', label: '#78350F' },
   medium: { color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.3)', label: '#78350F' },
   high: { color: '#EA580C', bg: 'rgba(234,88,12,0.08)', border: 'rgba(234,88,12,0.3)', label: '#7C2D12' },
   critical: { color: '#DC2626', bg: 'rgba(220,38,38,0.08)', border: 'rgba(220,38,38,0.3)', label: '#7F1D1D' },
@@ -92,6 +93,8 @@ function ScoreBar({ score }: { score: number }) {
 interface CompositeScore {
   score: number;
   severity: string;
+  tier?: string;
+  tier_reason?: string;
   description?: string;
 }
 
@@ -166,6 +169,11 @@ function CompositeScores({ scores }: { scores: Record<string, CompositeScore> })
               <SeverityBadge severity={composite.severity} />
             </div>
             <ScoreBar score={composite.score} />
+            {composite.tier_reason && composite.tier_reason !== 'Weighted aggregation' && (
+              <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-quiet)', marginTop: 6, lineHeight: 1.4, fontStyle: 'italic' }}>
+                {composite.tier_reason}
+              </p>
+            )}
             {composite.description && (
               <p style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)', marginTop: 8, lineHeight: 1.5 }}>
                 {composite.description}
