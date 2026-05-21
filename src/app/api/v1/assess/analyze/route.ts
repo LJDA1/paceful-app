@@ -23,6 +23,7 @@ import {
   getSupabaseAdmin,
 } from '@/lib/partner-auth';
 import { extractApiKey, isSandboxRequest, sandboxResponse } from '@/lib/sandbox-middleware';
+import { buildAnalysisPrompt } from '@/lib/text-analysis';
 
 // Types
 type Dimension = 'emotional_stability' | 'self_reflection' | 'coping_capacity' | 'behavioral_engagement' | 'social_readiness';
@@ -75,14 +76,16 @@ const VALID_DIMENSIONS: Dimension[] = [
 // Claude analysis result structure
 interface ClaudeAnalysisResult {
   dimensions: {
-    emotional_stability: { score: number; top_signals: string[]; confidence: Confidence };
-    self_reflection: { score: number; top_signals: string[]; confidence: Confidence };
-    coping_capacity: { score: number; top_signals: string[]; confidence: Confidence };
-    behavioral_engagement: { score: number; top_signals: string[]; confidence: Confidence };
-    social_readiness: { score: number; top_signals: string[]; confidence: Confidence };
+    emotional_stability: { score: number; reasoning: string; top_signals: string[]; confidence: Confidence };
+    self_reflection: { score: number; reasoning: string; top_signals: string[]; confidence: Confidence };
+    coping_capacity: { score: number; reasoning: string; top_signals: string[]; confidence: Confidence };
+    behavioral_engagement: { score: number; reasoning: string; top_signals: string[]; confidence: Confidence };
+    social_readiness: { score: number; reasoning: string; top_signals: string[]; confidence: Confidence };
   };
   overall_confidence: Confidence;
   extraction_notes: string;
+  welfare_flag: boolean;
+  welfare_note: string;
 }
 
 // ============================================================================
@@ -188,39 +191,7 @@ function getReadinessLabel(score: number): string {
 // Claude Analysis
 // ============================================================================
 
-const ANALYSIS_SYSTEM_PROMPT = `You are an expert clinical psychologist analyzing text for emotional readiness signals.
-
-Analyze the provided text and extract signals for each of these 5 ERS (Emotional Readiness Score) dimensions:
-
-1. emotional_stability: Look for mood variance indicators, emotional regulation patterns, reaction proportionality, recovery from emotional events
-2. self_reflection: Look for self-awareness indicators, pattern recognition, insight depth, ability to examine one's own thoughts/feelings
-3. coping_capacity: Look for healthy coping mentions, resource awareness, adaptive strategies, problem-solving approaches
-4. behavioral_engagement: Look for activity levels, routine consistency, goal-directed behavior, follow-through on intentions
-5. social_readiness: Look for social mention frequency, connection quality indicators, openness to relationships, trust signals
-
-For each dimension, provide:
-- score: 0-100 (based on evidence in the text)
-- top_signals: Array of 2-3 specific phrases or indicators from the text that support your score
-- confidence: "low" (minimal text evidence), "medium" (some evidence), or "high" (strong evidence)
-
-Also provide an overall_confidence based on the total amount of analyzable content.
-
-IMPORTANT: Be conservative with scores when evidence is limited. Default toward moderate scores (40-60) unless clear positive or negative signals exist.
-
-Respond with ONLY a valid JSON object in this exact format:
-{
-  "dimensions": {
-    "emotional_stability": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "self_reflection": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "coping_capacity": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "behavioral_engagement": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "social_readiness": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" }
-  },
-  "overall_confidence": "low"|"medium"|"high",
-  "extraction_notes": "Brief note about the analysis quality and any limitations"
-}`;
-
-async function analyzeTextWithClaude(text: string, sourceType: SourceType): Promise<ClaudeAnalysisResult> {
+async function analyzeTextWithClaude(text: string, sourceType: SourceType, tone: Tone = 'clinical'): Promise<ClaudeAnalysisResult> {
   const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
@@ -235,8 +206,8 @@ async function analyzeTextWithClaude(text: string, sourceType: SourceType): Prom
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: ANALYSIS_SYSTEM_PROMPT,
+    max_tokens: 1200,
+    system: buildAnalysisPrompt(tone),
     messages: [
       {
         role: 'user',
@@ -256,75 +227,43 @@ async function analyzeTextWithClaude(text: string, sourceType: SourceType): Prom
     const cleanedText = textBlock.text.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
     const result = JSON.parse(cleanedText) as ClaudeAnalysisResult;
 
-    // Validate and clamp scores
+    // Validate and clamp scores; ensure reasoning and welfare fields present
     for (const dim of VALID_DIMENSIONS) {
       if (result.dimensions[dim]) {
         result.dimensions[dim].score = Math.max(0, Math.min(100, Math.round(result.dimensions[dim].score)));
         if (!['low', 'medium', 'high'].includes(result.dimensions[dim].confidence)) {
           result.dimensions[dim].confidence = 'medium';
         }
+        if (typeof result.dimensions[dim].reasoning !== 'string') {
+          result.dimensions[dim].reasoning = '';
+        }
       }
     }
+    if (typeof result.welfare_flag !== 'boolean') result.welfare_flag = false;
+    if (typeof result.welfare_note !== 'string') result.welfare_note = '';
 
     return result;
   } catch (parseError) {
     console.error('Failed to parse Claude response:', textBlock.text);
-    // Return fallback moderate scores
     return {
       dimensions: {
-        emotional_stability: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        self_reflection: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        coping_capacity: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        behavioral_engagement: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        social_readiness: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
+        emotional_stability: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        self_reflection: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        coping_capacity: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        behavioral_engagement: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        social_readiness: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
       },
       overall_confidence: 'low',
       extraction_notes: 'Failed to parse analysis response - using fallback scores',
+      welfare_flag: false,
+      welfare_note: '',
     };
   }
 }
 
-// ============================================================================
-// Reasoning Generation (tone-adapted, matching snapshot endpoint)
-// ============================================================================
-
-function generateReasoning(
-  dimension: Dimension,
-  score: number,
-  signals: string[],
-  confidence: Confidence,
-  tone: Tone
-): string {
-  const signalStr = signals.slice(0, 2).join(' and ') || 'text analysis';
-  const tier = score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low';
-  const confNote = confidence === 'low' ? ' (limited text evidence)' : confidence === 'high' ? ' (strong text evidence)' : '';
-
-  const dimensionLabels: Record<Dimension, string> = {
-    emotional_stability: 'Emotional stability',
-    self_reflection: 'Self-reflection capacity',
-    coping_capacity: 'Coping capacity',
-    behavioral_engagement: 'Behavioral engagement',
-    social_readiness: 'Social readiness',
-  };
-
-  const label = dimensionLabels[dimension];
-
-  if (tone === 'casual') {
-    if (tier === 'high') return `${label} looks solid! Based on: ${signalStr}${confNote}.`;
-    if (tier === 'mid') return `${label} is developing. Based on: ${signalStr}${confNote}.`;
-    return `${label} could use some attention. Based on: ${signalStr}${confNote}.`;
-  }
-
-  if (tone === 'motivational') {
-    if (tier === 'high') return `${label} is a real strength here! Based on: ${signalStr}${confNote}.`;
-    if (tier === 'mid') return `${label} is building nicely - keep going! Based on: ${signalStr}${confNote}.`;
-    return `${label} is an opportunity for growth! Based on: ${signalStr}${confNote}.`;
-  }
-
-  // Clinical (default)
-  if (tier === 'high') return `${label} indicators are strong. Key signals: ${signalStr}${confNote}.`;
-  if (tier === 'mid') return `${label} indicators are moderate. Key signals: ${signalStr}${confNote}.`;
-  return `${label} indicators suggest need for support. Key signals: ${signalStr}${confNote}.`;
+// Pure pass-through — reasoning is written by Claude in the partner's tone register.
+function generateReasoning(reasoning: string): string {
+  return reasoning;
 }
 
 function generateRecommendedAction(dimension: Dimension, score: number): string {
@@ -437,8 +376,8 @@ export async function POST(request: NextRequest) {
     const partnerConfig = await loadPartnerConfig(validation.partnerId!);
     const config = mergeConfig(partnerConfig, requestConfig);
 
-    // Analyze text with Claude
-    const analysis = await analyzeTextWithClaude(text, sourceType);
+    // Analyze text with Claude (pass partner tone so reasoning is written in the right register)
+    const analysis = await analyzeTextWithClaude(text, sourceType, config.tone);
 
     // Calculate weighted ERS score
     let weightedSum = 0;
@@ -509,7 +448,7 @@ export async function POST(request: NextRequest) {
           score: formattedScore,
           label,
           confidence: dimData.confidence,
-          reasoning: generateReasoning(dim, dimData.score, dimData.top_signals, dimData.confidence, config.tone),
+          reasoning: generateReasoning(dimData.reasoning),
           top_signals: config.include_signals ? dimData.top_signals : undefined,
         };
 
@@ -536,6 +475,9 @@ export async function POST(request: NextRequest) {
       source_type: sourceType,
       text_length: text.length,
       extraction_confidence: analysis.overall_confidence,
+      // Welfare flag — always present; true signals human escalation is needed
+      welfare_flag: analysis.welfare_flag,
+      welfare_note: analysis.welfare_note,
     };
 
     // Add meta block for non-minimal responses

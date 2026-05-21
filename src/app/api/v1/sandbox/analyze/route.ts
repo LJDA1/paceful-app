@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Analyze text with Claude (real analysis, not mock)
-    const analysis = await analyzeTextWithClaude(text, sourceType);
+    const analysis = await analyzeTextWithClaude(text, sourceType, config.tone);
 
     // Calculate weighted ERS score
     const ersScore = calculateErsScore(analysis.dimensions);
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
           score: formattedScore,
           label,
           confidence: dimData.confidence,
-          reasoning: generateReasoning(dim, dimData.score, dimData.top_signals, dimData.confidence, config.tone),
+          reasoning: generateReasoning(dimData.reasoning),
           top_signals: config.include_signals ? dimData.top_signals : undefined,
         };
 

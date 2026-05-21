@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
         score: dimScore,
         label: getScoreLabel(dimScore),
         confidence: avgConfidence,
-        reasoning: generateReasoning(dim, dimScore, ['batch analysis'], avgConfidence, 'clinical'),
+        reasoning: generateReasoning(`${dim.replace(/_/g, ' ')} is ${trend} over this batch period.`),
         trend,
       };
     }

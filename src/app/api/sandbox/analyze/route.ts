@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
         score: formattedScore,
         label: getScoreLabel(dimData.score),
         confidence: dimData.confidence,
-        reasoning: generateReasoning(dim, dimData.score, dimData.top_signals, dimData.confidence, config.tone),
+        reasoning: generateReasoning(dimData.reasoning),
         top_signals: dimData.top_signals,
         recommended_action: generateRecommendedAction(dim, dimData.score),
       };

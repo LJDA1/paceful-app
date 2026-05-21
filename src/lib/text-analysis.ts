@@ -60,6 +60,7 @@ export const VALID_SOURCE_TYPES: SourceType[] = ['journal', 'session_notes', 'ch
 // Claude analysis result structure
 export interface DimensionAnalysis {
   score: number;
+  reasoning: string;
   top_signals: string[];
   confidence: Confidence;
 }
@@ -68,6 +69,8 @@ export interface ClaudeAnalysisResult {
   dimensions: Record<Dimension, DimensionAnalysis>;
   overall_confidence: Confidence;
   extraction_notes: string;
+  welfare_flag: boolean;
+  welfare_note: string;
 }
 
 // ============================================================================
@@ -118,39 +121,91 @@ export function getReadinessLabel(score: number): string {
 // Claude Analysis
 // ============================================================================
 
-const ANALYSIS_SYSTEM_PROMPT = `You are an expert clinical psychologist analyzing text for emotional readiness signals.
+const TONE_INSTRUCTIONS: Record<Tone, string> = {
+  clinical: 'Neutral and clinical. Describe what the evidence shows factually. Example: "Expressed doubt about fit at this level, without contextual triggers or recovery evidence, indicates reduced stability."',
+  casual: 'Warm and honest. Be direct without being harsh. Example: "There is no plan or action here — just a wish to improve, which shows awareness but not actual coping capacity."',
+  motivational: 'Encouraging but rigorously honest. Acknowledge low capacity plainly — never reframe low scores as growth opportunities. Example: "The frustration here is real, and without an active coping strategy in place, coping capacity is genuinely limited right now."',
+};
 
-Analyze the provided text and extract signals for each of these 5 ERS (Emotional Readiness Score) dimensions:
+export function buildAnalysisPrompt(tone: Tone): string {
+  return `You are a clinical assessment engine scoring emotional readiness across five dimensions.
 
-1. emotional_stability: Look for mood variance indicators, emotional regulation patterns, reaction proportionality, recovery from emotional events
-2. self_reflection: Look for self-awareness indicators, pattern recognition, insight depth, ability to examine one's own thoughts/feelings
-3. coping_capacity: Look for healthy coping mentions, resource awareness, adaptive strategies, problem-solving approaches
-4. behavioral_engagement: Look for activity levels, routine consistency, goal-directed behavior, follow-through on intentions
-5. social_readiness: Look for social mention frequency, connection quality indicators, openness to relationships, trust signals
+Analyze the text and return a score, reasoning sentence, top_signals, and confidence for each dimension. Apply the scoring contracts below exactly.
 
-For each dimension, provide:
-- score: 0-100 (based on evidence in the text)
-- top_signals: Array of 2-3 specific phrases or indicators from the text that support your score
-- confidence: "low" (minimal text evidence), "medium" (some evidence), or "high" (strong evidence)
+---
+DIMENSION SCORING CONTRACTS
 
-Also provide an overall_confidence based on the total amount of analyzable content.
+1. EMOTIONAL STABILITY — Score the person's CURRENT and RECENT emotional baseline.
+- HIGH (60–100): Explicitly calm, grounded, or reporting stable functioning across contexts.
+- MODERATE (40–59): Mixed signals, a single setback, or ordinary proportionate disappointment about a specific event. A bad game, a dropped squad selection, or a routine sporting setback is proportionate disappointment — score MODERATE, not low.
+- LOW (0–39): Sustained distress, dysregulation, or distress clearly disproportionate to the trigger.
+Critical rule: described resolution of a past low does NOT raise this score above moderate unless current stability is also confirmed in the text. If the text says "I was really down but then I talked to my coach", score MODERATE — both the distress and resolution are present, not stable.
 
-IMPORTANT: Be conservative with scores when evidence is limited. Default toward moderate scores (40-60) unless clear positive or negative signals exist.
+2. SELF-REFLECTION — Score the QUALITY of insight, not the presence of first-person thinking.
+- HIGH (60–100): The person identifies WHY something is happening — a causal or contextual link, a recognised pattern across situations, or a specific trigger named with evidence.
+- MODERATE (40–59): The person notices something is happening but does not analyse why.
+- LOW (0–39): No self-observation, or pure rumination without analytical layer.
+Critical rule: "I keep thinking X", "I'm not sure I belong", "I feel like Y" are RUMINATION — they show distress, not insight. Rumination does not raise self_reflection above low-to-moderate. Only score high when a cause, mechanism, or pattern is explicitly identified.
 
-Respond with ONLY a valid JSON object in this exact format:
+3. COPING CAPACITY — Score DEMONSTRATED or RECENTLY ENACTED coping behaviour only.
+- HIGH (60–100): The person describes a specific action taken or currently ongoing: talked to someone, made a plan, used a technique, asked for help.
+- MODERATE (40–59): Awareness of needing to cope, without a specific enacted action.
+- LOW (0–39): No coping behaviour present, or only aspirational statements.
+Critical rule: "I want to work on X", "I'd like to get better at Y", "I really want to improve Z" are ASPIRATIONAL — they score LOW regardless of how specific the goal sounds. Stated intentions without described action are not coping capacity.
+
+4. BEHAVIORAL ENGAGEMENT — Score engagement RELATIVE TO A NORMAL BASELINE.
+- HIGH (60–100): Evidence of extra engagement, consistency across multiple activities, or proactive initiative beyond what is normally expected.
+- MODERATE (40–59): Attending regular or mandatory activities at a normal level. "Training was fine. Normal sessions." is MODERATE.
+- LOW (0–39): Skipping, withdrawing, reduced activity, or passivity.
+Critical rule: expressing a goal or wish to improve is not engagement evidence. Only demonstrated behaviour counts.
+
+5. SOCIAL READINESS — Score actual social interaction quality and connection.
+- HIGH (60–100): Active, reciprocal, or sought-out social connection is described.
+- MODERATE (40–59): Neutral references to social context without evidence of connection quality.
+- LOW (0–39): Active withdrawal, avoidance, disconnection, or absence of social mention where it would normally be expected.
+
+---
+REASONING
+
+For each dimension, write ONE sentence. Rules:
+- Interpret — explain why the score is where it is; do not quote the text back verbatim.
+- Do not use the phrase "Based on:" anywhere in the reasoning.
+- Be honest at all scores. Low scores must describe the concern plainly.
+- Tone register: ${TONE_INSTRUCTIONS[tone]}
+
+---
+WELFARE FLAG
+
+If the text contains language suggesting genuine emotional risk beyond ordinary disappointment — including hopelessness ("don't see the point of anything", "what's the point of carrying on"), expressions of not wanting to exist or be here, self-harm ideation, sustained emptiness, or feeling like a burden — set welfare_flag to true and describe specifically what was detected in welfare_note.
+
+This is a separate human-escalation flag, not a scoring modifier. Still complete all five dimension scores. Do not soften or suppress any score because welfare_flag is true.
+
+If no welfare signals are present, set welfare_flag to false and welfare_note to "".
+
+---
+CONFIDENCE
+
+"low" = brief or ambiguous text. "medium" = adequate evidence. "high" = clear, detailed evidence. Set overall_confidence based on total analyzable content.
+
+---
+Respond with ONLY valid JSON — no markdown fences, no commentary:
+
 {
   "dimensions": {
-    "emotional_stability": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "self_reflection": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "coping_capacity": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "behavioral_engagement": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" },
-    "social_readiness": { "score": number, "top_signals": string[], "confidence": "low"|"medium"|"high" }
+    "emotional_stability":   { "score": number, "reasoning": string, "top_signals": [string, string], "confidence": "low"|"medium"|"high" },
+    "self_reflection":       { "score": number, "reasoning": string, "top_signals": [string, string], "confidence": "low"|"medium"|"high" },
+    "coping_capacity":       { "score": number, "reasoning": string, "top_signals": [string, string], "confidence": "low"|"medium"|"high" },
+    "behavioral_engagement": { "score": number, "reasoning": string, "top_signals": [string, string], "confidence": "low"|"medium"|"high" },
+    "social_readiness":      { "score": number, "reasoning": string, "top_signals": [string, string], "confidence": "low"|"medium"|"high" }
   },
   "overall_confidence": "low"|"medium"|"high",
-  "extraction_notes": "Brief note about the analysis quality and any limitations"
+  "extraction_notes": string,
+  "welfare_flag": boolean,
+  "welfare_note": string
 }`;
+}
 
-export async function analyzeTextWithClaude(text: string, sourceType: SourceType): Promise<ClaudeAnalysisResult> {
+export async function analyzeTextWithClaude(text: string, sourceType: SourceType, tone: Tone = 'clinical'): Promise<ClaudeAnalysisResult> {
   const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
@@ -165,8 +220,8 @@ export async function analyzeTextWithClaude(text: string, sourceType: SourceType
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: ANALYSIS_SYSTEM_PROMPT,
+    max_tokens: 1200,
+    system: buildAnalysisPrompt(tone),
     messages: [
       {
         role: 'user',
@@ -186,15 +241,22 @@ export async function analyzeTextWithClaude(text: string, sourceType: SourceType
     const cleanedText = textBlock.text.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
     const result = JSON.parse(cleanedText) as ClaudeAnalysisResult;
 
-    // Validate and clamp scores
+    // Validate and clamp scores; ensure reasoning field present
     for (const dim of VALID_DIMENSIONS) {
       if (result.dimensions[dim]) {
         result.dimensions[dim].score = Math.max(0, Math.min(100, Math.round(result.dimensions[dim].score)));
         if (!['low', 'medium', 'high'].includes(result.dimensions[dim].confidence)) {
           result.dimensions[dim].confidence = 'medium';
         }
+        if (typeof result.dimensions[dim].reasoning !== 'string') {
+          result.dimensions[dim].reasoning = '';
+        }
       }
     }
+
+    // Ensure welfare fields present
+    if (typeof result.welfare_flag !== 'boolean') result.welfare_flag = false;
+    if (typeof result.welfare_note !== 'string') result.welfare_note = '';
 
     return result;
   } catch (parseError) {
@@ -202,14 +264,16 @@ export async function analyzeTextWithClaude(text: string, sourceType: SourceType
     // Return fallback moderate scores
     return {
       dimensions: {
-        emotional_stability: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        self_reflection: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        coping_capacity: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        behavioral_engagement: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
-        social_readiness: { score: 50, top_signals: ['insufficient_data'], confidence: 'low' },
+        emotional_stability: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        self_reflection: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        coping_capacity: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        behavioral_engagement: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
+        social_readiness: { score: 50, reasoning: '', top_signals: ['insufficient_data'], confidence: 'low' },
       },
       overall_confidence: 'low',
       extraction_notes: 'Failed to parse analysis response - using fallback scores',
+      welfare_flag: false,
+      welfare_note: '',
     };
   }
 }
@@ -231,43 +295,10 @@ export function calculateErsScore(dimensions: Record<Dimension, { score: number 
 // Reasoning Generation
 // ============================================================================
 
-export function generateReasoning(
-  dimension: Dimension,
-  score: number,
-  signals: string[],
-  confidence: Confidence,
-  tone: Tone
-): string {
-  const signalStr = signals.slice(0, 2).join(' and ') || 'text analysis';
-  const tier = score >= 70 ? 'high' : score >= 40 ? 'mid' : 'low';
-  const confNote = confidence === 'low' ? ' (limited text evidence)' : confidence === 'high' ? ' (strong text evidence)' : '';
-
-  const dimensionLabels: Record<Dimension, string> = {
-    emotional_stability: 'Emotional stability',
-    self_reflection: 'Self-reflection capacity',
-    coping_capacity: 'Coping capacity',
-    behavioral_engagement: 'Behavioral engagement',
-    social_readiness: 'Social readiness',
-  };
-
-  const label = dimensionLabels[dimension];
-
-  if (tone === 'casual') {
-    if (tier === 'high') return `${label} presents strongly in this assessment. Based on: ${signalStr}${confNote}.`;
-    if (tier === 'mid') return `${label} shows moderate development. Based on: ${signalStr}${confNote}.`;
-    return `${label} is an area that would benefit from additional focus. Based on: ${signalStr}${confNote}.`;
-  }
-
-  if (tone === 'motivational') {
-    if (tier === 'high') return `${label} demonstrates notable strength in this area. Based on: ${signalStr}${confNote}.`;
-    if (tier === 'mid') return `${label} shows meaningful progress with continued potential. Based on: ${signalStr}${confNote}.`;
-    return `${label} represents a key growth opportunity. Based on: ${signalStr}${confNote}.`;
-  }
-
-  // Clinical (default)
-  if (tier === 'high') return `${label} indicators are strong. Key signals: ${signalStr}${confNote}.`;
-  if (tier === 'mid') return `${label} indicators are moderate. Key signals: ${signalStr}${confNote}.`;
-  return `${label} indicators suggest need for support. Key signals: ${signalStr}${confNote}.`;
+// Pure pass-through — reasoning is now written by Claude directly in the tone
+// register requested. This function exists for call-site compatibility only.
+export function generateReasoning(reasoning: string): string {
+  return reasoning;
 }
 
 export function generateRecommendedAction(dimension: Dimension, score: number): string {

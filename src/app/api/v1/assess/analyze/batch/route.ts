@@ -411,7 +411,7 @@ export async function POST(request: NextRequest) {
           confidence: dimConfidence,
           trend: trend.direction,
           trend_delta: trend.delta,
-          reasoning: generateReasoning(dim, trend.end_score, uniqueSignals, dimConfidence, config.tone),
+          reasoning: generateReasoning(`${dim.replace(/_/g, ' ')} is ${trend.direction} over this period.`),
           top_signals: config.include_signals ? uniqueSignals : undefined,
         };
 

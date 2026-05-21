@@ -76,15 +76,15 @@ function createMockRequest(body: unknown, headers: Record<string, string> = {}):
 
 // Helper to create Claude response
 function createClaudeResponse(
-  dimensions: Record<string, { score: number; confidence: string }>,
+  dimensions: Record<string, { score?: number; reasoning?: string; top_signals?: string[]; confidence?: string }>,
   overall_confidence: 'low' | 'medium' | 'high' = 'medium'
 ) {
   const fullDimensions = {
-    emotional_stability: { score: 50, top_signals: ['neutral'], confidence: 'medium', ...dimensions.emotional_stability },
-    self_reflection: { score: 50, top_signals: ['neutral'], confidence: 'medium', ...dimensions.self_reflection },
-    coping_capacity: { score: 50, top_signals: ['neutral'], confidence: 'medium', ...dimensions.coping_capacity },
-    behavioral_engagement: { score: 50, top_signals: ['neutral'], confidence: 'medium', ...dimensions.behavioral_engagement },
-    social_readiness: { score: 50, top_signals: ['neutral'], confidence: 'medium', ...dimensions.social_readiness },
+    emotional_stability: { score: 50, reasoning: '', top_signals: ['neutral'], confidence: 'medium', ...dimensions.emotional_stability },
+    self_reflection: { score: 50, reasoning: '', top_signals: ['neutral'], confidence: 'medium', ...dimensions.self_reflection },
+    coping_capacity: { score: 50, reasoning: '', top_signals: ['neutral'], confidence: 'medium', ...dimensions.coping_capacity },
+    behavioral_engagement: { score: 50, reasoning: '', top_signals: ['neutral'], confidence: 'medium', ...dimensions.behavioral_engagement },
+    social_readiness: { score: 50, reasoning: '', top_signals: ['neutral'], confidence: 'medium', ...dimensions.social_readiness },
   };
 
   return {
@@ -94,6 +94,8 @@ function createClaudeResponse(
         dimensions: fullDimensions,
         overall_confidence,
         extraction_notes: 'Test analysis',
+        welfare_flag: false,
+        welfare_note: '',
       }),
     }],
   };
