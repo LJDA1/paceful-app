@@ -304,7 +304,7 @@ export default function PartnerDashboard() {
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers: {
-        'X-API-Key': apiKey,
+        'Authorization': 'Bearer ' + apiKey,
         'Content-Type': 'application/json',
         ...options?.headers,
       },
@@ -390,7 +390,7 @@ export default function PartnerDashboard() {
       // Validate API key by fetching partner info
       const response = await fetch(`${API_BASE}/info`, {
         headers: {
-          'X-API-Key': apiKeyInput,
+          'Authorization': 'Bearer ' + apiKeyInput,
           'Content-Type': 'application/json',
         },
       });

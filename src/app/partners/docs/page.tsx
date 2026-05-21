@@ -666,7 +666,7 @@ result = requests.post(
           <h2 style={styles.sectionTitle}>Authentication</h2>
           <p style={styles.paragraph}>
             All API requests require authentication using your API key. Include it in the{' '}
-            <code>X-API-Key</code> header with every request.
+            <code>Authorization: Bearer</code> header with every request.
           </p>
           <p style={styles.paragraph}>
             <strong>Key formats:</strong><br />
@@ -675,11 +675,11 @@ result = requests.post(
           </p>
           <CodeBlock code={{
             curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/info" \\
-  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
   -H "Content-Type: application/json"`,
             javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/info', {
   headers: {
-    'X-API-Key': 'pk_live_your_api_key',
+    'Authorization': 'Bearer pk_live_your_api_key',
     'Content-Type': 'application/json'
   }
 });`,
@@ -688,7 +688,7 @@ result = requests.post(
 response = requests.get(
     'https://paceful-app.vercel.app/api/v1/partner/info',
     headers={
-        'X-API-Key': 'pk_live_your_api_key',
+        'Authorization': 'Bearer pk_live_your_api_key',
         'Content-Type': 'application/json'
     }
 )`
@@ -719,7 +719,7 @@ response = requests.get(
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/users/register" \\
-  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{"externalId": "user-123", "consentGiven": true}'`,
               javascript: `const user = await paceful.users.register({
@@ -782,7 +782,7 @@ response = requests.get(
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/import/users" \\
-  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "users": [
@@ -794,7 +794,7 @@ response = requests.get(
               javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/import/users', {
   method: 'POST',
   headers: {
-    'X-API-Key': 'pk_live_your_api_key',
+    'Authorization': 'Bearer pk_live_your_api_key',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -810,7 +810,7 @@ const { created, skipped, failed, results } = await response.json();`,
               python: `response = requests.post(
     'https://paceful-app.vercel.app/api/v1/partner/import/users',
     headers={
-        'X-API-Key': 'pk_live_your_api_key',
+        'Authorization': 'Bearer pk_live_your_api_key',
         'Content-Type': 'application/json'
     },
     json={
@@ -885,7 +885,7 @@ const { created, skipped, failed, results } = await response.json();`,
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/import/mood" \\
-  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "entries": [
@@ -897,7 +897,7 @@ const { created, skipped, failed, results } = await response.json();`,
               javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/import/mood', {
   method: 'POST',
   headers: {
-    'X-API-Key': 'pk_live_your_api_key',
+    'Authorization': 'Bearer pk_live_your_api_key',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -913,7 +913,7 @@ const { created, skipped, failed, results } = await response.json();`,
               python: `response = requests.post(
     'https://paceful-app.vercel.app/api/v1/partner/import/mood',
     headers={
-        'X-API-Key': 'pk_live_your_api_key',
+        'Authorization': 'Bearer pk_live_your_api_key',
         'Content-Type': 'application/json'
     },
     json={
@@ -995,7 +995,7 @@ const { created, skipped, failed, results } = await response.json();`,
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/mood/log" \\
-  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{"externalId": "user-123", "score": 4, "emotions": ["hopeful", "calm"]}'`,
               javascript: `const mood = await paceful.mood.log({
@@ -1043,7 +1043,7 @@ const { created, skipped, failed, results } = await response.json();`,
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/partner/journal/entry" \\
-  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{"externalId": "user-123", "content": "Today I reflected on my progress..."}'`,
               javascript: `const entry = await paceful.journal.create({
@@ -1176,16 +1176,16 @@ const { created, skipped, failed, results } = await response.json();`,
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/user-123/history?period=30d&granularity=daily" \\
-  -H "X-API-Key: pk_live_your_api_key"`,
+  -H "Authorization: Bearer pk_live_your_api_key"`,
               javascript: `const response = await fetch(
   'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/history?period=30d',
-  { headers: { 'X-API-Key': 'pk_live_your_api_key' } }
+  { headers: { 'Authorization': 'Bearer pk_live_your_api_key' } }
 );
 const { trend, milestones, history } = await response.json();`,
               python: `response = requests.get(
     'https://paceful-app.vercel.app/api/v1/partner/ers/user-123/history',
     params={'period': '30d', 'granularity': 'daily'},
-    headers={'X-API-Key': 'pk_live_your_api_key'}
+    headers={'Authorization': 'Bearer pk_live_your_api_key'}
 )`
             }} />
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
@@ -1247,16 +1247,16 @@ const { trend, milestones, history } = await response.json();`,
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/ers/trends/aggregate?period=30d&granularity=weekly" \\
-  -H "X-API-Key: pk_live_your_api_key"`,
+  -H "Authorization: Bearer pk_live_your_api_key"`,
               javascript: `const response = await fetch(
   'https://paceful-app.vercel.app/api/v1/partner/ers/trends/aggregate?period=30d',
-  { headers: { 'X-API-Key': 'pk_live_your_api_key' } }
+  { headers: { 'Authorization': 'Bearer pk_live_your_api_key' } }
 );
 const { overallTrend, stageDistributionEnd, transitionsInPeriod } = await response.json();`,
               python: `response = requests.get(
     'https://paceful-app.vercel.app/api/v1/partner/ers/trends/aggregate',
     params={'period': '30d', 'granularity': 'weekly'},
-    headers={'X-API-Key': 'pk_live_your_api_key'}
+    headers={'Authorization': 'Bearer pk_live_your_api_key'}
 )`
             }} />
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
@@ -1583,14 +1583,14 @@ const { recommendations, strengths } = await response.json();`,
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/assess/snapshot/questions" \\
-  -H "X-API-Key: pk_live_your_api_key"`,
+  -H "Authorization: Bearer pk_live_your_api_key"`,
               javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/assess/snapshot/questions', {
-  headers: { 'X-API-Key': 'pk_live_your_api_key' }
+  headers: { 'Authorization': 'Bearer pk_live_your_api_key' }
 });
 const { questions, dimensions } = await response.json();`,
               python: `response = requests.get(
     'https://paceful-app.vercel.app/api/v1/assess/snapshot/questions',
-    headers={'X-API-Key': 'pk_live_your_api_key'}
+    headers={'Authorization': 'Bearer pk_live_your_api_key'}
 )`
             }} />
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>
@@ -1649,7 +1649,7 @@ const { questions, dimensions } = await response.json();`,
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X POST "https://paceful-app.vercel.app/api/v1/assess/snapshot" \\
-  -H "X-API-Key: pk_live_your_api_key" \\
+  -H "Authorization: Bearer pk_live_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{
     "externalId": "user-123",
@@ -1670,7 +1670,7 @@ const { questions, dimensions } = await response.json();`,
               javascript: `const result = await fetch('https://paceful-app.vercel.app/api/v1/assess/snapshot', {
   method: 'POST',
   headers: {
-    'X-API-Key': 'pk_live_your_api_key',
+    'Authorization': 'Bearer pk_live_your_api_key',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -1686,7 +1686,7 @@ const { questions, dimensions } = await response.json();`,
               python: `result = requests.post(
     'https://paceful-app.vercel.app/api/v1/assess/snapshot',
     headers={
-        'X-API-Key': 'pk_live_your_api_key',
+        'Authorization': 'Bearer pk_live_your_api_key',
         'Content-Type': 'application/json'
     },
     json={
@@ -2124,7 +2124,7 @@ data = response.json()`
             ]} />
             <CodeBlock code={{
               curl: `curl -X POST https://paceful.com/api/v1/assess/gambling \\
-  -H "X-API-Key: YOUR_API_KEY" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
     "user_id": "player_123",
@@ -2134,7 +2134,7 @@ data = response.json()`
               javascript: `const response = await fetch('https://paceful.com/api/v1/assess/gambling', {
   method: 'POST',
   headers: {
-    'X-API-Key': 'YOUR_API_KEY',
+    'Authorization': 'Bearer YOUR_API_KEY',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -2148,7 +2148,7 @@ const data = await response.json();`,
 
 response = requests.post(
     'https://paceful.com/api/v1/assess/gambling',
-    headers={'X-API-Key': 'YOUR_API_KEY'},
+    headers={'Authorization': 'Bearer YOUR_API_KEY'},
     json={
         'user_id': 'player_123',
         'text': 'I just need one more win to break even...',
@@ -2499,14 +2499,14 @@ print(status['status'])  # "operational"`
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Request</h4>
             <CodeBlock code={{
               curl: `curl -X GET "https://paceful-app.vercel.app/api/v1/partner/health" \\
-  -H "X-API-Key: pk_live_your_api_key"`,
+  -H "Authorization: Bearer pk_live_your_api_key"`,
               javascript: `const response = await fetch('https://paceful-app.vercel.app/api/v1/partner/health', {
-  headers: { 'X-API-Key': 'pk_live_your_api_key' }
+  headers: { 'Authorization': 'Bearer pk_live_your_api_key' }
 });
 const health = await response.json();`,
               python: `response = requests.get(
     'https://paceful-app.vercel.app/api/v1/partner/health',
-    headers={'X-API-Key': 'pk_live_your_api_key'}
+    headers={'Authorization': 'Bearer pk_live_your_api_key'}
 )`
             }} />
             <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Response</h4>

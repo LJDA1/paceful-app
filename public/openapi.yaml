@@ -7,7 +7,8 @@ info:
     5 clinical dimensions and get actionable insights.
 
     ## Authentication
-    All endpoints require an API key passed via the `X-API-Key` header.
+    All endpoints require an API key passed via the `Authorization` header as a Bearer token:
+    `Authorization: Bearer pk_live_your_key_here`.
     Get your API key at [/partners/signup](/partners/signup).
 
     ## Rate Limiting
@@ -582,11 +583,11 @@ paths:
 components:
   securitySchemes:
     ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
       description: |
-        Partner API key. Get yours at /partners/signup.
+        Partner API key passed as a Bearer token. Get yours at /partners/signup.
         - Production keys start with `pk_live_`
         - Sandbox keys start with `pk_sandbox_`
 

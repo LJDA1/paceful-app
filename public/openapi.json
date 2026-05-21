@@ -3,7 +3,7 @@
   "info": {
     "title": "Paceful Partner API",
     "version": "1.3.0",
-    "description": "The Paceful Partner API enables you to integrate Emotional Readiness Scores into your product — dating apps, therapy platforms, workplace tools, and more.\n\n## Authentication\n\nAll endpoints (except sandbox and health) require a partner API key in the `X-API-Key` header.\n\n```\nX-API-Key: pk_live_your_key_here\n```\n\nGet your API key at [paceful.app/partners/signup](https://paceful.app/partners/signup).\n\n## Rate Limiting\n\nRate limits are applied per API key. Check response headers:\n\n| Header | Description |\n|--------|-------------|\n| `X-RateLimit-Limit` | Max requests per hour |\n| `X-RateLimit-Remaining` | Requests remaining |\n| `X-RateLimit-Reset` | Unix timestamp when window resets |\n\nExceeded limits return `429 Too Many Requests`.\n\n## Sandbox Mode\n\nUse a sandbox API key (`pk_sandbox_...`) for testing. Sandbox requests:\n- Return deterministic realistic data\n- Do not persist to production\n- Do not count against rate limits\n\n## Emotional Readiness Score Dimensions\n\nThe score is computed from 5 weighted dimensions:\n\n| Dimension | Weight | Description |\n|-----------|--------|-------------|\n| Emotional Stability | 25% | Mood variance, emotional regulation |\n| Self Reflection | 15% | Self-awareness, pattern recognition |\n| Coping Capacity | 20% | Healthy coping, problem-solving |\n| Behavioral Engagement | 15% | Activity levels, routine consistency |\n| Social Readiness | 25% | Openness to relationships, trust |\n\n## Score Stages\n\n| Stage | Score Range | Label |\n|-------|-------------|-------|\n| Healing | 0–39 | Not Ready |\n| Rebuilding | 40–74 | Rebuilding |\n| Ready | 75–100 | Ready |\n",
+    "description": "The Paceful Partner API enables you to integrate Emotional Readiness Scores into your product — dating apps, therapy platforms, workplace tools, and more.\n\n## Authentication\n\nAll endpoints (except sandbox and health) require a partner API key in the `Authorization` header as a Bearer token.\n\n```\nAuthorization: Bearer pk_live_your_key_here\n```\n\nGet your API key at [paceful.app/partners/signup](https://paceful.app/partners/signup).\n\n## Rate Limiting\n\nRate limits are applied per API key. Check response headers:\n\n| Header | Description |\n|--------|-------------|\n| `X-RateLimit-Limit` | Max requests per hour |\n| `X-RateLimit-Remaining` | Requests remaining |\n| `X-RateLimit-Reset` | Unix timestamp when window resets |\n\nExceeded limits return `429 Too Many Requests`.\n\n## Sandbox Mode\n\nUse a sandbox API key (`pk_sandbox_...`) for testing. Sandbox requests:\n- Return deterministic realistic data\n- Do not persist to production\n- Do not count against rate limits\n\n## Emotional Readiness Score Dimensions\n\nThe score is computed from 5 weighted dimensions:\n\n| Dimension | Weight | Description |\n|-----------|--------|-------------|\n| Emotional Stability | 25% | Mood variance, emotional regulation |\n| Self Reflection | 15% | Self-awareness, pattern recognition |\n| Coping Capacity | 20% | Healthy coping, problem-solving |\n| Behavioral Engagement | 15% | Activity levels, routine consistency |\n| Social Readiness | 25% | Openness to relationships, trust |\n\n## Score Stages\n\n| Stage | Score Range | Label |\n|-------|-------------|-------|\n| Healing | 0–39 | Not Ready |\n| Rebuilding | 40–74 | Rebuilding |\n| Ready | 75–100 | Ready |\n",
     "contact": {
       "name": "Paceful Partner Support",
       "email": "partners@paceful.com",
@@ -988,10 +988,10 @@
   "components": {
     "securitySchemes": {
       "ApiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-API-Key",
-        "description": "Your partner API key. Get one at [paceful.app/partners/signup](https://paceful.app/partners/signup).\n- Production keys: `pk_live_...`\n- Sandbox keys: `pk_sandbox_...`"
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API Key",
+        "description": "Your partner API key passed as a Bearer token. Get one at [paceful.app/partners/signup](https://paceful.app/partners/signup).\n- Production keys: `pk_live_...`\n- Sandbox keys: `pk_sandbox_...`"
       }
     },
 

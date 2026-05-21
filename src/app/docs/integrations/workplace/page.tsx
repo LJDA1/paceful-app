@@ -17,7 +17,7 @@ const config: IntegrationPageConfig = {
   const res = await fetch('https://api.paceful.com/v1/assess/analyze', {
     method: 'POST',
     headers: {
-      'X-API-Key': process.env.PACEFUL_API_KEY,
+      'Authorization': 'Bearer ' + process.env.PACEFUL_API_KEY,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ user_id: employeeId, text: responseText, source_type: 'free_text' }),

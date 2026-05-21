@@ -313,7 +313,7 @@ export default function ApiPlayground({ defaultApiKey = 'pk_sandbox_paceful_demo
 
       // Only add API key for authenticated endpoints
       if (!selectedEndpoint.path.includes('/status') && !selectedEndpoint.path.includes('/changelog')) {
-        headers['X-API-Key'] = apiKey;
+        headers['Authorization'] = 'Bearer ' + apiKey;
       }
 
       const fetchOptions: RequestInit = {
