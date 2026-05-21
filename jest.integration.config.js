@@ -9,14 +9,10 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testMatch: ['**/__tests__/**/*.test.ts'],
-  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/src/__tests__/integration/'],
-  setupFilesAfterEnv: [],
+  testMatch: ['<rootDir>/src/__tests__/integration/**/*.test.ts'],
+  setupFiles: ['<rootDir>/src/__tests__/integration/setup.ts'],
+  testTimeout: 45000,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  collectCoverageFrom: [
-    'src/app/api/**/*.ts',
-    '!src/app/api/**/*.d.ts',
-  ],
 };
 
 module.exports = config;

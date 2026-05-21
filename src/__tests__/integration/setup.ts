@@ -1,0 +1,23 @@
+/**
+ * Integration test env loader.
+ * Reads .env.local into process.env before tests run.
+ * This file is loaded by jest.integration.config.js via setupFiles.
+ */
+import * as fs from 'fs';
+import * as path from 'path';
+
+const envPath = path.resolve(process.cwd(), '.env.local');
+if (fs.existsSync(envPath)) {
+  const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.substring(0, eqIdx).trim();
+    const val = trimmed.substring(eqIdx + 1).trim();
+    if (key && !(key in process.env)) {
+      process.env[key] = val;
+    }
+  }
+}
