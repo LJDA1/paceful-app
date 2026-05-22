@@ -218,8 +218,9 @@ export async function analyzeTextWithClaude(text: string, sourceType: SourceType
   // Truncate text to reasonable length (8k chars ~ 2k tokens)
   const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...[truncated]' : text;
 
+  const model = process.env.ERS_MODEL ?? 'claude-sonnet-4-20250514';
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model,
     max_tokens: 1200,
     system: buildAnalysisPrompt(tone),
     messages: [

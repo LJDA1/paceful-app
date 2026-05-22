@@ -12,7 +12,6 @@
 
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createHash } from 'crypto';
 import {
   validatePartnerKey,
   checkEndpointRateLimit,
@@ -204,8 +203,9 @@ async function analyzeTextWithClaude(text: string, sourceType: SourceType, tone:
   // Truncate text to reasonable length (8k chars ~ 2k tokens)
   const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...[truncated]' : text;
 
+  const model = process.env.ERS_MODEL ?? 'claude-sonnet-4-20250514';
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model,
     max_tokens: 1200,
     system: buildAnalysisPrompt(tone),
     messages: [
@@ -301,13 +301,6 @@ function generateRecommendedAction(dimension: Dimension, score: number): string 
   return isLow ? actions[dimension].low : isMid ? actions[dimension].mid : actions[dimension].high;
 }
 
-// ============================================================================
-// Hashing (never store raw partner text)
-// ============================================================================
-
-function hashText(text: string): string {
-  return createHash('sha256').update(text).digest('hex');
-}
 
 // ============================================================================
 // Main Handler
@@ -337,8 +330,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Check endpoint-specific rate limit (100/hour for analyze)
-  const rateLimit = await checkEndpointRateLimit(validation.partnerId!, '/api/v1/assess/analyze');
+  // Parallelize rate-limit check and config load — both need partnerId but not each other
+  const [rateLimit, partnerConfig] = await Promise.all([
+    checkEndpointRateLimit(validation.partnerId!, '/api/v1/assess/analyze'),
+    loadPartnerConfig(validation.partnerId!),
+  ]);
+
   if (!rateLimit.allowed) {
     return partnerApiError(
       `Rate limit exceeded. Limit: ${rateLimit.limit}/hour. Retry after ${rateLimit.retryAfter} seconds.`,
@@ -355,25 +352,23 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!user_id || typeof user_id !== 'string') {
-      await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime);
+      logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime).catch(() => {});
       return partnerApiError('user_id is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     if (!text || typeof text !== 'string') {
-      await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime);
+      logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime).catch(() => {});
       return partnerApiError('text is required', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     if (text.length < 20) {
-      await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime);
+      logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 400, Date.now() - startTime).catch(() => {});
       return partnerApiError('text must be at least 20 characters', 'BAD_REQUEST', 400, undefined, rateLimit);
     }
 
     const validSourceTypes: SourceType[] = ['journal', 'session_notes', 'chat_transcript', 'free_text'];
     const sourceType: SourceType = validSourceTypes.includes(source_type) ? source_type : 'free_text';
 
-    // Load partner config and merge with request config
-    const partnerConfig = await loadPartnerConfig(validation.partnerId!);
     const config = mergeConfig(partnerConfig, requestConfig);
 
     // Analyze text with Claude (pass partner tone so reasoning is written in the right register)
@@ -391,43 +386,9 @@ export async function POST(request: NextRequest) {
     // Generate assessment ID
     const assessmentId = `anlz_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
     const timestamp = new Date().toISOString();
-    const textHash = hashText(text);
 
-    // Store in database
-    const supabase = getSupabaseAdmin();
-    const { error: insertError } = await supabase
-      .from('text_assessments')
-      .insert({
-        id: assessmentId.replace('anlz_', '').padEnd(36, '0').substring(0, 36).replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5'),
-        partner_id: validation.partnerId,
-        external_user_id: user_id,
-        source_type: sourceType,
-        text_hash: textHash,
-        text_length: text.length,
-        ers_score: ersScore,
-        readiness_label: readinessLabel,
-        extraction_confidence: analysis.overall_confidence,
-        dim_emotional_stability: analysis.dimensions.emotional_stability.score,
-        dim_self_reflection: analysis.dimensions.self_reflection.score,
-        dim_coping_capacity: analysis.dimensions.coping_capacity.score,
-        dim_behavioral_engagement: analysis.dimensions.behavioral_engagement.score,
-        dim_social_readiness: analysis.dimensions.social_readiness.score,
-        dim_es_confidence: analysis.dimensions.emotional_stability.confidence,
-        dim_sr_confidence: analysis.dimensions.self_reflection.confidence,
-        dim_cc_confidence: analysis.dimensions.coping_capacity.confidence,
-        dim_be_confidence: analysis.dimensions.behavioral_engagement.confidence,
-        dim_srd_confidence: analysis.dimensions.social_readiness.confidence,
-        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null,
-        user_agent: request.headers.get('user-agent') || null,
-      });
-
-    if (insertError) {
-      console.error('Error storing text assessment:', insertError);
-      // Continue anyway - we still return the result even if storage fails
-    }
-
-    // Log API usage
-    await logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 200, Date.now() - startTime);
+    // Log API usage — fire and forget; must not block or crash the response
+    logPartnerApiUsage(validation.partnerId!, '/api/v1/assess/analyze', 'POST', 200, Date.now() - startTime).catch(() => {});
 
     // Build dimension results based on config
     const dimensionResults: Record<Dimension, Record<string, unknown>> = {} as Record<Dimension, Record<string, unknown>>;
