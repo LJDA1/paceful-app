@@ -257,7 +257,7 @@ function ApiCodePreview() {
         <div className="w-3 h-3 rounded-full" style={{ background: '#B86B64' }} />
         <div className="w-3 h-3 rounded-full" style={{ background: '#D4973B' }} />
         <div className="w-3 h-3 rounded-full" style={{ background: '#5B8A72' }} />
-        <span className="ml-2 text-[12px]" style={{ color: '#9A938A' }}>GET /api/v1/ers/:userId</span>
+        <span className="ml-2 text-[12px]" style={{ color: '#9A938A' }}>GET /api/v1/partner/ers/:externalId/history</span>
       </div>
       <pre className="text-[13px] leading-relaxed overflow-x-auto">
         <code>
@@ -300,7 +300,7 @@ interface ScenarioData {
 const DEMO_SCENARIOS: Record<DemoScenario, ScenarioData> = {
   dating: {
     label: 'Dating App',
-    request: `GET /api/v1/ers/usr_sarah_m
+    request: `GET /api/v1/partner/ers/usr_sarah_m/history
 Authorization: Bearer pk_your_api_key`,
     response: `{
   "ers_score": 42,
@@ -336,7 +336,7 @@ X-Organization-Id: org_acme_corp`,
   },
   therapy: {
     label: 'Therapy Tool',
-    request: `GET /api/v1/ers/usr_client_123/trajectory
+    request: `GET /api/v1/partner/ers/usr_client_123/history
 Authorization: Bearer pk_your_api_key`,
     response: `{
   "client_id": "usr_client_123",

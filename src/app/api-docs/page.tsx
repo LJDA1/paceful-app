@@ -263,9 +263,7 @@ function Sidebar({ activeSection }: { activeSection: string }) {
       label: 'ERS Endpoints',
       icon: <ChartIcon className="w-4 h-4" />,
       children: [
-        { id: 'endpoint-ers-single', label: '/ers/:userId', method: 'GET' as const },
-        { id: 'endpoint-ers-history', label: '/ers/:userId/history', method: 'GET' as const },
-        { id: 'endpoint-ers-batch', label: '/ers/batch', method: 'GET' as const },
+        { id: 'endpoint-ers-history', label: '/partner/ers/:externalId/history', method: 'GET' as const },
         { id: 'endpoint-analytics', label: '/analytics/summary', method: 'GET' as const },
       ]
     },
@@ -358,7 +356,7 @@ export default function ApiDocsPage() {
     const handleScroll = () => {
       const sections = [
         'getting-started', 'authentication',
-        'endpoint-ers-single', 'endpoint-ers-history', 'endpoint-ers-batch', 'endpoint-analytics',
+        'endpoint-ers-history', 'endpoint-analytics',
         'endpoint-aggregate', 'endpoint-individual', 'endpoint-health',
         'endpoint-deliveries-list', 'endpoint-delivery-detail', 'endpoint-delivery-retry',
         'endpoint-status-public', 'endpoint-health-partner',
@@ -514,66 +512,10 @@ export default function ApiDocsPage() {
             </section>
 
             {/* ERS ENDPOINTS */}
-            <section id="endpoint-ers-single" className="scroll-mt-24">
-              <div className="flex items-center gap-3 mb-4">
-                <MethodBadge method="GET" />
-                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/api/v1/ers/:userId</code>
-              </div>
-              <h2
-                className="text-[24px] font-bold mb-4"
-                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
-              >
-                Get User ERS
-              </h2>
-              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
-                Retrieve the latest Emotional Readiness Score for a specific user.
-              </p>
-
-              <h3 className="text-[15px] font-semibold mb-3" style={{ color: '#1F1D1A' }}>Path Parameters</h3>
-              <ParamTable params={[
-                { name: 'userId', type: 'string (UUID)', required: true, description: 'Unique identifier for the user' },
-              ]} />
-
-              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
-              <CodeBlock
-                code={`curl -X GET "https://api.paceful.app/api/v1/ers/550e8400-e29b-41d4-a716-446655440000" \\
-  -H "Authorization: Bearer pk_your_api_key"`}
-                language="bash"
-              />
-
-              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Response</h3>
-              <div className="flex items-center gap-2 mb-2">
-                <StatusCode code={200} />
-                <span className="text-[13px]" style={{ color: '#5C574F' }}>Success</span>
-              </div>
-              <CodeBlock
-                code={`{
-  "user_id": "550e8400-e29b-41d4-a716-446655440000",
-  "ers_score": 42,
-  "ers_stage": "healing",
-  "dimensions": {
-    "emotional_stability": 52,
-    "self_reflection": 45,
-    "engagement_consistency": 38,
-    "trust_openness": 41,
-    "recovery_behavior": 44,
-    "social_readiness": 35
-  },
-  "calculated_at": "2026-02-13T10:30:00Z",
-  "trend": {
-    "direction": "improving",
-    "weekly_change": 3.2
-  }
-}`}
-                language="json"
-                title="Response Body"
-              />
-            </section>
-
             <section id="endpoint-ers-history" className="scroll-mt-24">
               <div className="flex items-center gap-3 mb-4">
                 <MethodBadge method="GET" />
-                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/api/v1/ers/:userId/history</code>
+                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/api/v1/partner/ers/:externalId/history</code>
               </div>
               <h2
                 className="text-[24px] font-bold mb-4"
@@ -587,7 +529,7 @@ export default function ApiDocsPage() {
 
               <h3 className="text-[15px] font-semibold mb-3" style={{ color: '#1F1D1A' }}>Path Parameters</h3>
               <ParamTable params={[
-                { name: 'userId', type: 'string', required: true, description: 'External user ID' },
+                { name: 'externalId', type: 'string', required: true, description: 'External user ID' },
               ]} />
 
               <h3 className="text-[15px] font-semibold mt-6 mb-3" style={{ color: '#1F1D1A' }}>Query Parameters</h3>
@@ -676,34 +618,6 @@ export default function ApiDocsPage() {
                   </div>
                 </div>
               </div>
-            </section>
-
-            <section id="endpoint-ers-batch" className="scroll-mt-24">
-              <div className="flex items-center gap-3 mb-4">
-                <MethodBadge method="GET" />
-                <code className="text-[16px] font-mono" style={{ color: '#5C574F' }}>/api/v1/ers/batch</code>
-              </div>
-              <h2
-                className="text-[24px] font-bold mb-4"
-                style={{ fontFamily: "'Fraunces', serif", color: '#1F1D1A' }}
-              >
-                Batch ERS Lookup
-              </h2>
-              <p className="text-[15px] mb-6" style={{ color: '#5C574F' }}>
-                Retrieve ERS scores for multiple users in a single request.
-              </p>
-
-              <h3 className="text-[15px] font-semibold mb-3" style={{ color: '#1F1D1A' }}>Query Parameters</h3>
-              <ParamTable params={[
-                { name: 'user_ids', type: 'string', required: true, description: 'Comma-separated list of user IDs (max 50)' },
-              ]} />
-
-              <h3 className="text-[15px] font-semibold mt-8 mb-3" style={{ color: '#1F1D1A' }}>Example Request</h3>
-              <CodeBlock
-                code={`curl -X GET "https://api.paceful.app/api/v1/ers/batch?user_ids=abc123,xyz789,def456" \\
-  -H "Authorization: Bearer pk_your_api_key"`}
-                language="bash"
-              />
             </section>
 
             <section id="endpoint-analytics" className="scroll-mt-24">
