@@ -39,10 +39,8 @@ info:
     url: https://paceful.com/terms
 
 servers:
-  - url: https://api.paceful.com
+  - url: https://paceful-app.vercel.app
     description: Production
-  - url: https://sandbox.paceful.com
-    description: Sandbox
   - url: http://localhost:3000
     description: Local Development
 
@@ -297,25 +295,56 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/v1/ers/{userId}:
-    get:
-      tags: [ERS]
-      summary: Get user's ERS score
+  /api/v1/assess/{vertical}:
+    post:
+      tags: [Assessment]
+      summary: Industry-vertical assessment
       description: |
-        Retrieve the current ERS score and dimensional breakdown for a user.
-        Returns the most recent calculated score with trend data.
-      operationId: getErsScore
+        Run industry-specific signal detection alongside core ERS analysis.
+        Combines a full five-dimension ERS score with a vertical-specific signal catalog
+        and risk score.
+
+        **Available verticals:** `cx`, `dating`, `gambling`, `healthcare`, `insurance`
+
+        Use a sandbox key (`pk_sandbox_*`) for testing — returns deterministic mock data
+        without consuming rate limits.
+      operationId: assessVertical
       parameters:
-        - $ref: '#/components/parameters/userId'
-        - name: include_history
-          in: query
-          description: Include score history (last 30 days)
+        - name: vertical
+          in: path
+          required: true
+          description: Vertical slug
           schema:
-            type: boolean
-            default: false
+            type: string
+            enum: [cx, dating, gambling, healthcare, insurance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - text
+              properties:
+                user_id:
+                  type: string
+                  description: External user ID
+                text:
+                  type: string
+                  minLength: 20
+                  description: Text to analyze
+                source_type:
+                  type: string
+                  enum: [journal, session_notes, chat_transcript, free_text]
+                  default: free_text
+            example:
+              user_id: player_123
+              text: "I just need one more win to break even. I have been chasing my losses all week."
+              source_type: chat_transcript
       responses:
         '200':
-          description: ERS score data
+          description: Vertical assessment results
           headers:
             X-RateLimit-Limit:
               $ref: '#/components/headers/X-RateLimit-Limit'
@@ -326,32 +355,115 @@ paths:
           content:
             application/json:
               schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      vertical:
+                        type: string
+                      ers:
+                        type: object
+                        properties:
+                          ers_snapshot:
+                            type: number
+                          dimensions:
+                            $ref: '#/components/schemas/DimensionsMap'
+                          readiness_label:
+                            type: string
+                          confidence:
+                            type: string
+                            enum: [low, medium, high]
+                      vertical_analysis:
+                        type: object
+                        properties:
+                          risk_score:
+                            type: number
+                            minimum: 0
+                            maximum: 100
+                          risk_level:
+                            type: string
+                            enum: [low, moderate, high, critical]
+                          recommended_action:
+                            type: string
+                          signals:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  description: Signal ID (e.g. GMB-001)
+                                detected:
+                                  type: boolean
+                                confidence:
+                                  type: string
+                                  enum: [low, medium, high]
+                                  nullable: true
+                                evidence:
+                                  type: string
+                                  nullable: true
+                          signals_detected:
+                            type: integer
+                          signals_total:
+                            type: integer
+                      source_type:
+                        type: string
+                      extraction_confidence:
+                        type: string
+                        enum: [low, medium, high]
+                      assessed_at:
+                        type: string
+                        format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Vertical not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/ers/{userId}:
+    get:
+      tags: [ERS]
+      summary: Get user's ERS score
+      description: |
+        Retrieve the current ERS score and dimensional breakdown for a user.
+        Returns the most recent calculated score with trend data.
+
+        **Authentication note:** This endpoint uses a separate B2B integration key system,
+        distinct from partner portal keys (`pk_live_*`). The key must have the `read_ers`
+        permission. Partner portal keys will return 403. Contact support to obtain a
+        B2B integration key with the required permission.
+      operationId: getErsScore
+      security:
+        - ApiKeyAuth: [read_ers]
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: ERS score data
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/ErsScoreResponse'
-              example:
-                success: true
-                data:
-                  user_id: user_12345
-                  ers_score: 67
-                  ers_stage: rebuilding
-                  readiness_label: Rebuilding
-                  dimensions:
-                    emotional_stability: 65
-                    self_reflection: 72
-                    coping_capacity: 70
-                    behavioral_engagement: 58
-                    social_readiness: 62
-                  trend:
-                    direction: improving
-                    delta: 3.2
-                    period_days: 7
-                  confidence: 0.85
-                  calculated_at: "2024-01-20T15:30:00Z"
         '404':
           $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '429':
-          $ref: '#/components/responses/RateLimited'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/v1/ers/batch:
     post:
@@ -847,14 +959,39 @@ components:
               type: string
             text_length:
               type: integer
+            extraction_confidence:
+              type: string
+              enum: [low, medium, high]
+              description: Duplicate of confidence — extraction quality indicator
+            welfare_flag:
+              type: boolean
+              description: |
+                Always present. True when the text contains language indicating potential
+                emotional risk beyond ordinary distress — hopelessness, expressions of not
+                wanting to exist, self-harm ideation, sustained emptiness, or feeling like
+                a burden. This is a human-escalation signal, not a clinical determination.
+                Do not act on it automatically. Route to a human reviewer.
+            welfare_note:
+              type: string
+              description: |
+                Empty string when welfare_flag is false. When true, contains a specific
+                description of what language triggered the flag. Suitable for inclusion
+                in a reviewer handoff note.
             meta:
               type: object
+              description: Present when verbosity is standard or clinical
               properties:
                 verbosity:
                   type: string
                 tone:
                   type: string
+                score_format:
+                  type: string
+                api_version:
+                  type: string
                 model_version:
+                  type: string
+                extraction_notes:
                   type: string
 
     BatchAnalyzeResponse:
@@ -903,38 +1040,47 @@ components:
     ErsScoreResponse:
       type: object
       properties:
-        success:
-          type: boolean
-        data:
+        user_id:
+          type: string
+        ers_score:
+          type: number
+        ers_stage:
+          type: string
+          enum: [healing, rebuilding, ready]
+        dimensions:
           type: object
           properties:
-            user_id:
-              type: string
-            ers_score:
+            emotional_stability:
               type: number
-            ers_stage:
-              type: string
-              enum: [healing, rebuilding, ready]
-            readiness_label:
-              type: string
-            dimensions:
-              type: object
-              additionalProperties:
-                type: number
-            trend:
-              type: object
-              properties:
-                direction:
-                  type: string
-                delta:
-                  type: number
-                period_days:
-                  type: integer
-            confidence:
+              nullable: true
+            self_reflection:
               type: number
-            calculated_at:
+              nullable: true
+            engagement_consistency:
+              type: number
+              nullable: true
+            trust_openness:
+              type: number
+              nullable: true
+            recovery_behavior:
+              type: number
+              nullable: true
+            social_readiness:
+              type: number
+              nullable: true
+        calculated_at:
+          type: string
+          format: date-time
+        trend:
+          type: object
+          properties:
+            direction:
               type: string
-              format: date-time
+              enum: [improving, stable, declining]
+            weekly_change:
+              type: number
+              nullable: true
+              description: Score delta over prior 7 days; null if no prior data
 
     ErsBatchResponse:
       type: object

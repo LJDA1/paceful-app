@@ -1930,6 +1930,13 @@ const { questions, dimensions } = await response.json();`,
               Analyze a single text entry and return an ERS score with dimension breakdown.
               Minimum text length is 20 characters; longer text provides higher confidence scores.
             </p>
+            <p style={styles.paragraph}>
+              Every 200 response includes <code>welfare_flag</code> (boolean) and <code>welfare_note</code> (string).
+              When <code>welfare_flag</code> is true, the text contains language indicating potential emotional risk
+              beyond ordinary distress — hopelessness, self-harm ideation, or expressions of not wanting to exist.
+              This is a human-escalation signal only — it is not a clinical determination and must not be acted on
+              automatically. Route flagged responses to a human reviewer.
+            </p>
             <ParamsTable params={[
               { name: 'user_id', type: 'string', required: true, description: 'Your external user identifier' },
               { name: 'text', type: 'string', required: true, description: 'The text to analyze (min 20 chars, recommended 100+)' },
@@ -2002,7 +2009,9 @@ data = response.json()`
     "timestamp": "2026-04-06T12:00:00Z",
     "source_type": "journal",
     "text_length": 284,
-    "extraction_confidence": "medium"
+    "extraction_confidence": "medium",
+    "welfare_flag": false,
+    "welfare_note": ""
   }
 }`} />
           </div>
@@ -2077,8 +2086,12 @@ data = response.json()`
             a catalog of signals relevant to that industry, with risk scoring and recommended actions.
           </p>
           <p style={styles.paragraph}>
-            <strong>Available verticals:</strong> gambling (responsible gambling / player protection).
-            More verticals coming soon: workplace wellness, insurance risk, education.
+            <strong>Available verticals:</strong>{' '}
+            <code>gambling</code> (Gambling Safeguarding),{' '}
+            <code>healthcare</code> (Healthcare &amp; Therapy Intelligence),{' '}
+            <code>insurance</code> (Insurance Claims Intelligence),{' '}
+            <code>dating</code> (Dating Platform Intelligence),{' '}
+            <code>cx</code> (Customer Experience Intelligence).
           </p>
 
           <div id="verticals-list" style={styles.endpoint}>
@@ -2181,25 +2194,25 @@ data = response.json()`
       "recommended_action": "Flag for manual review",
       "signals": [
         {
-          "id": "loss_chasing",
+          "id": "GMB-002",
           "detected": true,
           "confidence": "high",
           "evidence": "Pattern: 'I just need one more win to break even', 'chasing my losses'"
         },
         {
-          "id": "financial_distress",
+          "id": "GMB-001",
           "detected": true,
           "confidence": "high",
           "evidence": "Pattern: 'borrowed money from my brother to keep playing'"
         },
         {
-          "id": "impulse_patterns",
+          "id": "GMB-003",
           "detected": true,
           "confidence": "medium",
           "evidence": "Pattern: 'I can not resist the urge'"
         },
         {
-          "id": "recovery_help_seeking",
+          "id": "GMB-012",
           "detected": false,
           "confidence": null,
           "evidence": null
@@ -2233,25 +2246,28 @@ data = response.json()`
               </thead>
               <tbody>
                 {[
-                  { id: 'loss_chasing', desc: 'Pursuing losses through continued gambling', weight: 0.8 },
-                  { id: 'desperation_urgency', desc: 'Desperate need to gamble or win immediately', weight: 0.9 },
-                  { id: 'financial_distress', desc: 'Financial problems related to gambling', weight: 0.85 },
-                  { id: 'sleep_disruption', desc: 'Gambling affecting sleep patterns', weight: 0.5 },
-                  { id: 'social_isolation', desc: 'Withdrawal from social connections', weight: 0.7 },
-                  { id: 'denial_minimization', desc: 'Downplaying gambling behavior', weight: 0.75 },
-                  { id: 'emotional_volatility', desc: 'Extreme emotional swings from outcomes', weight: 0.65 },
-                  { id: 'impulse_patterns', desc: 'Inability to control gambling urges', weight: 0.7 },
-                  { id: 'relationship_conflict', desc: 'Gambling causing relationship problems', weight: 0.6 },
-                  { id: 'work_productivity_decline', desc: 'Gambling affecting work performance', weight: 0.55 },
-                  { id: 'substance_co_use', desc: 'Concurrent substance use with gambling', weight: 0.8 },
-                  { id: 'self_harm_hopelessness', desc: 'Hopelessness or self-harm ideation', weight: 1.0 },
-                  { id: 'withdrawal_symptoms', desc: 'Distress when not gambling', weight: 0.7 },
-                  { id: 'recovery_help_seeking', desc: 'Wanting help (protective factor)', weight: -0.5 },
+                  { id: 'GMB-001', name: 'financial_harm_language', desc: 'Language indicating financial distress directly linked to gambling activity — chasing losses, gambling money needed for bills, borrowing to gamble.', weight: 0.14 },
+                  { id: 'GMB-002', name: 'loss_chasing', desc: 'Language indicating active loss chasing — a primary DSM-5 indicator of gambling disorder and a leading predictor of severe harm.', weight: 0.13 },
+                  { id: 'GMB-003', name: 'control_loss_language', desc: 'Language indicating the player feels they have lost control over their gambling — unable to stop, gambling more than intended.', weight: 0.12 },
+                  { id: 'GMB-004', name: 'emotional_distress_gambling_linked', desc: 'Emotional distress language specifically linked to gambling activity — shame, guilt, anxiety about gambling behavior.', weight: 0.10 },
+                  { id: 'GMB-005', name: 'self_exclusion_intent', desc: 'Explicit or implicit signals that the player is considering self-exclusion or needs help stopping. Critical for intervention.', weight: 0.09 },
+                  { id: 'GMB-006', name: 'relationship_harm', desc: 'Language indicating gambling is causing relationship damage — hiding from family, lying to partners, relationship breakdown.', weight: 0.08 },
+                  { id: 'GMB-007', name: 'irrational_cognition', desc: "Language indicating cognitive distortions common in gambling disorder — gambler's fallacy, illusion of control, superstitious thinking.", weight: 0.07 },
+                  { id: 'GMB-008', name: 'time_harm_indicators', desc: 'Language indicating gambling time is causing harm — sleep deprivation, neglecting responsibilities, all-night sessions.', weight: 0.06 },
+                  { id: 'GMB-009', name: 'minor_gambling_risk', desc: 'Language suggesting the account holder may be underage or gambling on behalf of a minor. Triggers immediate verification.', weight: 0.06 },
+                  { id: 'GMB-010', name: 'suicidal_distress_signposting', desc: 'Detects language indicating severe distress that may warrant crisis signposting. Does NOT attempt crisis diagnosis — flags for human review only.', weight: 0.05 },
+                  { id: 'GMB-011', name: 'bet_frequency_escalation', desc: 'Language indicating increasing stakes or bet frequency — a core DSM-5 indicator of disordered gambling (tolerance).', weight: 0.04 },
+                  { id: 'GMB-012', name: 'help_seeking_gambling', desc: 'Positive signal — player is actively seeking help, asking about tools, engaging with RG resources. Critical to recognise and act on promptly.', weight: 0.02 },
+                  { id: 'GMB-013', name: 'employment_impact', desc: 'Language indicating gambling is impacting work or employment — missing work, stealing from employer, job loss risk.', weight: 0.02 },
+                  { id: 'GMB-014', name: 'regulatory_complaint_risk', desc: 'Player language suggesting they may complain to the gambling commission, ombudsman, or external regulator.', weight: 0.02 },
                 ].map((s) => (
                   <tr key={s.id} style={{ borderBottom: '1px solid #E5E0D9' }}>
-                    <td style={{ padding: '6px 0' }}><code>{s.id}</code></td>
+                    <td style={{ padding: '6px 0' }}>
+                      <code style={{ display: 'block' }}>{s.id}</code>
+                      <span style={{ fontSize: '12px', color: '#9A938A' }}>{s.name}</span>
+                    </td>
                     <td style={{ padding: '6px 0', color: '#6B6560' }}>{s.desc}</td>
-                    <td style={{ padding: '6px 0', textAlign: 'center', color: s.weight < 0 ? '#3D6B54' : '#6B6560' }}>
+                    <td style={{ padding: '6px 0', textAlign: 'center', color: '#6B6560' }}>
                       {s.weight}
                     </td>
                   </tr>
